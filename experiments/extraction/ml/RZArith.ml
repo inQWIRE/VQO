@@ -197,13 +197,19 @@ let vars_for_rz_nat_full_m size =
 let nat_full_mult_out size =
   nat_full_mult size x_var y_var z_var
 
-(** val rz_full_adder : var -> int -> var -> exp **)
+(** val rz_full_adder' : var -> int -> int -> var -> exp **)
 
-let rec rz_full_adder x n y =
+let rec rz_full_adder' x n size y =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> SKIP (x, 0))
-    (fun m -> Seq ((CU ((y, m), (SR (m, x)))), (rz_full_adder x m y)))
+    (fun m -> Seq ((CU ((y, m), (SR ((sub size n), x)))),
+    (rz_full_adder' x m size y)))
     n
+
+(** val rz_full_adder : var -> int -> var -> exp **)
+
+let rz_full_adder x n y =
+  rz_full_adder' x n n y
 
 (** val one_cu_full_adder : posi -> var -> int -> var -> exp **)
 
@@ -245,9 +251,8 @@ let flt_full_mult size x y re ex =
 (** val rz_full_adder_form : var -> int -> var -> exp **)
 
 let rz_full_adder_form x n y =
-  Seq ((Seq ((Seq ((Seq ((Rev x), (Rev y))), (QFT x))),
-    (rz_full_adder x n y))),
-    (inv_exp (Seq ((Seq ((Rev x), (Rev y))), (QFT x)))))
+  Seq ((Seq ((Seq ((Rev x), (QFT x))), (rz_full_adder x n y))),
+    (inv_exp (Seq ((Rev x), (QFT x)))))
 
 (** val rz_adder_form : var -> int -> (int -> bool) -> exp **)
 
@@ -277,20 +282,25 @@ let vars_for_rz_full_add size =
 let rz_full_adder_out size =
   rz_full_adder_form x_var size y_var
 
-(** val rz_full_sub : var -> int -> var -> exp **)
+(** val rz_full_sub' : var -> int -> int -> var -> exp **)
 
-let rec rz_full_sub x n y =
+let rec rz_full_sub' x n size y =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> SKIP (x, 0))
-    (fun m -> Seq ((CU ((y, m), (SRR (m, x)))), (rz_full_sub x m y)))
+    (fun m -> Seq ((CU ((y, m), (SRR ((sub size n), x)))),
+    (rz_full_sub' x m size y)))
     n
+
+(** val rz_full_sub : var -> int -> var -> exp **)
+
+let rz_full_sub x n y =
+  rz_full_sub' x n n y
 
 (** val rz_full_sub_form : var -> int -> var -> exp **)
 
 let rz_full_sub_form x n y =
-  Seq ((Seq ((Seq ((Seq ((Rev x), (Rev y))), (QFT x))),
-    (rz_full_sub x n y))),
-    (inv_exp (Seq ((Seq ((Rev x), (Rev y))), (QFT x)))))
+  Seq ((Seq ((Seq ((Rev x), (QFT x))), (rz_full_sub x n y))),
+    (inv_exp (Seq ((Rev x), (QFT x)))))
 
 (** val rz_sub_right : var -> int -> (int -> bool) -> exp **)
 

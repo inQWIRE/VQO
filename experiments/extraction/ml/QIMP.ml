@@ -320,14 +320,9 @@ let type_factor bv = function
 
 (** val a_nat2fb : (int -> bool) -> int -> int **)
 
-let rec a_nat2fb f n =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
-    (fun _ -> 0)
-    (fun m ->
-    add
-      (mul (Nat.pow (Pervasives.succ (Pervasives.succ 0)) m) (Nat.b2n (f m)))
-      (a_nat2fb f m))
-    n
+let a_nat2fb f n =
+  natsum n (fun i ->
+    mul (Nat.b2n (f i)) (Nat.pow (Pervasives.succ (Pervasives.succ 0)) i))
 
 (** val is_q : typ -> bool **)
 

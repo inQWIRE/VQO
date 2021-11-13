@@ -93,7 +93,7 @@ let doubler1 y =
 (** val moddoubler01 : int -> var -> var -> posi -> posi -> exp **)
 
 let moddoubler01 n x m c1 c2 =
-  Seq ((doubler1 x), (Seq ((Seq ((comparator01 n m x c1 c2), (X c2))), (CU
+  Seq ((Seq ((doubler1 x), (X c2))), (Seq ((comparator01 n m x c1 c2), (CU
     (c2, (subtractor01 n m x c1))))))
 
 (** val modsummer' :
@@ -101,11 +101,10 @@ let moddoubler01 n x m c1 c2 =
 
 let rec modsummer' i n m x y c1 s fC =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
-    (fun _ ->
-    if fC 0 then modadder21 n y x m c1 (s, 0) else SKIP (x, 0))
+    (fun _ -> SKIP (x, 0))
     (fun i' -> Seq ((Seq ((modsummer' i' n m x y c1 s fC),
-    (moddoubler01 n x m c1 (s, i')))),
-    (if fC i then modadder21 n y x m c1 (s, i) else SKIP (x, i))))
+    (if fC i' then modadder21 n y x m c1 (s, i') else SKIP (x, i')))),
+    (moddoubler01 n x m c1 (s, i'))))
     i
 
 (** val modsummer : int -> var -> var -> var -> posi -> var -> int -> exp **)

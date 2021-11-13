@@ -26,6 +26,7 @@ QIMP.v
 OracleExample.v
 QC.v
 ArithTesting.v
+AltPQASM.v
 
 externals/SQIR/examples/shor/RCIR.v
 externals/SQIR/examples/shor/ModMult.v

@@ -1,15 +1,11 @@
 #!/bin/bash
 
-# Compile AltPQASM.
-echo "Compiling AltPQASM..."
-coqc -R ../.. Top AltPQASM.v
-
 # Change into the extraction directory.
 cd extraction
 
 # Perform extraction.
 echo "Extracting code..."
-coqc -R ../../.. Top Extraction.v
+coqc -R ../.. Top Extraction.v
 
 # Remove unneeded files.
 echo "Deleting unneeded files..."

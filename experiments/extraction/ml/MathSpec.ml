@@ -74,3 +74,11 @@ let fbrev n f x =
 
 let times_two_spec f i =
   if (=) i 0 then false else f (sub i (Pervasives.succ 0))
+
+(** val natsum : int -> (int -> int) -> int **)
+
+let rec natsum n f =
+  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+    (fun _ -> 0)
+    (fun n' -> add (f n') (natsum n' f))
+    n
