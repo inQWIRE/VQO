@@ -24,7 +24,6 @@ CLArith.v
 RZArith.v
 QIMP.v
 OracleExample.v
-QC.v
 ArithTesting.v
 AltPQASM.v
 
