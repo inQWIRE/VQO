@@ -25,30 +25,6 @@ Require Import Testing.
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
 
-Fixpoint rotate_left_n (x : qvar) n :=
-  match n with
-  | 0 => skip
-  | S n' => slrot (Nor (Var x));; rotate_left_n x n'
-  end.
-
-Definition chacha_estore :=
-  init_estore_g (map (fun x => (TNor Q Nat, x)) (seq 0 16)).
-
-(*define example hash_function as the oracle for grover's search.
-  https://qibo.readthedocs.io/en/stable/tutorials/hash-grover/README.html *)
-Definition qr_qexp (a b c d : qvar) :=
-  unary (Nor (Var a)) nadd (Nor (Var b));;
-  unary (Nor (Var d)) qxor (Nor (Var a)) ;;
-  rotate_left_n d (32 - 16);;
-  unary (Nor (Var c)) nadd (Nor (Var d));;
-  unary (Nor (Var b)) qxor (Nor (Var c));;
-  rotate_left_n b (32 - 12);;
-  unary (Nor (Var a)) nadd (Nor (Var b));;
-  unary (Nor (Var d)) qxor (Nor (Var a));;
-  rotate_left_n d (32 - 8);;
-  unary (Nor (Var c)) nadd (Nor (Var d));;
-  unary (Nor (Var b)) qxor (Nor (Var c));;
-  rotate_left_n b (32 - 7).
 
 Definition sha256_k : var := 1.
 
@@ -144,6 +120,49 @@ Definition result :var := 9.
 (* define sin/cos. a = x^2, b = x^1/3/5/...., d is the result
     the input of sin/cos function is x/2 (not x) range from [0,pi/2) *)
 
+
+Fixpoint rotate_left_n (x : qvar) n :=
+  match n with
+  | 0 => skip
+  | S n' => slrot (Nor (Var x));; rotate_left_n x n'
+  end.
+
+Definition chacha_estore :=
+  init_estore_g (map (fun x => (TNor Q Nat, x)) (seq 0 16)).
+
+Definition hash_qr (b:qvar) (a:qvar) := unary (Nor (Var a)) nadd (Nor (Var b));;
+             unary (Nor (Var b)) qxor (Nor (Var a));; unary (Nor (Var a)) nadd (Nor (Var b))
+                   ;; unary (Nor (Var b)) qxor (Nor (Var a)).
+
+(*define example hash_function as the oracle for grover's search.
+  https://qibo.readthedocs.io/en/stable/tutorials/hash-grover/README.html *)
+Definition qr_qexp (a b c d : qvar) :=
+  unary (Nor (Var a)) nadd (Nor (Var b));;
+  unary (Nor (Var d)) qxor (Nor (Var a)) ;;
+  rotate_left_n d (32 - 16);;
+  unary (Nor (Var c)) nadd (Nor (Var d));;
+  unary (Nor (Var b)) qxor (Nor (Var c));;
+  rotate_left_n b (32 - 12);;
+  unary (Nor (Var a)) nadd (Nor (Var b));;
+  unary (Nor (Var d)) qxor (Nor (Var a));;
+  rotate_left_n d (32 - 8);;
+  unary (Nor (Var c)) nadd (Nor (Var d));;
+  unary (Nor (Var b)) qxor (Nor (Var c));;
+  rotate_left_n b (32 - 7).
+
+Definition hash_oracle (key:nat) (sndk:nat) :func :=
+     (f, [], ((TNor Q Bl,g)::(TNor C Nat,x)::(TNor Q Nat,a)::(TNor Q Nat,b)::(TNor Q Nat,c)::(TNor Q Nat,d)::[]),
+      init (Nor (Var (L d))) (Nor (Num Nat (nat2fb 1)));;
+      qfor x (Nor (Num Nat (nat2fb 1)))
+           (hash_qr (L a) (L c);; hash_qr (L b) (L d) ;; hash_qr (L a) (L d)
+                ;; hash_qr (L b) (L c);;
+      qif (ceq (Nor (Var (L c))) (Nor (Num Nat (nat2fb key))))
+                (qif (ceq (Nor (Var (L d))) (Nor (Num Nat (nat2fb sndk))))
+                    (init (Nor (Var (L g))) (Nor (Num Nat (nat2fb 1)))) (skip)) (skip)), (Nor (Var (L g)))).
+
+
+Definition hash_prog (size:nat) (key:nat) (sndk:nat) : prog := 
+         (size,[(TNor Q Bl,result)],[hash_oracle key sndk],f,result).
 
 Definition x2 := 6.
 Definition x3 := 0.
