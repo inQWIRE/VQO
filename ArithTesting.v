@@ -2,6 +2,13 @@ From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
 Require Import BasicUtility PQASM Testing RZArith CLArith.
 
+Extract Constant Nat.add => "(+)".
+Extract Constant Nat.mul => "( * )".
+Extract Constant Nat.sub => "(-)".
+Extract Constant Nat.modulo => "(mod)".
+Extract Constant Nat.div => "(/)".
+Extract Constant N.of_nat => "(fun x -> x)".
+
 Open Scope exp_scope.
 
 Fixpoint exp2 n :=
@@ -67,9 +74,9 @@ Module TofAdd.
 
   Conjecture tof_add_spec :
     forall (n : nat) (vx vy : Bvector n),
-    st_equiv (get_vars (tof_add_circ n)) (tof_add_env n) (tof_add_prec n)
-      (exp_sem (fun _ => n) (tof_add_circ n) (x |=> vx, y |=> vy))
-          (x |=> vx, y |=> vx [+] vy).
+    st_equivb (get_vars (tof_add_circ n)) (tof_add_env n)
+      (exp_sem (fun _ => n) n (tof_add_circ n) (x |=> vx, y |=> vy))
+          (x |=> vx, y |=> vx [+] vy) = true.
 
 End TofAdd.
 
@@ -84,11 +91,11 @@ Module RzAdd.
   Definition ex := 2.
 
   Definition rz_add_circ n :=
-     (Rev x; Rev y);
+    Rev x;
     QFT x;
-     (rz_full_adder x n y);
+    rz_full_adder x n y;
     RQFT x;
-     (Rev y; Rev x).
+    Rev x.
 
   Definition rz_add_env n : f_env := fun _ => n.
 
@@ -96,9 +103,9 @@ Module RzAdd.
 
   Conjecture rz_add_spec :
     forall (n : nat) (vx vy : Bvector n),
-    st_equiv (get_vars (rz_add_circ n)) (rz_add_env n) (rz_add_prec n)
-      (exp_sem (fun _ => n) (rz_add_circ n) (x |=> vx, y |=> vy))
-          (x |=> vx [+] vy, y |=> vy).
+    st_equivb (get_vars (rz_add_circ n)) (rz_add_env n)
+      (exp_sem (fun _ => n) n (rz_add_circ n) (x |=> vx, y |=> vy))
+          (x |=> vx [+] vy, y |=> vy) = true.
 
 End RzAdd.
 
@@ -123,10 +130,10 @@ Module AddParam.
 
   Conjecture add_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
-    st_equiv (add_param_vars n) (add_param_env n) (add_param_prec n)
-      (exp_sem (add_param_env n) (add_param_circ n vm)
+    st_equivb (add_param_vars n) (add_param_env n)
+      (exp_sem (add_param_env n) n (add_param_circ n vm)
         (x |=> vx))
-      (x |=> vx [+] vm).
+      (x |=> vx [+] vm) = true.
 
 End AddParam.
 
@@ -150,10 +157,10 @@ Module RzMul.
 
   Conjecture rz_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
-    st_equiv (rz_mul_vars n) (rz_mul_env n) (rz_mul_prec n)
-      (exp_sem (rz_mul_env n) (rz_mul_circ n)
+    st_equivb (rz_mul_vars n) (rz_mul_env n)
+      (exp_sem (rz_mul_env n) n (rz_mul_circ n)
         (x |=> vx, y |=> vy, re |=> vre))
-      (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy).
+            (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy) = true.
 
 End RzMul.
 
@@ -178,10 +185,10 @@ Module MulParam.
 
   Conjecture mul_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
-    st_equiv (mul_param_vars n) (mul_param_env n) (mul_param_prec n)
-      (exp_sem (mul_param_env n) (mul_param_circ n vm)
+    st_equivb (mul_param_vars n) (mul_param_env n)
+      (exp_sem (mul_param_env n) n (mul_param_circ n vm)
         (x |=> vx, re |=> vre))
-      (x |=> vx, re |=> vre [+] vx [*] vm).
+      (x |=> vx, re |=> vre [+] vx [*] vm) = true.
 
 End MulParam.
 
@@ -206,10 +213,10 @@ Module TofMul.
 
   Conjecture tof_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
-    st_equiv (tof_mul_vars n) (tof_mul_env n) (tof_mul_prec n)
-      (exp_sem (tof_mul_env n) (tof_mul_circ n)
+    st_equivb (tof_mul_vars n) (tof_mul_env n)
+      (exp_sem (tof_mul_env n) n (tof_mul_circ n)
         (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy).
+            (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy) = true.
 
 End TofMul.
 
@@ -235,10 +242,10 @@ Module TofMulParam.
 
   Conjecture tof_mul_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
-    st_equiv (tof_mul_param_vars n) (tof_mul_param_env n) (tof_mul_param_prec n)
-      (exp_sem (tof_mul_param_env n) (tof_mul_param_circ n vm)
+    st_equivb (tof_mul_param_vars n) (tof_mul_param_env n)
+      (exp_sem (tof_mul_param_env n) n (tof_mul_param_circ n vm)
         (x |=> vx, re |=> vre))
-      (x |=> vx, re |=> vre [+] vx [*] vm).
+      (x |=> vx, re |=> vre [+] vx [*] vm) = true.
 
 End TofMulParam.
 
@@ -262,14 +269,14 @@ Module DivMod.
     get_prec (div_mod_env n) (div_mod_circ n 1).
 
   Definition div_mod_spec : Checker :=
-    forAll (choose (1, 8)) (fun n =>
-    forAll (choose (1, 2 ^ n - 1)) (fun m =>
+    forAll (choose (1, 60)) (fun n =>
+    forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
-    (st_equiv (div_mod_vars n) (div_mod_env n) (div_mod_prec n)
-      (exp_sem (div_mod_env n) (div_mod_circ n m)
+    (st_equivb (div_mod_vars n) (div_mod_env n)
+      (exp_sem (div_mod_env n) (S n) (div_mod_circ n m)
         (x |=> vx))
-      (x |=> vx [%] m, ex |=> vx [/] m))))).
+      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
 
 End DivMod.
 
@@ -295,14 +302,14 @@ Module TofDivMod.
     get_prec (tof_div_mod_env n) (tof_div_mod_circ n 1).
 
   Definition tof_div_mod_spec : Checker :=
-    forAll (choose (1, 8)) (fun n =>
-    forAll (choose (1, 2 ^ n - 1)) (fun m =>
+    forAll (choose (1, 61)) (fun n =>
+    forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
-    (st_equiv (tof_div_mod_vars n) (tof_div_mod_env n) (tof_div_mod_prec n)
-      (exp_sem (tof_div_mod_env n) (tof_div_mod_circ n m)
+    (st_equivb (tof_div_mod_vars n) (tof_div_mod_env n)
+      (exp_sem (tof_div_mod_env n) n (tof_div_mod_circ n m)
         (x |=> vx))
-      (x |=> vx [%] m, ex |=> vx [/] m))))).
+      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
 
 End TofDivMod.
 

@@ -45,7 +45,7 @@ PQASM
 
 QIMP
 * QIMP.v - QIMP language, type system, and compilation from QIMP to PQASM
-* OracleExample.v - example oracles written in QIMP including SHA224, sin, cos, arcsin, x^n
+* OracleExample.v - example oracles written in QIMP including SHA224, ChaCha20, sin, cos, arcsin, x^n
 
 Testing
 * Testing.v - data structures and theorems for random testing
