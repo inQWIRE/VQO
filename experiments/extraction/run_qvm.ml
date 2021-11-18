@@ -163,8 +163,18 @@ let run_partial_eval_exp size =
   | Some c -> print_and_write_file c ("partial-eval-cl-" ^ fname);
   ();;
 
+(*
 run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_partial_eval_exp 16;;
+*)
+
+let size = 8;;
+(*printf "Running trans_rz_add_mul_opt...\n%!";;
+print_and_write_file (trans_rz_add_mul_opt size) ("trans-rz-add-mul-opt-8.qasm");;
+printf "Running trans_rz_add_mul...\n%!";;
+print_and_write_file (trans_rz_add_mul size) ("trans-rz-add-mul-8.qasm");;*)
+printf "Running trans_cl_add_mul...\n%!";;
+print_and_write_file (trans_cl_add_mul size) ("trans-cl-add-mul-8.qasm");;

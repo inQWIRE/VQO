@@ -232,6 +232,27 @@ let trans_rz_div_mod size m =
     (mul (Pervasives.succ (Pervasives.succ 0)) (Pervasives.succ size))
     (rz_div_mod_out size m) (avs_for_rz_div_mod size)
 
+(** val trans_rz_add_mul_opt : int -> coq_U ucom **)
+
+let trans_rz_add_mul_opt size =
+  trans_exp (vars_for_nat_con_add_mult_out size)
+    (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
+    (nat_con_add_mult_out size) (avs_for_arith size)
+
+(** val trans_rz_add_mul : int -> coq_U ucom **)
+
+let trans_rz_add_mul size =
+  trans_exp (vars_for_nat_old_con_add_mult_out size)
+    (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
+    (nat_old_con_add_mult_out size) (avs_for_arith size)
+
+(** val trans_cl_add_mul : int -> coq_U ucom **)
+
+let trans_cl_add_mul size =
+  trans_exp (vars_for_cl_nat_con_add_mult_out size)
+    (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
+    (cl_nat_con_add_mult_out size) (avs_for_arith size)
+
 (** val trans_rz_modmult_rev : int -> int -> int -> int -> coq_U ucom **)
 
 let trans_rz_modmult_rev m c cinv size =
