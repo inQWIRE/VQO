@@ -4245,17 +4245,17 @@ Definition rz_div_mod_out (size:nat) :=
 Definition nat_con_add_mult (n:nat) (x y re:var) :=
     Rev re; QFT re; 
     rz_full_adder re n x;
-    Rev x; nat_full_mult n x y re ; Rev x;
+    Rev x; nat_full_mult' n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult n y x re ; Rev y;
+    Rev y; nat_full_mult' n y x re ; Rev y;
     rz_full_adder re n x;
-    Rev x; nat_full_mult n x y re ; Rev x;
+    Rev x; nat_full_mult' n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult n y x re ; Rev y;
+    Rev y; nat_full_mult' n y x re ; Rev y;
     rz_full_adder re n x;
-    Rev x; nat_full_mult n x y re ; Rev x;
+    Rev x; nat_full_mult' n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult n y x re ; Rev y;
+    Rev y; nat_full_mult' n y x re ; Rev y;
     RQFT re; Rev re.
 
 Definition vars_for_nat_con_add_mult_out (size:nat) := 
