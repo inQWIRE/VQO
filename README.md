@@ -49,7 +49,7 @@ QIMP
 
 Testing
 * Testing.v - data structures and theorems for random testing
-* ArithTesting.v - random testing results for arithmetic operations and chacha20
+* ArithTesting.v - random testing results for arithmetic operations
 
 Utilities
 * BasicUtility.v - useful helper functions and tactics

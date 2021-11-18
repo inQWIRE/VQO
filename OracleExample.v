@@ -18,8 +18,14 @@ Require Import ExtLib.Structures.Monads.
 
 
 Require Import Nat Bvector.
-From Bits Require Import bits.
 Require Import Testing.
+
+Extract Constant Nat.add => "(+)".
+Extract Constant Nat.mul => "( * )".
+Extract Constant Nat.sub => "(-)".
+Extract Constant Nat.modulo => "(mod)".
+Extract Constant Nat.div => "(/)".
+Extract Constant N.of_nat => "(fun x -> x)".
 
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
@@ -143,18 +149,20 @@ Definition qr_qexp (a b c d : qvar) :=
   unary (Nor (Var b)) qxor (Nor (Var c));;
   rotate_left_n b (32 - 7).
 
-(* define sin/cos. a = x^2, b = x^1/3/5/...., d is the result
-    the input of sin/cos function is x/2 (not x) range from [0,pi/2) *)
-
+Declare Scope bits_scope.
 Open Scope bits_scope.
 
-Definition rolBn (p : DWORD) k := iter k rolB p.
+Definition word := Bvector 32.
 
-Infix "+" := addB : bits_scope.
-Infix "^" := xorB : bits_scope.
+Definition rolB (p : word) : word := BshiftL 31 p (Bsign 31 p).
+
+Definition rolBn (p : word) k := iter k rolB p.
+
+Infix "+" := add_bvector.
+Infix "^" := (BVxor 32) : bits_scope.
 Infix "<<<" := rolBn (at level 30, no associativity) : bits_scope.
 
-Definition qr_spec (a b c d : DWORD) : DWORD * DWORD * DWORD * DWORD :=
+Definition qr_spec (a b c d : word) : word * word * word * word :=
   let a := a + b in
   let d := d ^ a in
   let d := d <<< 16 in
@@ -168,13 +176,6 @@ Definition qr_spec (a b c d : DWORD) : DWORD * DWORD * DWORD * DWORD :=
   let b := b ^ c in
   let b := b <<< 7 in
   (a, b, c, d).
-
-Definition bits2bvector {n : nat} (p : BITS n) : Bvector n :=
-  n2bvector n (Z.to_N (toPosZ p)).
-
-Definition bvector2bits {n : nat} (v : Bvector n) : BITS n :=
-  fromZ (Z.of_N (bvector2n v)).
-
 
 Definition tmp : var := 101.
 Definition tmp1 : var := 102.
@@ -205,17 +206,14 @@ Definition compile_qr :=
 
 Definition qr_pexp : exp.
 Proof.
-(*
   destruct (compile_qr) eqn:E1.
-  destruct v.
-  destruct x.
-  - destruct p, p, o.
-    + apply p.
-    + discriminate.
-  - discriminate.
+  - destruct v.
+    + destruct x0, p, p, o.
+      * apply e0.
+      * apply (SKIP (tmp, 0)).
+    + apply (SKIP (tmp, 0)).
+  - apply (SKIP (tmp, 0)).
 Defined.
-*)
-Admitted.
 
 Definition qr_env : f_env := fun _ => 32.
 
@@ -223,16 +221,11 @@ Conjecture qr_oracle_spec :
   forall va vb vc vd,
   let
     '(a', b', c', d') :=
-    qr_spec (bvector2bits va) (bvector2bits vb)
-            (bvector2bits vc) (bvector2bits vd)
+    qr_spec va vb vc vd
   in
-  let va' := bits2bvector a' in
-  let vb' := bits2bvector b' in
-  let vc' := bits2bvector c' in
-  let vd' := bits2bvector d' in
-  st_equiv (get_vars qr_pexp) qr_env (get_prec qr_env qr_pexp)
-    (exp_sem qr_env qr_pexp (a |=> va, b |=> vb, c |=> vc, d |=> vd))
-        (a |=> va', b |=> vb', c |=> vc', d |=> vd').
+  st_equivb (get_vars qr_pexp) qr_env
+    (exp_sem qr_env 32 qr_pexp (a |=> va, b |=> vb, c |=> vc, d |=> vd))
+        (a |=> a', b |=> b', c |=> c', d |=> d') = true.
 
 
 
@@ -276,17 +269,14 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
 
   Definition dr_pexp : exp.
   Proof.
-(*
-
     destruct (compile_dr) eqn:E1.
-    - destruct p, p, o.
-      + apply p.
-      + discriminate.
-    - discriminate.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
   Defined.
-*)
-  Admitted.
-
 
   Definition dr_env : f_env := fun _ => 32.
 
@@ -311,40 +301,19 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
       '(x0', x1', x2', x3', x4', x5', x6', x7',
         x8', x9', x10', x11', x12', x13', x14', x15') :=
       dr_spec
-        (bvector2bits v0) (bvector2bits v1) (bvector2bits v2) (bvector2bits v3)
-        (bvector2bits v4) (bvector2bits v5) (bvector2bits v6) (bvector2bits v7)
-        (bvector2bits v8) (bvector2bits v9)
-        (bvector2bits v10) (bvector2bits v11)
-        (bvector2bits v12) (bvector2bits v13)
-        (bvector2bits v14) (bvector2bits v15)
+        v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
     in
-    let v0' := bits2bvector x0' in
-    let v1' := bits2bvector x1' in
-    let v2' := bits2bvector x2' in
-    let v3' := bits2bvector x3' in
-    let v4' := bits2bvector x4' in
-    let v5' := bits2bvector x5' in
-    let v6' := bits2bvector x6' in
-    let v7' := bits2bvector x7' in
-    let v8' := bits2bvector x8' in
-    let v9' := bits2bvector x9' in
-    let v10' := bits2bvector x10' in
-    let v11' := bits2bvector x11' in
-    let v12' := bits2bvector x12' in
-    let v13' := bits2bvector x13' in
-    let v14' := bits2bvector x14' in
-    let v15' := bits2bvector x15' in
-    dec2checker
-    (st_equiv (get_vars dr_pexp) dr_env (get_prec dr_env dr_pexp)
-     (exp_sem dr_env dr_pexp
+    checker
+    (st_equivb (get_vars dr_pexp) dr_env
+     (exp_sem dr_env 32 dr_pexp
         (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
          4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
          8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
          12 |=> v12, 13 |=> v13, 14 |=> v14, 15 |=> v15))
-     (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
-      4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
-      8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
+     (0 |=> x0', 1 |=> x1', 2 |=> x2', 3 |=> x3',
+      4 |=> x4', 5 |=> x5', 6 |=> x6', 7 |=> x7',
+      8 |=> x8', 9 |=> x9', 10 |=> x10', 11 |=> x11',
+      12 |=> x12', 13 |=> x13', 14 |=> x14', 15 |=> x15')))))))))))))))))).
 
   (*
   Conjecture dr_oracle_spec :
@@ -388,8 +357,8 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
    12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15').
    *)
 
-(*
-QuickChickWith (updMaxSuccess stdArgs 1) DRTesting.dr_oracle_spec.
+  (*
+QuickChickWith (updMaxSuccess stdArgs 1) dr_oracle_spec.
  *)
 
 Fixpoint chacha_qexp' n x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 :=
@@ -436,15 +405,14 @@ Definition chacha_spec := chacha_spec' 10.
 
   Definition chacha_pexp : exp.
   Proof.
-(*
     destruct (compile_chacha) eqn:E1.
-    - destruct p, p, o.
-      + apply p.
-      + discriminate.
-    - discriminate.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
   Defined.
-*)
-Admitted.
 
   Definition chacha_env : f_env := fun _ => 32.
 
@@ -469,45 +437,24 @@ Admitted.
       '(x0', x1', x2', x3', x4', x5', x6', x7',
         x8', x9', x10', x11', x12', x13', x14', x15') :=
       chacha_spec
-        (bvector2bits v0) (bvector2bits v1) (bvector2bits v2) (bvector2bits v3)
-        (bvector2bits v4) (bvector2bits v5) (bvector2bits v6) (bvector2bits v7)
-        (bvector2bits v8) (bvector2bits v9)
-        (bvector2bits v10) (bvector2bits v11)
-        (bvector2bits v12) (bvector2bits v13)
-        (bvector2bits v14) (bvector2bits v15)
+        v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
     in
-    let v0' := bits2bvector x0' in
-    let v1' := bits2bvector x1' in
-    let v2' := bits2bvector x2' in
-    let v3' := bits2bvector x3' in
-    let v4' := bits2bvector x4' in
-    let v5' := bits2bvector x5' in
-    let v6' := bits2bvector x6' in
-    let v7' := bits2bvector x7' in
-    let v8' := bits2bvector x8' in
-    let v9' := bits2bvector x9' in
-    let v10' := bits2bvector x10' in
-    let v11' := bits2bvector x11' in
-    let v12' := bits2bvector x12' in
-    let v13' := bits2bvector x13' in
-    let v14' := bits2bvector x14' in
-    let v15' := bits2bvector x15' in
-    dec2checker
-    (st_equiv
-     (get_vars chacha_pexp) chacha_env (get_prec chacha_env chacha_pexp)
-     (exp_sem chacha_env chacha_pexp
+    checker
+    (st_equivb
+     (get_vars chacha_pexp) chacha_env
+     (exp_sem chacha_env 32 chacha_pexp
         (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
          4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
          8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
          12 |=> v12, 13 |=> v13, 14 |=> v14, 15 |=> v15))
-     (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
-      4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
-      8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
+     (0 |=> x0', 1 |=> x1', 2 |=> x2', 3 |=> x3',
+      4 |=> x4', 5 |=> x5', 6 |=> x6', 7 |=> x7',
+      8 |=> x8', 9 |=> x9', 10 |=> x10', 11 |=> x11',
+      12 |=> x12', 13 |=> x13', 14 |=> x14', 15 |=> x15')))))))))))))))))).
 
-(*
-QuickChickWith (updMaxSuccess stdArgs 1) ChaChaTesting.chacha_oracle_spec.
- *)
+  (*
+QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
+   *)
 
 Module Collision.
 
@@ -529,8 +476,14 @@ Definition x14 : qvar := L 14.
 Definition x15 : qvar := L 15.
 Definition out : qvar := G 16.
 
+Definition getBit (v : word) k :=
+  match Fin.of_nat k 32 with
+  | inleft f => Vector.nth v f
+  | inright _ => false
+  end.
+
 Definition collision_qexp
-  (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : DWORD) :=
+  (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
   chacha_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
   qif (ceq (Nor (Var x0)) (Nor (Num Nat (getBit v0))))
   (qif (ceq (Nor (Var x1)) (Nor (Num Nat (getBit v1))))
@@ -555,7 +508,7 @@ Definition collision_qexp
 (*
 Definition collision_spec
   (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 
-  v0' v1' v2' v3' v4' v5' v6' v7' v8' v9' v10' v11' v12' v13' v14' v15' : DWORD)
+  v0' v1' v2' v3' v4' v5' v6' v7' v8' v9' v10' v11' v12' v13' v14' v15' : word)
   :=
   let
     '(v0'', v1'', v2'', v3'', v4'', v5'', v6'', v7'',

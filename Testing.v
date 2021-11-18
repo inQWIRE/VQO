@@ -257,6 +257,9 @@ Fixpoint n2bvector n : N -> Bvector n :=
   | S n' => fun i => N.odd i :: n2bvector n' (N.div2 i)
   end.
 
+Definition add_bvector {n} (v v' : Bvector n) :=
+  n2bvector n (bvector2n v + bvector2n v')%N.
+
 Lemma bvector2n2bvector :
   forall n v, n2bvector n (bvector2n v) = v.
 Proof.
