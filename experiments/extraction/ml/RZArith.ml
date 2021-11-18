@@ -412,13 +412,13 @@ let nat_con_add_mult n x y re =
   Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
     ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
     ((Seq ((Seq ((Rev re), (QFT re))), (rz_full_adder re n x))), (Rev x))),
-    (nat_full_mult n x y re))), (Rev x))), (rz_full_adder re n y))), (Rev
-    y))), (nat_full_mult n y x re))), (Rev y))), (rz_full_adder re n x))),
-    (Rev x))), (nat_full_mult n x y re))), (Rev x))),
-    (rz_full_adder re n y))), (Rev y))), (nat_full_mult n y x re))), (Rev
-    y))), (rz_full_adder re n x))), (Rev x))), (nat_full_mult n x y re))),
+    (nat_full_mult' n n x y re))), (Rev x))), (rz_full_adder re n y))), (Rev
+    y))), (nat_full_mult' n n y x re))), (Rev y))), (rz_full_adder re n x))),
+    (Rev x))), (nat_full_mult' n n x y re))), (Rev x))),
+    (rz_full_adder re n y))), (Rev y))), (nat_full_mult' n n y x re))), (Rev
+    y))), (rz_full_adder re n x))), (Rev x))), (nat_full_mult' n n x y re))),
     (Rev x))), (rz_full_adder re n y))), (Rev y))),
-    (nat_full_mult n y x re))), (Rev y))), (RQFT re))), (Rev re))
+    (nat_full_mult' n n y x re))), (Rev y))), (RQFT re))), (Rev re))
 
 (** val vars_for_nat_con_add_mult_out :
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
