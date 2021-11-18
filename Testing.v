@@ -1,8 +1,13 @@
-Require Import Arith NArith Vector Bvector Equality MSets OrderedTypeEx Lia BasicUtility VectorStates PQASM Utilities.
+Require Import Arith NArith Vector Bvector Equality MSets OrderedTypeEx Lia BasicUtility VectorStates Utilities.
+Require Import PQASM MathSpec.
 From QuickChick Require Import QuickChick.
 Import Vector (hd, tl).
 Import Decidability (dec).
 Import PQASM (exp(..), CNOT).
+
+Require FMapAVL.
+Module Posi_as_OT := PairOrderedType Nat_as_OT Nat_as_OT.
+Module M := FMapAVL.Make(Posi_as_OT).
 
 Module Nat_as_OT := Update_OT Nat_as_OT.
 (* Used for finite sets of variables *)
@@ -16,6 +21,175 @@ Open Scope N_scope.
 Open Scope nat_scope.
 Open Scope bool_scope.
 Open Scope exp_scope.
+
+Definition rz_val := nat.
+
+Inductive val := nval (b:bool) (r:rz_val) | hval (b1:bool) (b2:bool) (r:rz_val) | qval (rc:rz_val) (r:rz_val).
+
+Definition addto (r : rz_val) (n : nat) (rmax : nat) : rz_val :=
+  (r + 2^(rmax - n)) mod 2^rmax.
+
+Definition addto_n (r : rz_val) n (rmax : nat) :=
+  (r + 2^rmax - 2^(rmax - n)) mod 2^rmax.
+
+Definition state := M.t val.
+
+Definition get_state (p : posi) (f : state) :=
+  match M.find p f with
+  | None => nval false 0
+  | Some v => v
+  end.
+
+Definition exchange (v: val) :=
+     match v with nval b r => nval (¬ b) r
+                  | hval b1 b2 r => hval b2 b1 r
+                  | a => a
+     end.
+
+Definition hexchange (v1:val) (v2:val) :=
+  match v1 with hval b1 b2 r1 => 
+    match v2 with hval b3 b4 r2 => if Bool.eqb b3 b4 then v1 else hval b1 (¬ b2) r1
+                | _ => v1
+    end
+             | _ => v1
+  end.
+
+Definition put_cu (v:val) (b:bool) :=
+    match v with nval x r => nval b r | a => a end.
+
+Definition get_cua (v:val) := 
+    match v with nval x r => x | _ => false end.
+
+Definition get_cus (n:nat) (f:state) (x:var) := 
+          fun i => if i <? n then (match get_state (x,i) f with nval b r => b | _ => false end) else allfalse i.
+
+Definition put_cus (f:posi -> val) (x:var) (g:nat -> bool) (n:nat) : (posi -> val) :=
+     fun a => if fst a =? x then if snd a <? n then put_cu (f a) (g (snd a)) else f a else f a.
+
+Definition get_cu (v : val) :=
+    match v with nval b r => Some b 
+                 | hval b1 b2 r => Some b1
+                 | _ => None
+    end.
+
+Definition get_r (v:val) :=
+   match v with nval x r => r
+              | qval rc r => rc
+              | hval x y r => r
+   end.
+
+Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
+
+Definition times_rotate (v : val) (q:nat) rmax := 
+     match v with nval b r => if b then nval b (rotate r q rmax) else nval b r
+                  | hval b1 b2 r => hval b1 (¬ b2) r
+                  | qval rc r =>  qval rc (rotate r q rmax)
+     end.
+
+Definition r_rotate (r :rz_val) (q:nat) rmax := addto_n r q rmax.
+
+Definition times_r_rotate (v : val) (q:nat) rmax := 
+     match v with nval b r =>  if b then nval b (r_rotate r q rmax) else nval b r
+                  | hval b1 b2 r => hval b1 (¬ b2) r
+                  | qval rc r =>  qval rc (r_rotate r q rmax)
+     end.
+
+Fixpoint sr_rotate' (st: state) (x:var) (n:nat) (size:nat) rmax :=
+   match n with 0 => st
+              | S m => (sr_rotate' (M.add (x,m) (times_rotate (get_state (x,m) st) (size - m) rmax) st) x m size rmax)
+   end.
+Definition sr_rotate st x n rmax := sr_rotate' st x (S n) (S n) rmax.
+
+Fixpoint srr_rotate' (st: state) (x:var) (n:nat) (size:nat) rmax :=
+   match n with 0 => st
+              | S m =>  (srr_rotate' (M.add (x,m) (times_r_rotate (get_state (x,m) st) (size - m) rmax) st) x m size rmax)
+   end.
+Definition srr_rotate st x n rmax := srr_rotate' st x (S n) (S n) rmax.
+
+Fixpoint lshift' (n:nat) (size:nat) (f:state) (x:var) := 
+   match n with 0 => M.add (x,0) (get_state (x,size) f) f
+             | S m => M.add (x,n) (get_state (x,m) f) (lshift' m size f x)
+   end.
+Definition lshift (f:state) (x:var) (n:nat) := lshift' (n-1) (n-1) f x.
+
+Fixpoint rshift' (n:nat) (size:nat) (f:state) (x:var) := 
+   match n with 0 => M.add (x,size) (get_state (x,0) f) f
+             | S m => M.add (x,m) (get_state (x,n) f) (rshift' m size f x)
+   end.
+Definition rshift (f:state) (x:var) (n:nat) := rshift' (n-1) (n-1) f x.
+
+Fixpoint reverse' (f : state) (x : var) (n : nat) i (f' : state) :=
+  match i with
+  | 0 => f'
+  | S i' =>
+      reverse' f x n i' (M.add (x, i') (get_state (x, n - i) f) f')
+  end.
+
+Definition reverse (f:state) (x:var) (n:nat) :=
+  reverse' f x n n f.
+
+Definition h_case (v : val) (rmax : nat) :=
+    match v with nval b r => if r <? 2^(rmax-1) then hval true (¬ b) r else hval false b (rotate r 1 rmax)
+               | hval true true r => nval false r
+               | hval true false r => nval true r
+               | hval false true r => nval true (rotate r 1 rmax)
+               | hval false false r => nval false (rotate r 1 rmax)
+               | a => a
+    end.
+
+Fixpoint h_sem (f:state) (x:var) (n : nat) (rmax : nat) := 
+    match n with 0 => f
+              | S m => M.add (x,m) (h_case (get_state (x,m) f) rmax) (h_sem f x m rmax)
+    end.
+
+Definition up_qft (v:val) (f:rz_val) :=
+   match v with nval b r => qval r f
+              | a => a
+   end.
+
+Fixpoint a_nat2fb' f (n acc: nat) :=
+            match n with 0 => acc
+               | S m => a_nat2fb' f m (acc + Nat.b2n (f m) * 2^m)
+            end.
+Definition a_nat2fb f n := a_nat2fb' f n 0.
+
+Fixpoint assign_r (f:state) (x:var) (r : nat) (n:nat) (size :nat) (rmax:nat) :=
+    match n with 0 => f
+    | S m =>  (assign_r (M.add (x,size - n) (up_qft (get_state (x,size - n) f) r) f) x ((r * 2) mod 2^rmax) m size rmax)
+    end.
+
+Definition turn_qft (f:state) (x:var) (n:nat) (rmax:nat) :=
+      assign_r f x (2^(rmax - n) * a_nat2fb (fbrev n (get_cus n f x)) n) n rmax rmax.
+
+Fixpoint assign_seq (f:state) (x:var) (vals : nat -> bool) (size:nat) (n:nat) :=
+   match n with 0 => f
+   | S m => (assign_seq (M.add (x,size-n) (nval (vals (size-n)) (get_r (get_state (x,size-n) f))) f) x vals size m)
+   end.
+
+Definition get_r_qft (f:state) (x:var) (n:nat) (rmax:nat) :=
+      match get_state (x,0) f with qval rc g => fbrev n (nat2fb (g/2^(rmax-n)))
+                      | _ => allfalse
+      end.
+
+Definition turn_rqft (st : state) (x:var) (n:nat) (rmax : nat) := assign_seq st x (get_r_qft st x n rmax) rmax rmax.
+
+Fixpoint exp_sem (env:var -> nat) (rmax : nat) (e:exp) (st: state) : state :=
+   match e with (SKIP p) => st
+              | X p => M.add p (exchange (get_state p st)) st
+              | HCNOT p1 p2 => M.add p1 (hexchange (get_state p1 st) (get_state p2 st)) st
+              | CU p e' => if get_cua (get_state p st) then exp_sem env rmax e' st else st
+              | RZ q p => M.add p (times_rotate (get_state p st) q rmax) st
+              | RRZ q p => M.add p (times_r_rotate (get_state p st) q rmax) st
+              | SR n x => sr_rotate st x n rmax (*n is the highest position to rotate. *)
+              | SRR n x => srr_rotate st x n rmax
+              | Lshift x => lshift st x (env x)
+              | Rshift x => rshift st x (env x)
+              | Rev x => (reverse st x (env x))
+              | H x => h_sem st x (env x) rmax
+              | QFT x => turn_qft st x (env x) rmax
+              | RQFT x => turn_rqft st x (env x) rmax
+              | e1 ; e2 => exp_sem env rmax e2 (exp_sem env rmax e1 st)
+    end.
 
 (* Bitwise xor *)
 Infix "(+)" := (BVxor _) (at level 50, left associativity).
@@ -83,6 +257,9 @@ Fixpoint n2bvector n : N -> Bvector n :=
   | S n' => fun i => N.odd i :: n2bvector n' (N.div2 i)
   end.
 
+Definition add_bvector {n} (v v' : Bvector n) :=
+  n2bvector n (bvector2n v + bvector2n v')%N.
+
 Lemma bvector2n2bvector :
   forall n v, n2bvector n (bvector2n v) = v.
 Proof.
@@ -98,19 +275,6 @@ Proof.
 Qed.
 
 Definition bvector2nat {n} (v : Bvector n) := N.to_nat (bvector2n v).
-
-(*
-Definition num_bits n :=
-  match n with
-  | N0 => 1
-  | Npos p => Pos.size_nat p
-  end.
-
-Lemma num_bits_le :
-  forall n p, num_bits n <= p <-> N.to_nat n < 2 ^ p.
-Proof.
-Abort. (* TODO *)
-*)
 
 Lemma double_size :
   forall n, N.size_nat (N.double n) <= S (N.size_nat n).
@@ -133,16 +297,6 @@ Proof.
   - eauto using le_trans, double_size, le_n_S.
 Qed.
 
-(*
-Lemma size_div2_le :
-  forall i n, N.size_nat i <= S n <-> N.size_nat (N.div2 i) <= n.
-Proof.
-  intros i n.
-  split; intros H; generalize dependent i;
-  induction n as [| n IH]; intros [|[]] H; simpl in *; lia.
-Qed.
- *)
-
 Lemma n2bvector2n :
   forall n i, N.size_nat i <= n -> bvector2n (n2bvector n i) = i.
 Proof.
@@ -150,25 +304,18 @@ Proof.
   intros [|[]] H; simpl; rewrite IH; simpl in *; try lia.
 Qed.
 
-(* Rotation of 0, scalar multiplication by 1 *)
-Definition zero_angle : rz_val :=
-  fun _ => false.
-
 (* A single-qubit state representing either |0> or |1> *)
-Definition basis_val b := nval b zero_angle.
+Definition basis_val b := nval b 0.
 
 (* The single-qubit state |0> *)
 Definition zero_val := basis_val false.
 
-(* A program state is a mapping from positions to values *)
-Definition state := posi -> val.
-
 (* A program state with all qubits set to |0>, used for initialization *)
-Definition zero_state : state := fun p => zero_val.
+Definition zero_state : state := M.empty val.
 
 Notation "x |-> vx , st" :=
-    (eupdate st x vx) (at level 100, vx at next level, right associativity).
-Infix "|->" := (eupdate zero_state) (at level 100).
+    (M.add x vx st) (at level 100, vx at next level, right associativity).
+Notation "x |-> vx" := (M.add x vx zero_state) (at level 100).
 
 Definition next_pos : posi -> posi := fun '(x, i) => (x, S i).
 
@@ -224,77 +371,41 @@ Definition f_env := var -> nat.
 Definition for_all_env (P : posi -> Prop) (vars : var_set) (env : f_env) := 
   For_all (fun x => forall i, i < env x -> P (x, i)) vars.
 
-(* It's decidable whether a Prop is true for a finite number of nats *)
-Definition dec_fin :
-  forall (P : nat -> Prop) `{forall i, Dec (P i)} n,
-  Dec (forall i, i < n -> P i).
+Instance dec_val_eq :
+  forall v v' : val, Dec (v = v').
 Proof.
-  intros P Hd n. constructor. induction n as [| n IH].
-  - left. intros i H. lia.
-  - destruct IH.
-    + destruct (Hd n) as [[|]].
-      * left. intros i H. destruct (Nat.eq_dec i n).
-        -- subst. assumption.
-        -- assert (i < n) by lia. auto.
-      * right. intros Hc. apply n0. apply Hc. constructor.
-    + right. intros Hc. apply n0. intros i H. apply Hc. lia.
-Qed.
-
-Instance dec_for_all_env {P : posi -> Prop} `{forall x, Dec (P x)} :
-  forall vars env, Dec (for_all_env P vars env).
-Proof.
-  intros vars env. constructor.
-  assert (forall x, Dec (forall i, i < env x -> P (x, i))).
-  { intros x. apply dec_fin. intros i. apply H0. }
-  apply dec_var_set_for_all.
-Defined.
-
-(* Two rotations can be equivalent up to a given precision *)
-Definition rz_val_equiv prec (z z' : rz_val) :=
-  forall i, i < prec -> z i = z' i.
-
-Instance dec_rz_val_equiv :
-  forall prec z z', Dec (rz_val_equiv prec z z').
-Proof.
-  intros prec z z'. apply dec_fin.
-  intros i. apply Eq__Dec.
-Defined.
-
-(* Value equivalence is based on rotation equivalence up to a given precision *)
-Inductive val_equiv prec : val -> val -> Prop :=
-  | val_equiv_nval b z z' :
-      rz_val_equiv prec z z' -> val_equiv prec (nval b z) (nval b z')
-  | val_equiv_hval b0 b1 z z' :
-      rz_val_equiv prec z z' -> val_equiv prec (hval b0 b1 z) (hval b0 b1 z')
-  | val_equiv_qval z0 z0' z1 z1' :
-      rz_val_equiv prec z0 z0' ->
-      rz_val_equiv prec z1 z1' ->
-      val_equiv prec (qval z0 z1) (qval z0' z1').
-
-Instance dec_val_equiv :
-  forall prec v v', Dec (val_equiv prec v v').
-Proof.
-  intros prec v v'. constructor.
+  intros v v'. constructor.
   destruct v as [b z | b0 b1 z | z0 z1 ], v' as [b' z' | b0' b1' z' | z0' z1'];
   try (right; intros H; inversion H; discriminate).
   - destruct (bool_dec b b'); try (right; intros H; inversion H; contradiction).
-    subst. destruct (dec_rz_val_equiv prec z z') as [[|]].
-    + left. constructor. assumption.
-    + right. intros H. inversion H. contradiction.
+    subst. bdestruct (z =? z'); subst.
+    + left. reflexivity.
+    + right. congruence.
   - destruct (bool_dec b0 b0'), (bool_dec b1 b1');
     try (right; intros H; inversion H; contradiction).
-    subst. destruct (dec_rz_val_equiv prec z z') as [[|]].
-    + left. constructor. assumption.
-    + right. intros H. inversion H. contradiction.
-  - destruct (dec_rz_val_equiv prec z0 z0') as [[|]],
-             (dec_rz_val_equiv prec z1 z1') as [[|]];
-    try (right; intros H; inversion H; contradiction).
-    left. constructor; assumption.
+    subst. bdestruct (z =? z'); subst.
+    + left. reflexivity.
+    + right. congruence.
+  - bdestruct (z0 =? z0'); bdestruct (z1 =? z1'); subst;
+    try (right; congruence).
+    left. reflexivity.
 Defined.
     
 (* States are equivalent if all values in the environment are equivalent *)
-Definition st_equiv vars env prec (st st' : state) :=
-  for_all_env (fun x => val_equiv prec (st x) (st' x)) vars env.
+Definition st_equiv vars env (st st' : state) :=
+  for_all_env (fun x => (get_state x st) = (get_state x st')) vars env.
+
+Fixpoint var_equivb (st st' : state) var n :=
+  match n with
+  | 0 => true
+  | S n' =>
+      if dec (P:=(get_state (var, n') st = get_state (var, n') st'))
+      then var_equivb st st' var n'
+      else false
+  end.
+
+Definition st_equivb vars env (st st' : state) :=
+  for_all (fun x => var_equivb st st' x (env x)) vars.
 
 (* Get the variables in an exp *)
 Fixpoint get_vars e :=
@@ -389,192 +500,4 @@ Definition ospec_n_bool n (s : N -> bool -> Prop) : ospec n 1 :=
 Definition ospec_n_bool_fun n f : ospec n 1 :=
   ospec_n_bool n (fun nx b => f nx = b).
 
-Definition is_oracle_fun x y env (f : Bvector (env x) -> Bvector (env y)) e :=
-  forall vx vy,
-  st_equiv (get_vars e) env (get_prec env e)
-      (exp_sem env e (x |=> vx, y |=> vy)) (x |=> vx, y |=> vy (+) f vx).
-
-Definition is_oracle x y env (s : ospec (env x) (env y)) e :=
-  exists f, fun_adheres f s /\ is_oracle_fun x y env f e.
-
-Definition is_oracle_bool x y env (s : ospec (env x) 1) e :=
-  exists H : env y = 1, is_oracle x y env (eq_rect_r (ospec (env x)) s H) e.
-
-(*
-Lemma is_oracle_fun_is_oracle :
-  forall x y env f e,
-  is_oracle_fun x y env f e <-> is_oracle x y env (ospec_fun f) e.
-Proof.
-  intros x y env f e. split.
-  - intros H. exists f. auto using ospec_fun_adheres.
-  - intros [f' [Ha Ho]].
-  H. exists f. auto using ospec_fun_adheres.
-Qed.
-
-(* Is the pexp an oracle for a function from Bvectors to Bvectors? *)
-Definition is_oracle x y env (f : Bvector (env x) -> Bvector (env y)) e :=
-  forall vx vy,
-  st_equiv (get_vars e) env (get_prec env e)
-      (prog_sem env e (x |=> vx, y |=> vy)) (x |=> vx, y |=> vy (+) f vx).
-
-(* Is the pexp an oracle for a function from Bvectors to bools? *)
-Definition is_oracle_bool x y env (f : Bvector (env x) -> bool) e :=
-  env y = 1 /\
-  is_oracle x y env (fun v => Vector.const (f v) _) e.
-
-(* Is the pexp an oracle for a function from N to N? *)
-Definition is_oracle_n x y env (f : N -> N) e :=
-  is_oracle x y env (fun v => nat2bvector (env y) (f (bvector2nat v))) e.
-
-(* Is the pexp an oracle for a function from nats to bools? *)
-Definition is_oracle_nat_bool x y env (f : nat -> bool) e :=
-  env y = 1 /\
-  is_oracle x y env (fun v => Vector.const (f (bvector2nat v)) _) e.
-
-Instance checkable_and {P Q : Prop} `{Checkable P} `{Checkable Q} :
-  Checkable (P /\ Q) :=
-  {|
-    checker '(conj p q) := conjoin (checker p :: checker q :: nil)%list
-  |}.
- *)
-
-(* Example: an oracle for the "not" function *)
-Module NotExample.
-
-  Example x := 0.
-  Example y := 1.
-
-  (* Given a bvector of length 1, negate its only element *)
-  Example not_function (vx : Bvector 1) := negb (hd vx).
-
-  Example not_ospec := ospec_bool_fun not_function.
-
-  (* An oracle for the "not" function *)
-  Example not_oracle := (X (x, 0); CNOT (x, 0) (y, 0); X (x, 0)).
-
-  (* The environment assumed by the "not" oracle *)
-  Example not_oracle_env :=
-    fun x' => if (x' =? x) || (x' =? y) then 1 else 0.
-
-  Conjecture not_oracle_correct :
-    is_oracle x y not_oracle_env not_ospec not_oracle.
-
-End NotExample.
-
-(* Test the oracle (must be done outside of the module) *)
-(*
-QuickChick NotExample.not_oracle_correct.
-*)
-
 Definition dec2checker P `{Dec P} := checker (dec2bool P).
-
-Infix "<*>" := kron (at level 40, only parsing).
-
-Definition nat_bool_to_n_bool f n : bool := f (N.to_nat n).
-
-Definition circuit_dim (env : f_env) e :=
-  list_sum (map env (elements (get_vars e))).
-
-Definition xy_first x y (env : f_env) (vs : vars) :=
-  let '(xstart, _, _, _) := vs x in
-  let '(ystart, _, _, _) := vs y in
-  xstart = 0 /\ ystart = env x.
-
-Lemma vkron_add :
-  forall n m f,
-  (forall i, i < n + m -> WF_Matrix (f i)) ->
-  vkron (n + m) f = vkron n f <*> vkron m (fun i => f (i + n)).
-Proof.
-  intros n m f H.
-  induction m as [| m IH]; simpl; Msimpl; auto with wf_db.
-  assert (forall i, i < n -> WF_Matrix (f i)) as Hn by (intros; apply H; lia).
-  assert (forall i, i < m -> WF_Matrix (f (i + n))) as Hm by (intros; apply H; lia).
-  assert (WF_Matrix (f (m + n))) as Hf by (intros; apply H; lia).
-  rewrite Nat.add_succ_r, <- kron_assoc; auto with wf_db. simpl.
-  rewrite IH by (intros; apply H; lia).
-  repeat apply f_equal. lia.
-Qed.
-
-Lemma update_var_eupdate_permute :
-  forall n x y i bx (vy : Bvector n) st,
-  x <> y -> ((x, i) |-> bx, y |=> vy, st) = (y |=> vy, (x, i) |-> bx, st).
-Proof.
-  intros n. unfold update_var. remember 0 as j. clear. generalize dependent j.
-  induction n as [| n IH]; try reflexivity.
-  intros j x y i bx vy st H. simpl.
-  rewrite eupdate_twice_neq by congruence.
-  rewrite IH by assumption. reflexivity.
-Qed.
-
-Lemma update_var_permute :
-  forall m n x y (vx : Bvector m) (vy : Bvector n) st,
-  x <> y -> (x |=> vx, y |=> vy, st) = (y |=> vy, x |=> vx, st).
-Proof.
-  intros m. unfold update_var. remember 0 as j.
-  intros n x y. replace (y, j) with (y, 0) by (subst; reflexivity).
-  generalize dependent y. generalize dependent x. generalize dependent n.
-  clear. generalize dependent j.
-  induction m as [| m IH]; try reflexivity.
-  intros j n x y vx vy st H. dependent destruction vx. simpl.
-  rewrite IH by assumption.
-Abort.
-
-Lemma trans_init_state :
-  forall m n dim x y avs rmax (vx : Bvector m) (vy : Bvector n),
-  x <> y ->
-  m + n <= dim ->
-  (forall i, i < m -> avs i = (x, i)) ->
-  (forall i, i < n -> avs (i + m) = (y, i)) ->
-  vkron dim (trans_state avs rmax (x |=> vx, y |=> vy)) =
-  @pad_vector (m + n)
-        dim
-        (basis_vector (2 ^ m) (bvector2nat vx) <*>
-           basis_vector (2 ^ n) (bvector2nat vy)).
-Proof.
-  intros m n dim x y avs rmax vx vy Nn He Hx Hy. unfold pad_vector.
-  remember (dim - (m + n)) as ancillae.
-  apply repad_lemma2 in Heqancillae; try assumption.
-  clear He. subst. rewrite vkron_add; auto using WF_trans_state.
-  rewrite Nat.pow_1_l. apply f_equal2.
-  - rewrite vkron_add; auto using WF_trans_state.
-    apply f_equal2.
-    + unfold trans_state. admit.
-Abort.
-(*
-    + rewrite update_var_permute by assumption. induction n as [| n IH].
-      * dependent destruction vy. simpl.
-        unfold bvector2nat. simpl. unfold basis_vector, I.
-        apply functional_extensionality.
-        intros []; apply functional_extensionality;
-        intros []; bdestruct_all; reflexivity.
-      * dependent destruction vy. unfold bvector2nat.
-        cbn - [ Nat.mul ].
-        rewrite vkron_eq with
-          (f' := fun i => trans_state avs rmax (y |=> vy, x |=> vx) (i + m)).
-        -- rewrite IH by (intros; apply Hy; lia).
-           destruct h.
-           ++ rewrite N2Nat.inj_succ_double.
-              replace (S (2 * _)) with (2 * N.to_nat (bvector2n vy) + 1) by lia.
-              rewrite <- (basis_vector_append_1 (2 ^ n)).
-              ** unfold bvector2nat. apply f_equal.
-                 unfold trans_state. rewrite Hy by constructor.
-                 rewrite eupdate_index_eq. simpl. Search turn_angle.
-*)
-
-Lemma todo :
-  forall x y env f e vs dim avs,
-  let '(p, _, _) := trans_exp vs dim e avs in
-  S (env x) <= dim ->
-  xy_first x y env vs ->
-  is_oracle_bool x y env (ospec_n_bool_fun (env x) (nat_bool_to_n_bool f)) e ->
-  padded_boolean_oracle (env x) p f.
-Proof.
-  intros x y env f e vs dim avs.
-  destruct (trans_exp vs dim e avs) as [[p vs'] avs'] eqn:E.
-  assert (p = fst (fst (trans_exp vs dim e avs))) as Hp
-                                                   by (rewrite E; reflexivity).
-  intros Hd Hf [Hy H]. intros nx vy Hx. unfold pad_vector.
-  remember (dim - S (env x)) as ancillae.
-  apply repad_lemma2 in Heqancillae; try assumption.
-  rewrite Hp.
-Abort.

@@ -47,11 +47,11 @@ OQASM
 
 QIMP
 * QIMP.v - QIMP language, type system, and compilation from QIMP to OQASM
-* OracleExample.v - example oracles written in QIMP including SHA224, sin, cos, arcsin, x^n
+* OracleExample.v - example oracles written in QIMP including SHA224, ChaCha20, sin, cos, arcsin, x^n
 
 Testing
 * Testing.v - data structures and theorems for random testing
-* ArithTesting.v - random testing results for arithmetic operations and chacha20
+* ArithTesting.v - random testing results for arithmetic operations
 
 Utilities
 * BasicUtility.v - useful helper functions and tactics

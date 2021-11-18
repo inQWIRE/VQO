@@ -16,11 +16,16 @@ Require Import Coq.Structures.OrderedTypeEx.
 Require Import ExtLib.Data.Monads.OptionMonad.
 Require Import ExtLib.Structures.Monads.
 
-(*
+
 Require Import Nat Bvector.
-From Bits Require Import bits.
 Require Import Testing.
-*)
+
+Extract Constant Nat.add => "(+)".
+Extract Constant Nat.mul => "( * )".
+Extract Constant Nat.sub => "(-)".
+Extract Constant Nat.modulo => "(mod)".
+Extract Constant Nat.div => "(/)".
+Extract Constant N.of_nat => "(fun x -> x)".
 
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
@@ -117,10 +122,8 @@ Definition d :var := 100.
 Definition f :var := 8.
 Definition result :var := 9.
 
-(* define sin/cos. a = x^2, b = x^1/3/5/...., d is the result
-    the input of sin/cos function is x/2 (not x) range from [0,pi/2) *)
 
-
+(* Chacha20 *)
 Fixpoint rotate_left_n (x : qvar) n :=
   match n with
   | 0 => skip
@@ -129,10 +132,6 @@ Fixpoint rotate_left_n (x : qvar) n :=
 
 Definition chacha_estore :=
   init_estore_g (map (fun x => (TNor Q Nat, x)) (seq 0 16)).
-
-Definition hash_qr (b:qvar) (a:qvar) := unary (Nor (Var a)) nadd (Nor (Var b));;
-             unary (Nor (Var b)) qxor (Nor (Var a));; unary (Nor (Var a)) nadd (Nor (Var b))
-                   ;; unary (Nor (Var b)) qxor (Nor (Var a)).
 
 (*define example hash_function as the oracle for grover's search.
   https://qibo.readthedocs.io/en/stable/tutorials/hash-grover/README.html *)
@@ -150,20 +149,395 @@ Definition qr_qexp (a b c d : qvar) :=
   unary (Nor (Var b)) qxor (Nor (Var c));;
   rotate_left_n b (32 - 7).
 
-Definition hash_oracle (key:nat) (sndk:nat) :func :=
-     (f, [], ((TNor Q Bl,g)::(TNor C Nat,x)::(TNor Q Nat,a)::(TNor Q Nat,b)::(TNor Q Nat,c)::(TNor Q Nat,d)::[]),
-      init (Nor (Var (L d))) (Nor (Num Nat (nat2fb 1)));;
-      qfor x (Nor (Num Nat (nat2fb 1)))
-           (hash_qr (L a) (L c);; hash_qr (L b) (L d) ;; hash_qr (L a) (L d)
-                ;; hash_qr (L b) (L c);;
-      qif (ceq (Nor (Var (L c))) (Nor (Num Nat (nat2fb key))))
-                (qif (ceq (Nor (Var (L d))) (Nor (Num Nat (nat2fb sndk))))
-                    (init (Nor (Var (L g))) (Nor (Num Nat (nat2fb 1)))) (skip)) (skip)), (Nor (Var (L g)))).
+Declare Scope bits_scope.
+Open Scope bits_scope.
+
+Definition word := Bvector 32.
+
+Definition rolB (p : word) : word := BshiftL 31 p (Bsign 31 p).
+
+Definition rolBn (p : word) k := iter k rolB p.
+
+Infix "+" := add_bvector.
+Infix "^" := (BVxor 32) : bits_scope.
+Infix "<<<" := rolBn (at level 30, no associativity) : bits_scope.
+
+Definition qr_spec (a b c d : word) : word * word * word * word :=
+  let a := a + b in
+  let d := d ^ a in
+  let d := d <<< 16 in
+  let c := c + d in
+  let b := b ^ c in
+  let b := b <<< 12 in
+  let a := a + b in
+  let d := d ^ a in
+  let d := d <<< 8 in
+  let c := c + d in
+  let b := b ^ c in
+  let b := b <<< 7 in
+  (a, b, c, d).
+
+Definition tmp : var := 101.
+Definition tmp1 : var := 102.
+Definition stack : var := 103.
+
+Definition qr_vmap : qvar * nat -> var :=
+  fun '(x, _) =>
+  match x with
+  | L x' => x'
+  | G x' => x'
+  end.
+
+Definition qr_benv :=
+ match
+  gen_genv (cons (TNor Q Nat, a) (cons (TNor Q Nat, b) (cons (TNor Q Nat, c) (cons (TNor Q Nat, d) nil))))
+  with None => empty_benv | Some bv => bv
+ end.
+
+Definition qr_estore := init_estore_g (map (fun x => (TNor Q Nat, x)) (seq 0 16)).
+
+Definition qr_smap := 
+(gen_smap_l (cons (TNor Q Nat, a) (cons (TNor Q Nat, b) (cons (TNor Q Nat, c) (cons (TNor Q Nat, d) nil)))) (fun _ => 0)).
+
+Definition compile_qr := 
+  trans_qexp
+    32 (fun _ => 1) qr_vmap qr_benv QFTA empty_cstore tmp tmp1 stack 0 nil qr_estore qr_estore
+    (qr_qexp (G a) (G b) (G c) (G d)).
+
+Definition qr_pexp : exp.
+Proof.
+  destruct (compile_qr) eqn:E1.
+  - destruct v.
+    + destruct x0, p, p, o.
+      * apply e0.
+      * apply (SKIP (tmp, 0)).
+    + apply (SKIP (tmp, 0)).
+  - apply (SKIP (tmp, 0)).
+Defined.
+
+Definition qr_env : f_env := fun _ => 32.
+
+Conjecture qr_oracle_spec :
+  forall va vb vc vd,
+  let
+    '(a', b', c', d') :=
+    qr_spec va vb vc vd
+  in
+  st_equivb (get_vars qr_pexp) qr_env
+    (exp_sem qr_env 32 qr_pexp (a |=> va, b |=> vb, c |=> vc, d |=> vd))
+        (a |=> a', b |=> b', c |=> c', d |=> d') = true.
 
 
-Definition hash_prog (size:nat) (key:nat) (sndk:nat) : prog := 
-         (size,[(TNor Q Bl,result)],[hash_oracle key sndk],f,result).
 
+Definition dr_spec x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 :=
+  let '(x0, x4, x8, x12) := qr_spec x0 x4 x8 x12 in
+  let '(x1, x5, x9, x13) := qr_spec x1 x5 x9 x13 in
+  let '(x2, x6, x10, x14) := qr_spec x2 x6 x10 x14 in
+  let '(x3, x7, x11, x15) := qr_spec x3 x7 x11 x15 in
+  let '(x0, x5, x10, x15) := qr_spec x0 x5 x10 x15 in
+  let '(x1, x6, x11, x12) := qr_spec x1 x6 x11 x12 in
+  let '(x2, x7, x8, x13) := qr_spec x2 x7 x8 x13 in
+  let '(x3, x4, x9, x14) := qr_spec x3 x4 x9 x14 in
+  (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15).
+
+Definition dr_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 :=
+  qr_qexp x0 x4 x8 x12;;
+  qr_qexp x1 x5 x9 x13;;
+  qr_qexp x2 x6 x10 x14;;
+  qr_qexp x3 x7 x11 x15;;
+  qr_qexp x0 x5 x10 x15;;
+  qr_qexp x1 x6 x11 x12;;
+  qr_qexp x2 x7 x8 x13;;
+  qr_qexp x3 x4 x9 x14.
+
+Definition dec2checker P `{Dec P} := checker (dec2bool P).
+
+  Definition dr_vmap : qvar * nat -> var :=
+    fun '(x, _) =>
+    match x with
+    | L x' => x'
+    | G x' => x'
+    end.
+
+  Definition dr_benv :=
+   match  gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
+
+  Definition compile_dr :=
+    trans_qexp 32 (fun _ => 1) dr_vmap dr_benv QFTA (empty_cstore) tmp tmp1 stack 0 nil qr_estore qr_estore
+    (dr_qexp (G 0) (G 1) (G 2) (G 3) (G 4) (G 5) (G 6) (G 7)
+             (G 8) (G 9) (G 10) (G 11) (G 12) (G 13) (G 14) (G 15)).
+
+  Definition dr_pexp : exp.
+  Proof.
+    destruct (compile_dr) eqn:E1.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
+  Defined.
+
+  Definition dr_env : f_env := fun _ => 32.
+
+  Definition dr_oracle_spec : Checker :=
+    forAllShrink arbitrary shrink (fun v0 =>
+    forAllShrink arbitrary shrink (fun v1 =>
+    forAllShrink arbitrary shrink (fun v2 =>
+    forAllShrink arbitrary shrink (fun v3 =>
+    forAllShrink arbitrary shrink (fun v4 =>
+    forAllShrink arbitrary shrink (fun v5 =>
+    forAllShrink arbitrary shrink (fun v6 =>
+    forAllShrink arbitrary shrink (fun v7 =>
+    forAllShrink arbitrary shrink (fun v8 =>
+    forAllShrink arbitrary shrink (fun v9 =>
+    forAllShrink arbitrary shrink (fun v10 =>
+    forAllShrink arbitrary shrink (fun v11 =>
+    forAllShrink arbitrary shrink (fun v12 =>
+    forAllShrink arbitrary shrink (fun v13 =>
+    forAllShrink arbitrary shrink (fun v14 =>
+    forAllShrink arbitrary shrink (fun v15 =>
+    let
+      '(x0', x1', x2', x3', x4', x5', x6', x7',
+        x8', x9', x10', x11', x12', x13', x14', x15') :=
+      dr_spec
+        v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
+    in
+    checker
+    (st_equivb (get_vars dr_pexp) dr_env
+     (exp_sem dr_env 32 dr_pexp
+        (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
+         4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
+         8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
+         12 |=> v12, 13 |=> v13, 14 |=> v14, 15 |=> v15))
+     (0 |=> x0', 1 |=> x1', 2 |=> x2', 3 |=> x3',
+      4 |=> x4', 5 |=> x5', 6 |=> x6', 7 |=> x7',
+      8 |=> x8', 9 |=> x9', 10 |=> x10', 11 |=> x11',
+      12 |=> x12', 13 |=> x13', 14 |=> x14', 15 |=> x15')))))))))))))))))).
+
+  (*
+  Conjecture dr_oracle_spec :
+    forall v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15,
+    let
+      '(x0', x1', x2', x3', x4', x5', x6', x7',
+        x8', x9', x10', x11', x12', x13', x14', x15') :=
+      dr_spec
+        (bvector2bits v0) (bvector2bits v1) (bvector2bits v2) (bvector2bits v3)
+        (bvector2bits v4) (bvector2bits v5) (bvector2bits v6) (bvector2bits v7)
+        (bvector2bits v8) (bvector2bits v9)
+        (bvector2bits v10) (bvector2bits v11)
+        (bvector2bits v12) (bvector2bits v13)
+        (bvector2bits v14) (bvector2bits v15)
+  in
+  let v0' := bits2bvector x0' in
+  let v1' := bits2bvector x1' in
+  let v2' := bits2bvector x2' in
+  let v3' := bits2bvector x3' in
+  let v4' := bits2bvector x4' in
+  let v5' := bits2bvector x5' in
+  let v6' := bits2bvector x6' in
+  let v7' := bits2bvector x7' in
+  let v8' := bits2bvector x8' in
+  let v9' := bits2bvector x9' in
+  let v10' := bits2bvector x10' in
+  let v11' := bits2bvector x11' in
+  let v12' := bits2bvector x12' in
+  let v13' := bits2bvector x13' in
+  let v14' := bits2bvector x14' in
+  let v15' := bits2bvector x15' in
+  st_equiv (get_vars dr_pexp) dr_env (get_prec dr_env dr_pexp)
+  (prog_sem dr_env dr_pexp
+     (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
+      4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
+      8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
+      12 |=> v12, 13 |=> v13, 14 |=> v14, 15 |=> v15))
+  (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
+   4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
+   8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
+   12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15').
+   *)
+
+  (*
+QuickChickWith (updMaxSuccess stdArgs 1) dr_oracle_spec.
+ *)
+
+Fixpoint chacha_qexp' n x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 :=
+  match n with
+  | 0 => skip
+  | S n' =>
+      dr_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
+      chacha_qexp' n' x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15
+  end.
+
+Definition chacha_qexp := chacha_qexp' 10.
+
+Fixpoint chacha_spec' n v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 :=
+  match n with
+  | 0 => (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15)
+  | S n' =>
+      let
+        '(v0', v1', v2', v3', v4', v5', v6', v7',
+          v8', v9', v10', v11', v12', v13', v14', v15') :=
+        dr_spec v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
+      in
+      chacha_spec' n' v0' v1' v2' v3' v4' v5' v6' v7'
+                      v8' v9' v10' v11' v12' v13' v14' v15'
+  end.
+
+Definition chacha_spec := chacha_spec' 10.
+
+
+  Definition chacha_vmap : qvar * nat -> var :=
+    fun '(x, _) =>
+    match x with
+    | L x' => x'
+    | G x' => x'
+    end.
+
+  Definition chacha_benv := 
+   match gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
+
+  Definition compile_chacha :=
+    trans_qexp
+    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tmp tmp1 stack 0 nil qr_estore qr_estore
+    (chacha_qexp (G 0) (G 1) (G 2) (G 3) (G 4) (G 5) (G 6) (G 7)
+             (G 8) (G 9) (G 10) (G 11) (G 12) (G 13) (G 14) (G 15)).
+
+  Definition chacha_pexp : exp.
+  Proof.
+    destruct (compile_chacha) eqn:E1.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
+  Defined.
+
+  Definition chacha_env : f_env := fun _ => 32.
+
+  Definition chacha_oracle_spec : Checker :=
+    forAllShrink arbitrary shrink (fun v0 =>
+    forAllShrink arbitrary shrink (fun v1 =>
+    forAllShrink arbitrary shrink (fun v2 =>
+    forAllShrink arbitrary shrink (fun v3 =>
+    forAllShrink arbitrary shrink (fun v4 =>
+    forAllShrink arbitrary shrink (fun v5 =>
+    forAllShrink arbitrary shrink (fun v6 =>
+    forAllShrink arbitrary shrink (fun v7 =>
+    forAllShrink arbitrary shrink (fun v8 =>
+    forAllShrink arbitrary shrink (fun v9 =>
+    forAllShrink arbitrary shrink (fun v10 =>
+    forAllShrink arbitrary shrink (fun v11 =>
+    forAllShrink arbitrary shrink (fun v12 =>
+    forAllShrink arbitrary shrink (fun v13 =>
+    forAllShrink arbitrary shrink (fun v14 =>
+    forAllShrink arbitrary shrink (fun v15 =>
+    let
+      '(x0', x1', x2', x3', x4', x5', x6', x7',
+        x8', x9', x10', x11', x12', x13', x14', x15') :=
+      chacha_spec
+        v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
+    in
+    checker
+    (st_equivb
+     (get_vars chacha_pexp) chacha_env
+     (exp_sem chacha_env 32 chacha_pexp
+        (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
+         4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
+         8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
+         12 |=> v12, 13 |=> v13, 14 |=> v14, 15 |=> v15))
+     (0 |=> x0', 1 |=> x1', 2 |=> x2', 3 |=> x3',
+      4 |=> x4', 5 |=> x5', 6 |=> x6', 7 |=> x7',
+      8 |=> x8', 9 |=> x9', 10 |=> x10', 11 |=> x11',
+      12 |=> x12', 13 |=> x13', 14 |=> x14', 15 |=> x15')))))))))))))))))).
+
+  (*
+QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
+   *)
+
+Module Collision.
+
+Definition x0 : qvar := L 0.
+Definition x1 : qvar := L 1.
+Definition x2 : qvar := L 2.
+Definition x3 : qvar := L 3.
+Definition x4 : qvar := L 4.
+Definition x5 : qvar := L 5.
+Definition x6 : qvar := L 6.
+Definition x7 : qvar := L 7.
+Definition x8 : qvar := L 8.
+Definition x9 : qvar := L 9.
+Definition x10 : qvar := L 10.
+Definition x11 : qvar := L 11.
+Definition x12 : qvar := L 12.
+Definition x13 : qvar := L 13.
+Definition x14 : qvar := L 14.
+Definition x15 : qvar := L 15.
+Definition out : qvar := G 16.
+
+Definition getBit (v : word) k :=
+  match Fin.of_nat k 32 with
+  | inleft f => Vector.nth v f
+  | inright _ => false
+  end.
+
+Definition collision_qexp
+  (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
+  chacha_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
+  qif (ceq (Nor (Var x0)) (Nor (Num Nat (getBit v0))))
+  (qif (ceq (Nor (Var x1)) (Nor (Num Nat (getBit v1))))
+  (qif (ceq (Nor (Var x2)) (Nor (Num Nat (getBit v2))))
+  (qif (ceq (Nor (Var x3)) (Nor (Num Nat (getBit v3))))
+  (qif (ceq (Nor (Var x4)) (Nor (Num Nat (getBit v4))))
+  (qif (ceq (Nor (Var x5)) (Nor (Num Nat (getBit v5))))
+  (qif (ceq (Nor (Var x6)) (Nor (Num Nat (getBit v6))))
+  (qif (ceq (Nor (Var x7)) (Nor (Num Nat (getBit v7))))
+  (qif (ceq (Nor (Var x8)) (Nor (Num Nat (getBit v8))))
+  (qif (ceq (Nor (Var x9)) (Nor (Num Nat (getBit v9))))
+  (qif (ceq (Nor (Var x10)) (Nor (Num Nat (getBit v10))))
+  (qif (ceq (Nor (Var x11)) (Nor (Num Nat (getBit v11))))
+  (qif (ceq (Nor (Var x12)) (Nor (Num Nat (getBit v12))))
+  (qif (ceq (Nor (Var x13)) (Nor (Num Nat (getBit v13))))
+  (qif (ceq (Nor (Var x14)) (Nor (Num Nat (getBit v14))))
+  (qif (ceq (Nor (Var x15)) (Nor (Num Nat (getBit v15))))
+  (init (Nor (Var out)) (Nor (Num Nat (fun _ => true))))
+  skip) skip) skip) skip) skip) skip) skip) skip)
+  skip) skip) skip) skip) skip) skip) skip) skip.
+
+(*
+Definition collision_spec
+  (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 
+  v0' v1' v2' v3' v4' v5' v6' v7' v8' v9' v10' v11' v12' v13' v14' v15' : word)
+  :=
+  let
+    '(v0'', v1'', v2'', v3'', v4'', v5'', v6'', v7'',
+    v8'', v9'', v10'', v11'', v12'', v13'', v14'', v15'') :=
+    chacha_spec v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15
+  in
+  eqtype.eq_op v0' v0'' &&
+  eqtype.eq_op v1' v1'' &&
+  eqtype.eq_op v2' v2'' &&
+  eqtype.eq_op v3' v3'' &&
+  eqtype.eq_op v4' v4'' &&
+  eqtype.eq_op v5' v5'' &&
+  eqtype.eq_op v6' v6'' &&
+  eqtype.eq_op v7' v7'' &&
+  eqtype.eq_op v8' v8'' &&
+  eqtype.eq_op v9' v9'' &&
+  eqtype.eq_op v10' v10'' &&
+  eqtype.eq_op v11' v11'' &&
+  eqtype.eq_op v12' v12'' &&
+  eqtype.eq_op v13' v13'' &&
+  eqtype.eq_op v14' v14'' &&
+  eqtype.eq_op v15' v15''.
+ *)
+
+End Collision.
+
+
+(* define sin/cos. a = x^2, b = x^1/3/5/...., d is the result
+    the input of sin/cos function is x/2 (not x) range from [0,pi/2) *)
 Definition x2 := 6.
 Definition x3 := 0.
 (*

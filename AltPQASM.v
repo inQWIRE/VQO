@@ -143,6 +143,24 @@ Definition trans_rz_div (size M:nat) :=
 Definition trans_rz_div_mod (size M:nat) :=
   trans_exp (RZArith.vars_for_rz_div_mod size) (2 * (S size)) (RZArith.rz_div_mod_out size M) (RZArith.avs_for_rz_div_mod size). 
 
+(* z = ((z+x); (z*x)); ((z+y); (z*y));
+        ((z+x); (z*x)); ((z+y); (z*y));
+       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based) *)
+Definition trans_rz_add_mul (size:nat) :=
+  trans_exp (RZArith.vars_for_nat_con_add_mult_out size) (3 * size) (RZArith.nat_con_add_mult_out size) (PQASM.avs_for_arith size). 
+
+(* z = ((z+x); (z*x)); ((z+y); (z*y));
+        ((z+x); (z*x)); ((z+y); (z*y));
+       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based-Not-Optimized) *)
+Definition trans_rz_add_mul (size:nat) :=
+  trans_exp (RZArith.vars_for_nat_old_con_add_mult_out size) (3 * size) (RZArith.nat_old_con_add_mult_out size) (PQASM.avs_for_arith size). 
+
+(* z = ((z+x); (z*x)); ((z+y); (z*y));
+        ((z+x); (z*x)); ((z+y); (z*y));
+       ((z+x); (z*x)); ((z+y); (z*y)); (TOFF-based) *)
+Definition trans_cl_add_mul (size:nat) :=
+  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size) (RZArith.cl_nat_con_add_mult_out size) (PQASM.avs_for_arith size). 
+
 (* Redefine funcs in RZArith and CLArith to use the new trans_exp *)
 Definition trans_rz_modmult_rev (M C Cinv size:nat) :=
         trans_exp (vars_for_rz size) (2*size+1) (real_rz_modmult_rev M C Cinv size) (avs_for_arith size).
