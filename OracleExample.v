@@ -230,9 +230,9 @@ Conjecture qr_oracle_spec :
   let vb' := bits2bvector b' in
   let vc' := bits2bvector c' in
   let vd' := bits2bvector d' in
-  st_equiv (get_vars qr_pexp) qr_env (get_prec qr_env qr_pexp)
-    (exp_sem qr_env qr_pexp (a |=> va, b |=> vb, c |=> vc, d |=> vd))
-        (a |=> va', b |=> vb', c |=> vc', d |=> vd').
+  st_equivb (get_vars qr_pexp) qr_env
+    (exp_sem qr_env 32 qr_pexp (a |=> va, b |=> vb, c |=> vc, d |=> vd))
+        (a |=> va', b |=> vb', c |=> vc', d |=> vd') = true.
 
 
 
@@ -335,8 +335,8 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
     let v14' := bits2bvector x14' in
     let v15' := bits2bvector x15' in
     dec2checker
-    (st_equiv (get_vars dr_pexp) dr_env (get_prec dr_env dr_pexp)
-     (exp_sem dr_env dr_pexp
+    (st_equivb (get_vars dr_pexp) dr_env
+     (exp_sem dr_env 32 dr_pexp
         (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
          4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
          8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
@@ -344,7 +344,7 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
      (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
       4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
       8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
+      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15') = true))))))))))))))))).
 
   (*
   Conjecture dr_oracle_spec :
@@ -493,9 +493,9 @@ Admitted.
     let v14' := bits2bvector x14' in
     let v15' := bits2bvector x15' in
     dec2checker
-    (st_equiv
-     (get_vars chacha_pexp) chacha_env (get_prec chacha_env chacha_pexp)
-     (exp_sem chacha_env chacha_pexp
+    (st_equivb
+     (get_vars chacha_pexp) chacha_env
+     (exp_sem chacha_env 32 chacha_pexp
         (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
          4 |=> v4, 5 |=> v5, 6 |=> v6, 7 |=> v7,
          8 |=> v8, 9 |=> v9, 10 |=> v10, 11 |=> v11,
@@ -503,7 +503,7 @@ Admitted.
      (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
       4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
       8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
+      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15') = true))))))))))))))))).
 
 (*
 QuickChickWith (updMaxSuccess stdArgs 1) ChaChaTesting.chacha_oracle_spec.
