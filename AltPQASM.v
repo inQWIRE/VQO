@@ -159,7 +159,7 @@ Definition trans_rz_add_mul (size:nat) :=
         ((z+x); (z*x)); ((z+y); (z*y));
        ((z+x); (z*x)); ((z+y); (z*y)); (TOFF-based) *)
 Definition trans_cl_add_mul (size:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size) (CLArith.cl_nat_con_add_mult_out size) (PQASM.avs_for_arith size). 
+  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size + 1) (CLArith.cl_nat_con_add_mult_out size) (PQASM.avs_for_arith size). 
 
 (* Redefine funcs in RZArith and CLArith to use the new trans_exp *)
 Definition trans_rz_modmult_rev (M C Cinv size:nat) :=
