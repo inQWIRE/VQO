@@ -4263,3 +4263,22 @@ Definition vars_for_nat_con_add_mult_out (size:nat) :=
 
 Definition nat_con_add_mult_out (size:nat) := nat_con_add_mult size x_var y_var z_var.
 
+Definition nat_old_con_add_mult (n:nat) (x y re:var) :=
+    rz_full_adder_form re n x;
+    nat_full_mult n x y re;
+    rz_full_adder_form re n y;
+    nat_full_mult n y x re;
+    rz_full_adder_form re n x;
+    nat_full_mult n x y re;
+    rz_full_adder_form re n y;
+    nat_full_mult n y x re;
+    rz_full_adder_form re n x;
+    nat_full_mult n x y re;
+    rz_full_adder_form re n y;
+    nat_full_mult n y x re.
+
+Definition vars_for_nat_old_con_add_mult_out (size:nat) := 
+  gen_vars size (x_var::y_var::z_var::[]).
+
+Definition nat_old_con_add_mult_out (size:nat) := nat_old_con_add_mult size x_var y_var z_var.
+
