@@ -334,7 +334,7 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
     let v13' := bits2bvector x13' in
     let v14' := bits2bvector x14' in
     let v15' := bits2bvector x15' in
-    dec2checker
+    checker
     (st_equivb (get_vars dr_pexp) dr_env
      (exp_sem dr_env 32 dr_pexp
         (0 |=> v0, 1 |=> v1, 2 |=> v2, 3 |=> v3,
@@ -344,7 +344,7 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
      (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
       4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
       8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15') = true))))))))))))))))).
+      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
 
   (*
   Conjecture dr_oracle_spec :
@@ -492,7 +492,7 @@ Admitted.
     let v13' := bits2bvector x13' in
     let v14' := bits2bvector x14' in
     let v15' := bits2bvector x15' in
-    dec2checker
+    checker
     (st_equivb
      (get_vars chacha_pexp) chacha_env
      (exp_sem chacha_env 32 chacha_pexp
@@ -503,7 +503,7 @@ Admitted.
      (0 |=> v0', 1 |=> v1', 2 |=> v2', 3 |=> v3',
       4 |=> v4', 5 |=> v5', 6 |=> v6', 7 |=> v7',
       8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
-      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15') = true))))))))))))))))).
+      12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
 
 (*
 QuickChickWith (updMaxSuccess stdArgs 1) ChaChaTesting.chacha_oracle_spec.
