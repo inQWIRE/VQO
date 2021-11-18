@@ -250,8 +250,8 @@ let trans_rz_add_mul size =
 
 let trans_cl_add_mul size =
   trans_exp (vars_for_cl_nat_con_add_mult_out size)
-    (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
-    (cl_nat_con_add_mult_out size) (avs_for_arith size)
+    (add (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
+      (Pervasives.succ 0)) (cl_nat_con_add_mult_out size) (avs_for_arith size)
 
 (** val trans_rz_modmult_rev : int -> int -> int -> int -> coq_U ucom **)
 
