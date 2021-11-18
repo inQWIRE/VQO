@@ -21,6 +21,13 @@ Require Import Nat Bvector.
 From Bits Require Import bits.
 Require Import Testing.
 
+Extract Constant Nat.add => "(+)".
+Extract Constant Nat.mul => "( * )".
+Extract Constant Nat.sub => "(-)".
+Extract Constant Nat.modulo => "(mod)".
+Extract Constant Nat.div => "(/)".
+Extract Constant N.of_nat => "(fun x -> x)".
+
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
 
@@ -205,17 +212,14 @@ Definition compile_qr :=
 
 Definition qr_pexp : exp.
 Proof.
-(*
   destruct (compile_qr) eqn:E1.
-  destruct v.
-  destruct x.
-  - destruct p, p, o.
-    + apply p.
-    + discriminate.
-  - discriminate.
+  - destruct v.
+    + destruct x0, p, p, o.
+      * apply e0.
+      * apply (SKIP (tmp, 0)).
+    + apply (SKIP (tmp, 0)).
+  - apply (SKIP (tmp, 0)).
 Defined.
-*)
-Admitted.
 
 Definition qr_env : f_env := fun _ => 32.
 
@@ -276,17 +280,14 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
 
   Definition dr_pexp : exp.
   Proof.
-(*
-
     destruct (compile_dr) eqn:E1.
-    - destruct p, p, o.
-      + apply p.
-      + discriminate.
-    - discriminate.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
   Defined.
-*)
-  Admitted.
-
 
   Definition dr_env : f_env := fun _ => 32.
 
@@ -388,8 +389,8 @@ Definition dec2checker P `{Dec P} := checker (dec2bool P).
    12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15').
    *)
 
-(*
-QuickChickWith (updMaxSuccess stdArgs 1) DRTesting.dr_oracle_spec.
+  (*
+QuickChickWith (updMaxSuccess stdArgs 1) dr_oracle_spec.
  *)
 
 Fixpoint chacha_qexp' n x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 :=
@@ -436,15 +437,14 @@ Definition chacha_spec := chacha_spec' 10.
 
   Definition chacha_pexp : exp.
   Proof.
-(*
     destruct (compile_chacha) eqn:E1.
-    - destruct p, p, o.
-      + apply p.
-      + discriminate.
-    - discriminate.
+    - destruct v.
+      + destruct x0, p, p, o.
+        * apply e0.
+        * apply (SKIP (tmp, 0)).
+      + apply (SKIP (tmp, 0)).
+    - apply (SKIP (tmp, 0)).
   Defined.
-*)
-Admitted.
 
   Definition chacha_env : f_env := fun _ => 32.
 
@@ -505,9 +505,7 @@ Admitted.
       8 |=> v8', 9 |=> v9', 10 |=> v10', 11 |=> v11',
       12 |=> v12', 13 |=> v13', 14 |=> v14', 15 |=> v15')))))))))))))))))).
 
-(*
-QuickChickWith (updMaxSuccess stdArgs 1) ChaChaTesting.chacha_oracle_spec.
- *)
+QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
 
 Module Collision.
 
