@@ -34,9 +34,6 @@ Instance shrinkPos : Shrink positive :=
 
 Instance showPos : Show positive := {| show p := show_N (Npos p) |}.
 
-Definition add_bvector {n} (v v' : Bvector n) :=
-  n2bvector n (bvector2n v + bvector2n v')%N.
-
 Infix "[+]" := add_bvector (at level 50).
 
 Definition mul_bvector {n} (v v' : Bvector n) :=
