@@ -2,6 +2,9 @@ From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
 Require Import BasicUtility OQASM Testing RZArith CLArith.
 
+Extract Inductive positive => int
+[ "(fun p->1+2*p)" "(fun p->2*p)" "1" ]
+"(fun f2p1 f2p f1 p -> if p=1 then f1 () else if p mod 2 = 0 then f2p (p lsr 1) else f2p1 (p lsr 1))".
 Extract Constant Nat.add => "(+)".
 Extract Constant Nat.mul => "( * )".
 Extract Constant Nat.sub => "(-)".
@@ -78,7 +81,7 @@ Module TofAdd.
 End TofAdd.
 
 (*
-QuickChick TofAdd.tof_add_spec.
+QuickChick (TofAdd.tof_add_spec 60).
  *)
 
 Module RzAdd.
@@ -107,8 +110,8 @@ Module RzAdd.
 End RzAdd.
 
 (*
-QuickChick RzAdd.rz_add_spec.
-*)
+QuickChick (RzAdd.rz_add_spec 60).
+ *)
 
 Module AddParam.
 
@@ -135,7 +138,7 @@ Module AddParam.
 End AddParam.
 
 (*
-QuickChick AddParam.add_param_spec.
+QuickChick (AddParam.add_param_spec 60).
  *)
 
 Module RzMul.
@@ -162,7 +165,7 @@ Module RzMul.
 End RzMul.
 
 (*
-QuickChick RzMul.rz_mul_spec.
+QuickChick (RzMul.rz_mul_spec 60).
  *)
 
 Module MulParam.
@@ -190,7 +193,7 @@ Module MulParam.
 End MulParam.
 
 (*
-QuickChick MulParam.mul_param_spec.
+QuickChick (MulParam.mul_param_spec 60).
  *)
 
 Module TofMul.
@@ -218,7 +221,7 @@ Module TofMul.
 End TofMul.
 
 (*
-QuickChick TofMul.tof_mul_spec.
+QuickChick (TofMul.tof_mul_spec 60).
  *)
 
 Module TofMulParam.
@@ -247,7 +250,7 @@ Module TofMulParam.
 End TofMulParam.
 
 (*
-QuickChick TofMul.tof_mul_spec.
+QuickChick (TofMulParam.tof_mul_param_spec 60).
  *)
 
 Module DivMod.
@@ -266,7 +269,7 @@ Module DivMod.
     get_prec (div_mod_env n) (div_mod_circ n 1).
 
   Definition div_mod_spec : Checker :=
-    forAll (choose (1, 60)) (fun n =>
+    forAll (choose (60, 60)) (fun n =>
     forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
@@ -299,7 +302,7 @@ Module TofDivMod.
     get_prec (tof_div_mod_env n) (tof_div_mod_circ n 1).
 
   Definition tof_div_mod_spec : Checker :=
-    forAll (choose (1, 61)) (fun n =>
+    forAll (choose (60, 60)) (fun n =>
     forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
@@ -314,3 +317,123 @@ End TofDivMod.
 QuickChick TofDivMod.tof_div_mod_spec.
  *)
 
+Module AddMul.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+
+  Definition add_mul_circ n := nat_con_add_mult n x y re.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMul.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMul.add_mul_spec 60).
+ *)
+
+Module AddMulOld.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+
+  Definition add_mul_circ n := nat_old_con_add_mult n x y re.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMulOld.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMulOld.add_mul_spec 60).
+ *)
+
+Module AddMulToff.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+  Definition c : posi := (3, 0).
+
+  Definition add_mul_circ n := cl_nat_con_add_mult n x y re c.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMulToff.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMulToff.add_mul_spec 60).
+ *)
