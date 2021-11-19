@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import PQASM.
+Require Import OQASM.
 Require Import CLArith.
 
 Local Open Scope exp_scope.
@@ -18,15 +18,12 @@ Local Opaque CNOT. Local Opaque CCX.
   This file contains an implementation and proof of correctness for the modular
   multiplier circuit based on QFT.
 
-  @Liyi: Link to relevant paper?
   https://arxiv.org/abs/quant-ph/0205095
   The modular multiplier circuit computes ((A * x) % N) where A and N are integer
   constants and x is an integer variable. The main definition in this file is 
   (rz_modmult_full y x n c A Ainv N). The main correctness property is
   rz_modmult_full_sem.
 
-  @Liyi: Describe the different arguments to rz_modmult_full and summarize what
-  rz_modmult_full_sem is saying.
   In rz_modmult_full (y:var) (x:var) (n:nat) (c:posi) (A:nat) (Ainv :nat) (N:nat),
   y is a group of n ancilla qubits, x is the input number, (n-2) is the qubit size of x.
   c is an ancilla qubit for storing data, A is the input number and Ainv is the invers of A,

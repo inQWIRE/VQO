@@ -1,7 +1,7 @@
 open Printf
 
 open AltGateSet
-open AltPQASM
+open ExtrOQASM
 (*open OracleExample*)
 
 (* find max qubit value used (hacky) *)
@@ -164,16 +164,18 @@ let run_partial_eval_exp size =
   ();;
 
 (* Experiments for paper: *)
-(*run_modmult_experiments 139 117 173;;
+run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
-run_partial_eval_exp 16;;*)
+run_partial_eval_exp 16;;
 
-(* Liyi's new experiments *)
+(*
+(* New repeated add/mult experiment: *)
 printf "Running trans_rz_add_mul_opt...\n%!";;
-print_and_write_file (trans_rz_add_mul_opt 8) ("trans-rz-add-mul-opt-8.qasm");;
+print_and_write_file (trans_rz_add_mul_opt 16) ("trans-rz-add-mul-opt-16.qasm");;
 printf "Running trans_rz_add_mul...\n%!";;
-print_and_write_file (trans_rz_add_mul 8) ("trans-rz-add-mul-8.qasm");;
+print_and_write_file (trans_rz_add_mul 16) ("trans-rz-add-mul-16.qasm");;
 printf "Running trans_cl_add_mul...\n%!";;
-print_and_write_file (trans_cl_add_mul 8) ("trans-cl-add-mul-8.qasm");;
+print_and_write_file (trans_cl_add_mul 16) ("trans-cl-add-mul-16.qasm");;
+*)

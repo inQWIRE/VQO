@@ -6,7 +6,7 @@ open FMapList
 open Factorial
 open MathSpec
 open Nat0
-open PQASM
+open OQASM
 open PeanoNat
 open Prelim
 open RZArith

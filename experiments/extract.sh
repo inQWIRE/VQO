@@ -18,11 +18,11 @@ rm -f BinNums.ml ClassicalDedekindReals.ml ConstructiveCauchyReals.ml List0.ml \
 
 # Move the remaining extracted files to the 'ml' subdirectory.
 echo "Moving generated files to ml/..."
-mv AltGateSet.ml AltPQASM.ml BasicUtility.ml Bin*.ml Bool.ml CLArith.ml Datatypes.ml \
+mv AltGateSet.ml ExtrOQASM.ml BasicUtility.ml Bin*.ml Bool.ml CLArith.ml Datatypes.ml \
    FMapList.ml Factorial.ml MathSpec.ml ModMult.ml Nat0.ml OracleExample.ml \
-   Order* PQASM.ml PeanoNat.ml Prelim.ml QIMP.ml RCIR.ml RZArith.ml \
+   Order* OQASM.ml PeanoNat.ml Prelim.ml OQIMP.ml RCIR.ml RZArith.ml \
    ml
 
 # Build extracted code.
 echo "Building extracted code..."
-dune build run_qvm.exe
+dune build run_vqo.exe

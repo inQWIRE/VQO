@@ -1,7 +1,7 @@
 open BasicUtility
 open MathSpec
 open Nat0
-open PQASM
+open OQASM
 open PeanoNat
 
 (** val coq_MAJ : posi -> posi -> posi -> exp **)

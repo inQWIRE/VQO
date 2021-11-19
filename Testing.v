@@ -1,9 +1,9 @@
 Require Import Arith NArith Vector Bvector Equality MSets OrderedTypeEx Lia BasicUtility VectorStates Utilities.
-Require Import PQASM MathSpec.
+Require Import OQASM MathSpec.
 From QuickChick Require Import QuickChick.
 Import Vector (hd, tl).
 Import Decidability (dec).
-Import PQASM (exp(..), CNOT).
+Import OQASM (exp(..), CNOT).
 
 Require FMapAVL.
 Module Posi_as_OT := PairOrderedType Nat_as_OT Nat_as_OT.

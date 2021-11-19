@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import PQASM.
+Require Import OQASM.
 Require Import CLArith.
 Require Import RZArith.
 
@@ -1389,7 +1389,7 @@ Definition store_match_st (sl sn:nat) (stack:var) (f:posi -> val)
 Definition aenv_match (stack temp:var) (size:nat) (bv:benv) (aenv: var -> nat) (vmap : (qvar*nat) -> var) : Prop := 
           forall x, vmap x <> stack -> vmap x <> temp -> aenv (vmap x) = (if is_bl (BEnv.find (fst x) bv) then 1 else size).
 
-(* Defining the equivalence relation between (cstore, circuit-run) and semantics store in QIMP. *)
+(* Defining the equivalence relation between (cstore, circuit-run) and semantics store in OQIMP. *)
 Definition cstore_store_match (smap : qvar -> nat) (s:store) (r:cstore) (bv:benv) :=
        forall x i v vl t, i < smap x -> Store.MapsTo (x,i) (v::vl) s -> 
                     BEnv.MapsTo x t bv -> ~ is_qtt (Some t) -> Store.MapsTo (x,i) v r.
@@ -1503,7 +1503,7 @@ Definition not_stack (stack temp:var) (vmap : (qvar*nat) -> var) (smap:qvar -> n
              := forall x, In x l -> (forall i, i < smap x -> vmap (x,i) <> stack /\ vmap (x,i) <> temp).
 
 Definition all_nor (vmap : (qvar*nat) -> var) (smap:qvar -> nat) (l:list qvar) (tenv:env)
-           := forall x, In x l -> (forall i, i < smap x -> Env.MapsTo (vmap (x,i)) PQASM.Nor tenv).
+           := forall x, In x l -> (forall i, i < smap x -> Env.MapsTo (vmap (x,i)) OQASM.Nor tenv).
 
 Definition in_store (s:store) (smap:qvar -> nat) (l:list qvar) :=
      forall x, In x l -> (forall i, i < smap x -> Store.In (x,i) s).
@@ -1980,7 +1980,7 @@ Lemma clt_circuit_right_sem : forall aenv vmap tenv f b size fl x y v stack temp
       get_cus (get_size size b) f (vmap y) = v ->
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
-      Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv -> Env.MapsTo temp PQASM.Nor tenv ->
+      Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (clt_circuit_right size fl b vmap x y stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) <? a_nat2fb v (get_size size b)).
@@ -2025,7 +2025,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H11.
   inv H11. easy.
   simpl. lia.
@@ -2102,7 +2102,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H11.
   inv H11. easy.
   simpl. lia.
@@ -2152,7 +2152,7 @@ Lemma ceq_circuit_right_sem : forall aenv vmap tenv f b size fl x y v stack temp
       get_cus (get_size size b) f (vmap y) = v ->
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
-      Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv -> Env.MapsTo temp PQASM.Nor tenv ->
+      Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (ceq_circuit_right size fl b vmap x y stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
@@ -2557,7 +2557,7 @@ Lemma clt_circuit_left_sem : forall aenv vmap tenv f b size fl x y v stack temp 
       get_cus (get_size size b) f (vmap y) = v ->
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
-      Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv -> Env.MapsTo temp PQASM.Nor tenv ->
+      Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (clt_circuit_left size fl b vmap y x stack temp sn) f (stack, sn))
          = (a_nat2fb v (get_size size b) <? a_nat2fb x (get_size size b)).
@@ -2602,7 +2602,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H11.
   inv H11. easy.
   simpl. lia.
@@ -2679,7 +2679,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H11.
   inv H11. easy.
   simpl. lia.
@@ -2729,7 +2729,7 @@ Lemma ceq_circuit_left_sem : forall aenv vmap tenv f b size fl x y v stack temp 
       get_cus (get_size size b) f (vmap y) = v ->
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
-      Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv -> Env.MapsTo temp PQASM.Nor tenv ->
+      Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (ceq_circuit_left size fl b vmap y x stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
@@ -3133,7 +3133,7 @@ Lemma clt_circuit_two_sem : forall aenv vmap tenv f b size fl x y v1 v2 stack sn
       get_cus (get_size size b) f (vmap x) = v1 ->
       get_cus (get_size size b) f (vmap y) = v2 ->
       store_match_st sl sn stack f vmap ->
-      Env.MapsTo (vmap x) PQASM.Nor tenv -> Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv ->
+      Env.MapsTo (vmap x) OQASM.Nor tenv -> Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (clt_circuit_two size fl b vmap x y stack sn) f (stack, sn))
          = (a_nat2fb v1 (get_size size b) <? a_nat2fb v2 (get_size size b)).
@@ -3156,7 +3156,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H12.
   inv H12. easy.
   simpl. lia.
@@ -3201,7 +3201,7 @@ Proof.
   apply get_put_cu.
   unfold nor_mode.
   unfold right_mode_env in H13.
-  specialize (H13 PQASM.Nor (stack, sn)).
+  specialize (H13 OQASM.Nor (stack, sn)).
   apply H13 in H12.
   inv H12. easy.
   simpl. lia.
@@ -3243,7 +3243,7 @@ Lemma ceq_circuit_two_sem : forall aenv vmap tenv f b size fl x y v1 v2 stack sn
       get_cus (get_size size b) f (vmap x) = v1 ->
       get_cus (get_size size b) f (vmap y) = v2 ->
       store_match_st sl sn stack f vmap ->
-      Env.MapsTo (vmap x) PQASM.Nor tenv -> Env.MapsTo (vmap y) PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv ->
+      Env.MapsTo (vmap x) OQASM.Nor tenv -> Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
       get_cua (exp_sem aenv (ceq_circuit_two size fl b vmap x y stack sn) f (stack, sn))
          = (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
@@ -3636,7 +3636,7 @@ Lemma all_nor_var : forall vmap smap tenv l bv size rl x xvar xv t,
          hd_error (get_var_cfac x) = Some xvar -> In xvar l -> 
          par_find_var_check smap bv size rl x = Some (Value xv) ->
          type_factor bv x = Some t -> bv_store_gt_0 smap bv ->
-         all_nor vmap smap l tenv -> Env.MapsTo (vmap xv) PQASM.Nor tenv.
+         all_nor vmap smap l tenv -> Env.MapsTo (vmap xv) OQASM.Nor tenv.
 Proof.
   intros.
   unfold par_find_var_check,get_var_cfac,type_factor in *.
@@ -3766,7 +3766,7 @@ Lemma compile_cexp_sem : forall t sl size smap vmap bv fl rh rl stack temp sn e 
       all_nor vmap smap (get_var_cexp e) tenv -> 
       stack <> temp -> aenv (get_size size (snd t)) temp = (get_size size (snd t))
       -> aenv (get_size size (snd t)) stack = sl -> get_cus size f temp = nat2fb 0 ->
-      Env.MapsTo temp PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv ->
+      Env.MapsTo temp OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env (aenv (get_size size (snd t))) tenv f -> qft_uniform (aenv (get_size size (snd t))) tenv f 
          -> qft_gt (aenv (get_size size (snd t)))  tenv f
           -> vmap_bij vmap
@@ -5037,7 +5037,7 @@ Inductive sem_prog (fv:fenv) : prog -> (@value (nat -> bool)) -> Prop :=
               Store.MapsTo rxn (v::vl) r'' ->
               sem_prog fv (size,gl,fl,main,x) (Value v).
 
-(* Compilation from MiniQASM to PQASM starts here. *)
+(* Compilation from MiniQASM to OQASM starts here. *)
 
 (* Compiler for qexp *)
 Definition fmap :Type := list (fvar * cfac * exp * (qvar -> nat) * ((qvar*nat) -> var) * benv * cstore).
@@ -5575,7 +5575,7 @@ Definition unary_circuit_left_core_cl (op:qop) size (x y:var) (c:posi) :=
                         | nsub =>  (subtractor01 size x (y) c)
                         | fadd =>  (adder01 size x (y) c)
                         | fsub =>  (subtractor01 size x (y) c)
-                        | _ => PQASM.SKIP (x,0)
+                        | _ => OQASM.SKIP (x,0)
             end.
 
 Definition unary_circuit_left (op:qop) (t:btype) (size:nat) (f:flag) (vmap: (qvar*nat) -> var)
@@ -5890,7 +5890,7 @@ Lemma unary_core_app_left :
     op = nadd \/ op = nsub \/ op = fadd \/ op = fsub ->
     0 < n -> aenv x = n -> aenv y = n -> snd c < aenv (fst c) ->
     get_cua (f c) = false ->
-    Env.MapsTo x PQASM.Nor tenv -> Env.MapsTo y PQASM.Nor tenv -> Env.MapsTo (fst c) PQASM.Nor tenv ->
+    Env.MapsTo x OQASM.Nor tenv -> Env.MapsTo y OQASM.Nor tenv -> Env.MapsTo (fst c) OQASM.Nor tenv ->
     right_mode_env aenv tenv f ->
     qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
     x <> y -> x <> fst c -> y <> fst c ->
@@ -5936,7 +5936,7 @@ Lemma compile_unary_sem : forall bv' t sl size smap vmap fv bv fl rh rl stack te
       all_nor vmap smap (get_var_cfac x ++ get_var_cfac y) tenv -> 
       stack <> temp -> aenv (get_size size (snd t)) temp = (get_size size (snd t))
       -> aenv (get_size size (snd t)) stack = sl -> get_cus size f temp = nat2fb 0 ->
-      Env.MapsTo temp PQASM.Nor tenv -> Env.MapsTo stack PQASM.Nor tenv ->
+      Env.MapsTo temp OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env (aenv (get_size size (snd t))) tenv f -> qft_uniform (aenv (get_size size (snd t))) tenv f 
          -> qft_gt (aenv (get_size size (snd t)))  tenv f
           -> vmap_bij vmap

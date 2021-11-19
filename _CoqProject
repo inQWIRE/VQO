@@ -18,14 +18,14 @@ externals/SQIR/examples/Utilities.v
 
 BasicUtility.v
 MathSpec.v
-PQASM.v
+OQASM.v
 Testing.v
 CLArith.v
 RZArith.v
-QIMP.v
+OQIMP.v
 OracleExample.v
 ArithTesting.v
-AltPQASM.v
+ExtrOQASM.v
 
 externals/SQIR/examples/shor/RCIR.v
 externals/SQIR/examples/shor/ModMult.v
