@@ -317,3 +317,123 @@ End TofDivMod.
 QuickChick TofDivMod.tof_div_mod_spec.
  *)
 
+Module AddMul.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+
+  Definition add_mul_circ n := nat_con_add_mult n x y re.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMul.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMul.add_mul_spec 60).
+ *)
+
+Module AddMulOld.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+
+  Definition add_mul_circ n := nat_old_con_add_mult n x y re.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMulOld.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMulOld.add_mul_spec 60).
+ *)
+
+Module AddMulToff.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition re : var := 2.
+  Definition c : posi := (3, 0).
+
+  Definition add_mul_circ n := cl_nat_con_add_mult n x y re c.
+
+  Definition add_mul_vars n := get_vars (add_mul_circ n).
+
+  Definition add_mul_env n : f_env := fun _ => n.
+
+  Definition compute_new_re {n} (vx vy vre : Bvector n) :=
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vx in
+    let vre := vre [+] vx [*] vy in
+    let vre := vre [+] vy in
+    vre.
+
+  Conjecture add_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (add_mul_vars n) (add_mul_env n)
+      (exp_sem (add_mul_env n) n (add_mul_circ n)
+        (x |=> vx, y |=> vy, re |=> vre))
+            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+
+End AddMulToff.
+
+(*
+QuickChickWith (updMaxSuccess stdArgs 100) (AddMulToff.add_mul_spec 60).
+ *)
