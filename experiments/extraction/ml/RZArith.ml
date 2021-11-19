@@ -405,3 +405,50 @@ let avs_for_rz_div_mod size x =
 
 let rz_div_mod_out size =
   rz_div_mod (Pervasives.succ size) x_var y_var
+
+(** val nat_con_add_mult : int -> var -> var -> var -> exp **)
+
+let nat_con_add_mult n x y re =
+  Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
+    ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
+    ((Seq ((Seq ((Rev re), (QFT re))), (rz_full_adder re n x))), (Rev x))),
+    (nat_full_mult' n n x y re))), (Rev x))), (rz_full_adder re n y))), (Rev
+    y))), (nat_full_mult' n n y x re))), (Rev y))), (rz_full_adder re n x))),
+    (Rev x))), (nat_full_mult' n n x y re))), (Rev x))),
+    (rz_full_adder re n y))), (Rev y))), (nat_full_mult' n n y x re))), (Rev
+    y))), (rz_full_adder re n x))), (Rev x))), (nat_full_mult' n n x y re))),
+    (Rev x))), (rz_full_adder re n y))), (Rev y))),
+    (nat_full_mult' n n y x re))), (Rev y))), (RQFT re))), (Rev re))
+
+(** val vars_for_nat_con_add_mult_out :
+    int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
+
+let vars_for_nat_con_add_mult_out size =
+  gen_vars size (x_var :: (y_var :: (z_var :: [])))
+
+(** val nat_con_add_mult_out : int -> exp **)
+
+let nat_con_add_mult_out size =
+  nat_con_add_mult size x_var y_var z_var
+
+(** val nat_old_con_add_mult : int -> var -> var -> var -> exp **)
+
+let nat_old_con_add_mult n x y re =
+  Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
+    ((rz_full_adder_form re n x), (nat_full_mult n x y re))),
+    (rz_full_adder_form re n y))), (nat_full_mult n y x re))),
+    (rz_full_adder_form re n x))), (nat_full_mult n x y re))),
+    (rz_full_adder_form re n y))), (nat_full_mult n y x re))),
+    (rz_full_adder_form re n x))), (nat_full_mult n x y re))),
+    (rz_full_adder_form re n y))), (nat_full_mult n y x re))
+
+(** val vars_for_nat_old_con_add_mult_out :
+    int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
+
+let vars_for_nat_old_con_add_mult_out size =
+  gen_vars size (x_var :: (y_var :: (z_var :: [])))
+
+(** val nat_old_con_add_mult_out : int -> exp **)
+
+let nat_old_con_add_mult_out size =
+  nat_old_con_add_mult size x_var y_var z_var

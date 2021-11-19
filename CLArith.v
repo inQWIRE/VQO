@@ -4418,10 +4418,20 @@ Definition cl_div_mod_out (size:nat) :=
    cl_div_mod size x_var y_var z_var (s_var,0).
 
 
+Definition cl_nat_con_add_mult (n:nat) (x y re:var) c :=
+    adder01 n x re c;
+    cl_full_mult n x y re c;
+    adder01 n y re c;
+    cl_full_mult n y x re c;
+    adder01 n x re c;
+    cl_full_mult n x y re c;
+    adder01 n y re c;
+    cl_full_mult n y x re c;
+    adder01 n x re c;
+    cl_full_mult n x y re c;
+    adder01 n y re c;
+    cl_full_mult n y x re c.
 
+Definition vars_for_cl_nat_con_add_mult_out (size:nat) := vars_for_cl_nat_full_m size.
 
-
-
-
-
-
+Definition cl_nat_con_add_mult_out (size:nat) := cl_nat_con_add_mult size x_var y_var z_var (s_var,0).

@@ -1,10 +1,12 @@
 # QVM
 
-**TODO**
+QVM is a Quantum Verified Machine (??) for verified compilation of quantum oracles
 
 ## Overview
 
-**TODO**: What are the main theorems proved (and what files are they in)?
+This repository contains the code used in our draft "Verified Compilation of Quantum Oracles".
+
+**Abstract**: Quantum algorithms often apply classical operations, such as arithmetic or predicate checks, over a quantum superposition of classical data; these so-called oracles are often the largest components of a quantum algorithm. To ease the construction of efficient, correct oracle functions, we built QVM, a high-assurance framework implemented with the Coq proof assistant. The core of QVM is OQASM, the oracle quantum assembly language. OQASM operations move qubits among three different bases via operations like the Quantum Fourier Transform and Hadamard gates, thus admitting important optimizations, but without inducing entanglement and the exponential blowup that comes with it. OQASM's design enabled us to prove correct QVM's compilers -- from a simple imperative language called QIMP to OQASM, and from OQASM to SQIR, a general-purpose quantum assembly language -- and allowed us to efficiently test properties of OQASM programs using the QuickChick property-based testing framework. We have used QVM to implement oracles used in Shor’s and Grover’s algorithms, as well as several common arithmetic operators. 
 
 ## Setup
 
@@ -16,8 +18,8 @@ Assuming you have opam installed (following the instructions in the link above),
 opam init
 eval $(opam env)
 
-# install some version of the OCaml compiler in a switch named "voqc"
-opam switch create voqc 4.12.0
+# install some version of the OCaml compiler in a switch named "qvm"
+opam switch create qvm 4.12.0
 eval $(opam env)
 
 # install Coq -- this will take a while!
@@ -38,13 +40,13 @@ Run `make` in the top level directory to compile our Coq proofs. See the README 
 
 ## Directory Contents
 
-PQASM
-* PQASM.v - PQASM language, type system, and compilation from PQASM to SQIR
+OQASM
+* OQASM.v - OQASM language, type system, and compilation from OQASM to SQIR
 * CLArith.v - "classical" arithmetic operations using X and CU gates
 * RZArith.v - arithmetic operations using QFT and Z axis rotations
 
 QIMP
-* QIMP.v - QIMP language, type system, and compilation from QIMP to PQASM
+* QIMP.v - QIMP language, type system, and compilation from QIMP to OQASM
 * OracleExample.v - example oracles written in QIMP including SHA224, ChaCha20, sin, cos, arcsin, x^n
 
 Testing
@@ -54,6 +56,6 @@ Testing
 Utilities
 * BasicUtility.v - useful helper functions and tactics
 * MathSpec.v - abstract specifications for arithmetic operations
-* AltPQASM.v - alternate definitions using a gate set suitable for extraction 
+* AltOQASM.v - alternate definitions using a gate set suitable for extraction 
 
 The `experiments` directory contains utilities for extracting QVM code & running the experiments in our paper. See the README in that directory for more information.

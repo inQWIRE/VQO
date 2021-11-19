@@ -468,3 +468,25 @@ let vars_for_cl_div_mod size x =
 
 let cl_div_mod_out size =
   cl_div_mod size x_var y_var z_var (s_var, 0)
+
+(** val cl_nat_con_add_mult : int -> var -> var -> var -> posi -> exp **)
+
+let cl_nat_con_add_mult n x y re c =
+  Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq ((Seq
+    ((adder01 n x re c), (cl_full_mult n x y re c))), (adder01 n y re c))),
+    (cl_full_mult n y x re c))), (adder01 n x re c))),
+    (cl_full_mult n x y re c))), (adder01 n y re c))),
+    (cl_full_mult n y x re c))), (adder01 n x re c))),
+    (cl_full_mult n x y re c))), (adder01 n y re c))),
+    (cl_full_mult n y x re c))
+
+(** val vars_for_cl_nat_con_add_mult_out :
+    int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
+
+let vars_for_cl_nat_con_add_mult_out =
+  vars_for_cl_nat_full_m
+
+(** val cl_nat_con_add_mult_out : int -> exp **)
+
+let cl_nat_con_add_mult_out size =
+  cl_nat_con_add_mult size x_var y_var z_var (s_var, 0)

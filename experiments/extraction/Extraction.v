@@ -10,6 +10,7 @@ Require Coq.extraction.ExtrOcamlBasic.
 
 (* Standard extraction from nat -> OCaml int. *)
 Require Coq.extraction.ExtrOcamlNatInt.
+Extract Inlined Constant Nat.eqb => "(=)".
 
 (* Custom extraction files. *)
 Require ExtrOcamlList.
@@ -57,4 +58,9 @@ Separate Extraction
     AltPQASM.trans_dmq_cl
     
     (* decomposition pass *)
-    AltGateSet.decompose_CU1_and_C3X.
+    AltGateSet.decompose_CU1_and_C3X
+
+    (* Liyi's new stuff *)
+    AltPQASM.trans_rz_add_mul_opt
+    AltPQASM.trans_rz_add_mul
+    AltPQASM.trans_cl_add_mul.
