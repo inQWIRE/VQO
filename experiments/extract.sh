@@ -25,4 +25,4 @@ mv AltGateSet.ml ExtrOQASM.ml BasicUtility.ml Bin*.ml Bool.ml CLArith.ml Datatyp
 
 # Build extracted code.
 echo "Building extracted code..."
-dune build run_VQO.exe
+dune build run_vqo.exe

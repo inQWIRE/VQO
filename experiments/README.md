@@ -21,6 +21,6 @@ Instructions for downloading and installing Quipper are available here: https://
 
 ## Informal Testing
 
-You can try simulating the programs in VQO_files or quipper_files with `python sanity_check.py <prog>` (requires Python 3 and `pip install qiskit jkq.ddsim`).
+You can try simulating the programs in vqo_files or quipper_files with `python sanity_check.py <prog>` (requires Python 3 and `pip install qiskit jkq.ddsim`).
 
 To run these programs through VOQC, clone the [mlvoqc](https://github.com/inQWIRE/mlvoqc) repository and follow the directions there for using `voqc_cli.exe`.

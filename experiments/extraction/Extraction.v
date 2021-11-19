@@ -60,7 +60,7 @@ Separate Extraction
     (* decomposition pass *)
     AltGateSet.decompose_CU1_and_C3X
 
-    (* Liyi's new stuff *)
+    (* new repeated add/mult experiments *)
     ExtrOQASM.trans_rz_add_mul_opt
     ExtrOQASM.trans_rz_add_mul
     ExtrOQASM.trans_cl_add_mul.

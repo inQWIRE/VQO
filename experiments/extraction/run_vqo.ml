@@ -171,7 +171,7 @@ run_div_mod 16 38168;;
 run_partial_eval_exp 16;;
 
 (*
-(* New repeated add/mult experiement: *)
+(* New repeated add/mult experiment: *)
 printf "Running trans_rz_add_mul_opt...\n%!";;
 print_and_write_file (trans_rz_add_mul_opt 16) ("trans-rz-add-mul-opt-16.qasm");;
 printf "Running trans_rz_add_mul...\n%!";;

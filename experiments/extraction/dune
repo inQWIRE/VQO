@@ -1,3 +1,3 @@
 (executable
-  (name run_VQO)
+  (name run_vqo)
   (libraries ml unix))
