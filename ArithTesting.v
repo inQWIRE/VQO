@@ -2,6 +2,9 @@ From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
 Require Import BasicUtility PQASM Testing RZArith CLArith.
 
+Extract Inductive positive => int
+[ "(fun p->1+2*p)" "(fun p->2*p)" "1" ]
+"(fun f2p1 f2p f1 p -> if p=1 then f1 () else if p mod 2 = 0 then f2p (p lsr 1) else f2p1 (p lsr 1))".
 Extract Constant Nat.add => "(+)".
 Extract Constant Nat.mul => "( * )".
 Extract Constant Nat.sub => "(-)".
@@ -78,7 +81,7 @@ Module TofAdd.
 End TofAdd.
 
 (*
-QuickChick TofAdd.tof_add_spec.
+QuickChick (TofAdd.tof_add_spec 60).
  *)
 
 Module RzAdd.
@@ -107,8 +110,8 @@ Module RzAdd.
 End RzAdd.
 
 (*
-QuickChick RzAdd.rz_add_spec.
-*)
+QuickChick (RzAdd.rz_add_spec 60).
+ *)
 
 Module AddParam.
 
@@ -135,7 +138,7 @@ Module AddParam.
 End AddParam.
 
 (*
-QuickChick AddParam.add_param_spec.
+QuickChick (AddParam.add_param_spec 60).
  *)
 
 Module RzMul.
@@ -162,7 +165,7 @@ Module RzMul.
 End RzMul.
 
 (*
-QuickChick RzMul.rz_mul_spec.
+QuickChick (RzMul.rz_mul_spec 60).
  *)
 
 Module MulParam.
@@ -190,7 +193,7 @@ Module MulParam.
 End MulParam.
 
 (*
-QuickChick MulParam.mul_param_spec.
+QuickChick (MulParam.mul_param_spec 60).
  *)
 
 Module TofMul.
@@ -218,7 +221,7 @@ Module TofMul.
 End TofMul.
 
 (*
-QuickChick TofMul.tof_mul_spec.
+QuickChick (TofMul.tof_mul_spec 60).
  *)
 
 Module TofMulParam.
@@ -247,7 +250,7 @@ Module TofMulParam.
 End TofMulParam.
 
 (*
-QuickChick TofMul.tof_mul_spec.
+QuickChick (TofMulParam.tof_mul_param_spec 60).
  *)
 
 Module DivMod.
@@ -266,7 +269,7 @@ Module DivMod.
     get_prec (div_mod_env n) (div_mod_circ n 1).
 
   Definition div_mod_spec : Checker :=
-    forAll (choose (1, 60)) (fun n =>
+    forAll (choose (60, 60)) (fun n =>
     forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
@@ -299,7 +302,7 @@ Module TofDivMod.
     get_prec (tof_div_mod_env n) (tof_div_mod_circ n 1).
 
   Definition tof_div_mod_spec : Checker :=
-    forAll (choose (1, 61)) (fun n =>
+    forAll (choose (60, 60)) (fun n =>
     forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
