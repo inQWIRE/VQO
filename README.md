@@ -1,6 +1,6 @@
 # VQO
 
-VQO is a Quantum Verified Machine (??) for verified compilation of quantum oracles
+VQO is a Verified Quantum Oracle framework for specifying, testing, and verifying quantum oracles.
 
 ## Overview
 
