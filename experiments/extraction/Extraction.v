@@ -1,6 +1,6 @@
 Require Coq.extraction.Extraction.
 Require Import AltGateSet.
-Require Import AltPQASM.
+Require Import ExtrOQASM.
 Require Import CLArith.
 Require Import ModMult.
 Require Import RZArith.
@@ -22,45 +22,45 @@ Extract Inlined Constant R4 => "4.0".
 Separate Extraction 
     (* RCIR modular multiplier *)
     ModMult.modmult_rev 
-    AltPQASM.bc2ucom
+    ExtrOQASM.bc2ucom
     
-    (* QVM classical modular multiplier *)
-    AltPQASM.trans_modmult_rev
+    (* VQO classical modular multiplier *)
+    ExtrOQASM.trans_modmult_rev
     
-    (* QVM QFT-based modular multiplier *)
-    AltPQASM.trans_rz_modmult_rev
+    (* VQO QFT-based modular multiplier *)
+    ExtrOQASM.trans_rz_modmult_rev
     
-    (* QVM classical adders/multipliers *)
-    AltPQASM.trans_cl_adder
-    AltPQASM.trans_cl_const_mul
-    AltPQASM.trans_cl_mul
+    (* VQO classical adders/multipliers *)
+    ExtrOQASM.trans_cl_adder
+    ExtrOQASM.trans_cl_const_mul
+    ExtrOQASM.trans_cl_mul
     
-    (* QVM QFT-based adders/multpliers *)
-    AltPQASM.trans_rz_const_adder
-    AltPQASM.trans_rz_adder
-    AltPQASM.trans_rz_const_mul
-    AltPQASM.trans_rz_mul
+    (* VQO QFT-based adders/multpliers *)
+    ExtrOQASM.trans_rz_const_adder
+    ExtrOQASM.trans_rz_adder
+    ExtrOQASM.trans_rz_const_mul
+    ExtrOQASM.trans_rz_mul
     
-    (* QVM TOFF-based divmod *)
-    AltPQASM.trans_cl_mod
-    AltPQASM.trans_cl_div
-    AltPQASM.trans_cl_div_mod
+    (* VQO TOFF-based divmod *)
+    ExtrOQASM.trans_cl_mod
+    ExtrOQASM.trans_cl_div
+    ExtrOQASM.trans_cl_div_mod
     
-    (* QVM QFT-based divmod *)
-    AltPQASM.trans_rz_mod
-    AltPQASM.trans_rz_div
-    AltPQASM.trans_rz_div_mod
+    (* VQO QFT-based divmod *)
+    ExtrOQASM.trans_rz_mod
+    ExtrOQASM.trans_rz_div
+    ExtrOQASM.trans_rz_div_mod
     
-    (* QIMP examples*)
-    AltPQASM.trans_dmc_qft
-    AltPQASM.trans_dmc_cl
-    AltPQASM.trans_dmq_qft
-    AltPQASM.trans_dmq_cl
+    (* OQIMP examples*)
+    ExtrOQASM.trans_dmc_qft
+    ExtrOQASM.trans_dmc_cl
+    ExtrOQASM.trans_dmq_qft
+    ExtrOQASM.trans_dmq_cl
     
     (* decomposition pass *)
     AltGateSet.decompose_CU1_and_C3X
 
     (* Liyi's new stuff *)
-    AltPQASM.trans_rz_add_mul_opt
-    AltPQASM.trans_rz_add_mul
-    AltPQASM.trans_cl_add_mul.
+    ExtrOQASM.trans_rz_add_mul_opt
+    ExtrOQASM.trans_rz_add_mul
+    ExtrOQASM.trans_cl_add_mul.

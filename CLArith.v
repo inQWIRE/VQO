@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import PQASM.
+Require Import OQASM.
 
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
@@ -16,7 +16,7 @@ Local Opaque CNOT. Local Opaque CCX.
 (* 
   This file contains an implementation and proof of correctness for a modular
   multiplier similar to the one defined in shor/ModMult.v, but rewritten to
-  use QVM.
+  use VQO.
 *)
 
 

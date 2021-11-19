@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import PQASM.
+Require Import OQASM.
 Require Import CLArith.
 
 Local Open Scope exp_scope.

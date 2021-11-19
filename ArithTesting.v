@@ -1,6 +1,6 @@
 From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
-Require Import BasicUtility PQASM Testing RZArith CLArith.
+Require Import BasicUtility OQASM Testing RZArith CLArith.
 
 Extract Constant Nat.add => "(+)".
 Extract Constant Nat.mul => "( * )".

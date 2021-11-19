@@ -2,7 +2,7 @@ open BasicUtility
 open CLArith
 open MathSpec
 open Nat0
-open PQASM
+open OQASM
 open PeanoNat
 
 (** val rz_adder' : var -> int -> int -> (int -> bool) -> exp **)

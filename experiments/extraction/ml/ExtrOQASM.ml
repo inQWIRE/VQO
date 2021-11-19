@@ -4,9 +4,9 @@ open CLArith
 open Datatypes
 open MathSpec
 open Nat0
+open OQASM
+open OQIMP
 open OracleExample
-open PQASM
-open QIMP
 open RCIR
 open RZArith
 

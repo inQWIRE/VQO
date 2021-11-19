@@ -2,8 +2,8 @@ open BasicUtility
 open CLArith
 open MathSpec
 open Nat0
-open PQASM
-open QIMP
+open OQASM
+open OQIMP
 
 (** val test_fun : qexp **)
 
