@@ -437,3 +437,64 @@ End AddMulToff.
 (*
 QuickChickWith (updMaxSuccess stdArgs 100) (AddMulToff.add_mul_spec 60).
  *)
+
+Module ModMul8.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition z : var := 2.
+  Definition s : var := 3.
+  Definition c : posi := (4, 0).
+
+  Definition n := 8.
+  Definition M := 127.
+  Definition A := 113.
+  Definition Ainv := 9.
+
+  Definition mod_mul_8_circ := modmult (MathSpec.nat2fb M) A Ainv n x y z s c.
+
+  Definition mod_mul_8_vars := get_vars mod_mul_8_circ.
+
+  Definition mod_mul_8_env : f_env := fun _ => n.
+
+  Definition mod_mul_8_spec :=
+    forAll (choose (0, pred M)) (fun xv =>
+    let xn := N.of_nat xv in
+    checker
+    (st_equivb mod_mul_8_vars mod_mul_8_env
+      (exp_sem mod_mul_8_env 9 mod_mul_8_circ (x |=> n2bvector 8 xn))
+      (y |=> n2bvector 8 (xn * 113 mod 127)))).
+
+End ModMul8.
+
+QuickChick ModMul8.mod_mul_8_spec.
+
+
+Module ModMul8Rz.
+
+  Definition x : var := 0.
+  Definition y : var := 1.
+  Definition c : posi := (4, 0).
+
+  Definition n := 9.
+  Definition M := 127.
+  Definition A := 113.
+  Definition Ainv := 9.
+
+  Definition mod_mul_8_circ := Rev x; Rev y; rz_modmult_full y x n c A Ainv M; Rev x; Rev y.
+
+  Definition mod_mul_8_vars := get_vars mod_mul_8_circ.
+
+  Definition mod_mul_8_env : f_env := fun _ => n.
+
+  Definition mod_mul_8_spec :=
+    forAllShrink (choose (0, pred M)) shrink (fun xv =>
+    let xn := N.of_nat xv in
+    checker
+    (st_equivb mod_mul_8_vars mod_mul_8_env
+      (exp_sem mod_mul_8_env 9 mod_mul_8_circ (x |=> n2bvector 9 xn))
+      (y |=> n2bvector 8 (xn * 113 mod 127)))).
+
+End ModMul8Rz.
+
+QuickChick ModMul8Rz.mod_mul_8_spec.
