@@ -24,15 +24,15 @@ Definition vars_neq (l:list var) := forall n m x y,
 Inductive exp := SKIP (p:posi) | X (p:posi) | CU (p:posi) (e:exp)
         | RZ (q:nat) (p:posi) (* 2 * PI * i / 2^q *)
         | RRZ (q:nat) (p:posi) 
-        | SR (q:nat) (x:var) (* a series of RZ gates for QFT mode. *)
-        | SRR (q:nat) (x:var) (* a series of RRZ gates for QFT mode. *)
+        | SR (q:nat) (b:nat) (x:var) (* a series of RZ gates for QFT mode from q down to b. *)
+        | SRR (q:nat) (b:nat) (x:var) (* a series of RRZ gates for QFT mode from q down to b. *)
         | HCNOT (p1:posi) (p2:posi)
         | Lshift (x:var)
         | Rshift (x:var)
         | Rev (x:var)
-        | QFT (x:var)
-        | RQFT (x:var)
-        | H (x:var)
+        | QFT (x:var) (b:nat)
+        | RQFT (x:var) (b:nat)
+        | H (p:posi)
         | Seq (s1:exp) (s2:exp).
 
 Notation "p1 ; p2" := (Seq p1 p2) (at level 50) : exp_scope.
@@ -58,16 +58,16 @@ Fixpoint inv_exp p :=
   | SKIP a => SKIP a
   | X n => X n
   | CU n p => CU n (inv_exp p)
-  | SR n x => SRR n x
-  | SRR n x => SR n x
+  | SR n b x => SRR n b x
+  | SRR n b x => SR n b x
   | Lshift x => Rshift x
   | Rshift x => Lshift x
   | Rev x => Rev x
   | HCNOT p1 p2 => HCNOT p1 p2
   | RZ q p1 => RRZ q p1
   | RRZ q p1 => RZ q p1
-  | QFT x => RQFT x
-  | RQFT x => QFT x
+  | QFT x b => RQFT x b
+  | RQFT x b => QFT x b
   | H x => H x
   | Seq p1 p2 => inv_exp p2; inv_exp p1
    end.
@@ -86,13 +86,15 @@ Fixpoint nX x n :=
    end.
 
 (* Grover diffusion operator. *)
+(*
 Definition diff_half (x c:var) (n:nat) := H x ; H c ;  ((nX x n; X (c,0))). 
 
 Definition diff_1 (x c :var) (n:nat) :=
   diff_half x c n ; ((GCCX x n)) ; (inv_exp (diff_half x c n)).
-
+*)
 (*The second implementation of grover's diffusion operator.
   The whole circuit is a little different, and the input for the diff_2 circuit is asssumed to in Had mode. *)
+(*
 Definition diff_2 (x c :var) (n:nat) :=
   H x ; ((GCCX x n)) ; H x.
 
@@ -114,13 +116,114 @@ Definition body (C:nat -> bool) (x c:var) (n:nat) := const_u C n c; diff_2 x c n
 
 Definition grover_e (i:nat) (C:nat -> bool) (x c:var) (n:nat) := 
         H x; H c ; ((Z (c,0))) ; niter_prog i c (body C x c n).
-
+*)
 (** Definition of Deutsch-Jozsa program. **)
-
+(*
 Definition deutsch_jozsa (x c:var) (n:nat) :=
   ((nX x n; X (c,0))) ; H x ; H c ; ((X (c,0))); H c ; H x.
+*)
 
-Inductive type := Had | Phi (n:nat) | Nor.
+(* Example Circuits that are definable by OQASM. *)
+(* find a number that is great-equal than 2^(n-1), assume that the number is less than 2^n *)
+Fixpoint findnum' (size:nat) (x:nat) (y:nat) (i:nat) := 
+       match size with 0 => i
+              | S n => if y <=? x then i else findnum' n (2 * x) y (i+1)
+       end.
+
+Definition findnum (x:nat) (n:nat) := findnum' n x (2^(n-1)) 0.
+
+(* Find the index i of a number 2^i that is x <= 2^i *)
+Fixpoint findBig2n' (size:nat) (x:nat) (i:nat) :=
+   match i with 0 => size
+          | S m => if x <=? 2^(size-(S m)) then (size - (S m)) else findBig2n' size x m
+   end.
+Definition findBig2n (size:nat) (x:nat) := findBig2n' size x size.
+
+
+(* Define a version of appox qft_adder with approx gates. b is the approx away number. 
+   Meaning that we do not record qubits that is below b.
+   Approx adder might not have a good accuracy.  *)
+Fixpoint appx_full_adder' (x:var) (n:nat) (b:nat) (size:nat) (y:var) :=
+  match n with
+  | 0 => (SKIP (x,0))
+  | S m => if b <=? m then ((CU (y,m) (SR (size - n) b x)); appx_full_adder' x m b size y)
+                      else (SKIP (x,m))
+  end.
+Definition appx_full_adder (x:var) (n:nat) (b:nat) (y:var) := appx_full_adder' x n b n y.
+
+Definition rz_full_adder_form (x:var) (n:nat) (b:nat) (y:var) :=
+   (Rev x; QFT x b) ; appx_full_adder x n b y ; 
+  inv_exp (Rev x; QFT x b).
+
+(* Definte approximate QFT adder with one input being constant.
+   In this case, random testing shows that the output is accurate.   *)
+Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
+  match n with 
+  | 0 => SKIP (x,0)
+  | S m => if b <=? m then (appx_adder' x m b size M ; 
+            if M m then SR (size - n) b x else SKIP (x,m)) else SKIP (x,m)
+  end.
+Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b n M.
+
+(* In constant adder, doing b + 1 approximate qft is enough where M <2^b.*)
+Definition appx_adder_form (x:var) (n:nat) (M:nat) :=
+   let b := findBig2n n M  in
+   (Rev x); QFT x (b+1); appx_adder x n (b+1) (nat2fb M) ;
+  inv_exp ( (Rev x); QFT x (b+1)).
+
+(* approximate x = (x % M, x / M)  circuit. *)
+Definition QFTCNOT (x y : posi) := CU x (X y).
+Definition div_two_spec (f:nat->bool) := fun i => f (i+1).
+
+Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
+  match n with 
+  | 0 => SKIP (x,0)
+  | S m => if b <=? m then (appx_sub' x m b size M ;
+            if M m then SRR (size - n) b x else SKIP (x,m)) else SKIP (x,m)
+  end.
+
+Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b n M.
+
+Definition appx_compare_half3 (x:var) (n:nat) (b:nat) (c:posi) (M:nat -> bool) := 
+   (appx_sub x n b M) ; RQFT x b ; (QFTCNOT (x,0) c).
+
+Fixpoint appx_moder' i (n:nat) (b:nat) (x ex:var) (M:nat -> bool) := 
+     match i with 0 =>  (SKIP (x,0))
+           | S j => appx_compare_half3 x n b (ex,j) M ; QFT x b;
+                      (CU (ex,j) ((appx_adder x n b M)));
+                      (X (ex,j)); RQFT x b; QFT x (b+1);
+                       appx_moder' j n (b+1) x ex (cut_n (div_two_spec M) n)
+     end.
+
+Definition appx_div_mod (n:nat) (x ex:var) (M:nat) := 
+    let i := findnum M (n-1) in 
+         (Rev x); QFT x 0;
+            appx_moder' (S i) n 0 x ex (nat2fb (2^i * M));
+        inv_exp ( (Rev x); QFT x 0).
+
+(*  Define approximate QFT in the Had basis by the extended type system. In this type system, 
+    once a value is in Had basis,
+     it will never be applied back to Nor domain, so that we can define more SR gates. *)
+Fixpoint many_CR (x:var) (b:nat) (n : nat) (i:nat) :=
+  match n with
+  | 0 | 1 => SKIP (x,n)
+  | S m  => if b <=? m then (many_CR x b m i ; (CU (x,m+i) (RZ n (x,i)))) else SKIP (x,m)
+  end.
+
+(* approximate QFT for reducing b ending qubits. *)
+Fixpoint appx_QFT (x:var) (b:nat) (n : nat) (size:nat) :=
+  match n with
+  | 0    => SKIP (x,n)
+  | S m => if b <=? m then appx_QFT x b m size ; (H (x,m)) ; (many_CR x b (size-m) m) else SKIP (x,m)
+  end.
+
+(* Match the K graph by LV decomposition, the following define the L part. *)
+Fixpoint half_k_graph (x:var) (r:nat) (size:nat) :=
+   match size with 0 => SKIP (x,0)
+          | S m => (H (x,m)); RZ r (x,m);half_k_graph x r m
+   end.
+
+Inductive type := Had (b:nat) | Phi (b:nat) | Nor.
 
 Require Import Coq.FSets.FMapList.
 Require Import Coq.FSets.FMapFacts.
@@ -8867,7 +8970,7 @@ Proof.
   rewrite vkron_proj_neq with (b := false) (r := Cexp (2 * PI * turn_angle r rmax)); try easy.
   unfold get_cua in H11.
   rewrite plus_comm in H11. rewrite <- H11.
-  rewrite update_same with (b0 := false).
+  rewrite update_same with (b := false).
   unfold compile_val. Msimpl. easy.
   rewrite lshift_fun_gen_ge by lia. easy.
   intros. rewrite update_twice_eq.
@@ -9999,20 +10102,14 @@ Fixpoint gen_vars' (size:nat) (l : list var) (start:nat) :=
       end.
 Definition gen_vars (size:nat) (l:list var) := gen_vars' size l 0.
 
-Fixpoint findnum' (size:nat) (x:nat) (y:nat) (i:nat) := 
-       match size with 0 => i
-              | S n => if y <=? x then i else findnum' n (2 * x) y (i+1)
-       end.
 
-(* find a number that is great-equal than 2^(n-1), assume that the number is less than 2^n *)
-Definition findnum (x:nat) (n:nat) := findnum' n x (2^(n-1)) 0.
 
 
 Fixpoint copyto (x y:var) size := match size with 0 => SKIP (x,0) 
                   | S m => copyto x y m;CNOT (x,m) (y,m)
     end.
 
-Definition div_two_spec (f:nat->bool) := fun i => f (i+1).
+
 
 Lemma cnot_wt_nor : forall aenv env x y, x <> y -> Env.MapsTo (fst x) Nor env -> 
                    Env.MapsTo (fst y) Nor env -> well_typed_pexp aenv env (CNOT x y) env.

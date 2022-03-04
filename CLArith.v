@@ -4390,7 +4390,8 @@ Definition cl_moder_out (size:nat)  :=
 (* x / M circuit. *)
 Definition cl_div (n:nat) (x re y ex:var) c1 (M:nat) := 
     let i := findnum M n in 
-         cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M)) ; copyto ex re n; inv_exp (cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M))).
+         cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M)) ; copyto ex re n;
+                inv_exp (cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M))).
 
 Definition vars_for_cl_div' (size:nat) := 
   gen_vars size (x_var::(y_var::(z_var::(s_var::[])))).
