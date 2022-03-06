@@ -51,10 +51,28 @@ Inductive predi := PTrue | PFalse | PEeq (x:var) (y:var)
             | PnFix (x:var) (p:predi) | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
             | PNot (p:predi) | Bool (b:bexp).
 
+Definition subst_var (x:var) (y:var) (z:var) := if x =? y then z else x.
+
+Definition substb (b:bexp) (x:var) (y:var) :=
+   match b with BEq u v => BEq (subst_var u x y) (subst_var v x y)
+            | BLt u v => BLt (subst_var u x y) (subst_var v x y)
+   end.
+
+Fixpoint subst (p:predi) (x:var) (y:var) :=
+   match p with PTrue => PTrue | PFalse => PFalse
+    | PEeq u v => PEeq (subst_var u x y) (subst_var v x y)
+    | PnFix u p => PnFix (subst_var u x y) (subst p x y)
+    | PSum u p => PSum (subst_var u x y) (subst p x y)
+    | PAnd p1 p2 => PAnd (subst p1 x y) (subst p2 x y)
+    | PNot p => PNot (subst p x y)
+    | Bool b => Bool (substb b x y)
+   end.
+
 Inductive triple : predi -> pexp -> predi -> Prop :=
-      | TQWhile : forall P x n b e,
+      | TQWhile : forall P x y n b e,
            triple (PAnd P (Bool b)) e (P) ->
-           triple (PnFix x P) (While b e) (PAnd ((PnFix x P)) (PNot (Bool b))) ->
+           triple (PnFix y (subst P x y)) (While b e) 
+                     (PAnd ((PnFix y (subst P x y))) (PNot (Bool (substb b x y)))) ->
            triple (PSum (x) (PnFix x P)) (QWhile x n b e) (PAnd (PSum (x) (PnFix x P)) (PNot (Bool b))).
 
 
