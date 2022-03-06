@@ -34,11 +34,15 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
               | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
-            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | WhileExp (b:bexp) (p:pexp)
-            | QWalk (n:nat) (b:bexp) (t:pattern) (e:exp).
-           (*In the QWalk syntax, n is the max number of loops,
-             b is the quantum control, t is the walk step determining the next step of the graph.
-             the variable appears in b and t must be the same, and e must not contain x. *)
+            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
+            | QWhile (x:var) (n:nat) (b:bexp) (e:exp)
+             (*quantum while, x is a variable, represents a monotonic function variable.
+                 n is the upperbound, b is the boolean formula but it needs to be monotonic. 
+                e is an expression that does not contain x and no measurement.
+                  an example of using QWhile is to find optimimal solution.  *)
+            | QWalk (e1:exp) (e2:exp).
+           (* SingleTon walk step, e1 is defussion step that does not include permutation,
+                      e2 is a walk step that cannot do defussion. *)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
