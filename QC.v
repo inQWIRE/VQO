@@ -35,16 +35,33 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
               | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | QWhile (x:var) (n:nat) (b:bexp) (e:exp)
+            | QWhile (x:var) (n:nat) (b:bexp) (e:pexp)
              (*quantum while, x is a variable, represents a monotonic function variable.
                  n is the upperbound, b is the boolean formula but it needs to be monotonic. 
                 e is an expression that does not contain x and no measurement.
                   an example of using QWhile is to find optimimal solution.  *)
-            | QWalk (e1:exp) (e2:exp).
+            | QWalk (e1:pexp) (e2:pexp).
            (* SingleTon walk step, e1 is defussion step that does not include permutation,
                       e2 is a walk step that cannot do defussion. *)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
+
+
+Inductive predi := PTrue | PFalse | PEeq (x:var) (y:var)
+            | PnFix (x:var) | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
+            | PNot (p:predi) | Bool (b:bexp).
+
+Inductive triple : predi -> pexp -> predi -> Prop :=
+      | TQWhile : forall P x n b e,
+           triple (PAnd P (Bool b)) e (P) ->
+           triple (PnFix x P) (While b e) (PAnd ((PnFix x P)) (PNot (Bool b))) ->
+           triple (PSum (x) (PnFix x P)) (QWhile x n b e) (PAnd (PSum (x) (PnFix x P)) (PNot (Bool b))).
+
+
+
+Inductive step (D : structdef) (F:funid -> option (list (var * type) * type * expression * mode)) : stack -> real_heap 
+                     -> expression -> stack -> real_heap -> result -> Prop :=
+
 
 (* An example expressions for pexp. This is the C-Uf gate in Shor's algorithm *)
 Fixpoint shor_u' (x:var) (y:var) (n:nat) (size:nat) :=
