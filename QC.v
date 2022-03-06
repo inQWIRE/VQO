@@ -59,10 +59,6 @@ Inductive triple : predi -> pexp -> predi -> Prop :=
 
 
 
-Inductive step (D : structdef) (F:funid -> option (list (var * type) * type * expression * mode)) : stack -> real_heap 
-                     -> expression -> stack -> real_heap -> result -> Prop :=
-
-
 (* An example expressions for pexp. This is the C-Uf gate in Shor's algorithm *)
 Fixpoint shor_u' (x:var) (y:var) (n:nat) (size:nat) :=
     match n with 0 => PSKIP (x,0)
