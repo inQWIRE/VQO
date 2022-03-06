@@ -48,7 +48,7 @@ Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
 
 Inductive predi := PTrue | PFalse | PEeq (x:var) (y:var)
-            | PnFix (x:var) | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
+            | PnFix (x:var) (p:predi) | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
             | PNot (p:predi) | Bool (b:bexp).
 
 Inductive triple : predi -> pexp -> predi -> Prop :=
