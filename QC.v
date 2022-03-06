@@ -19,7 +19,7 @@ Local Open Scope pexp_scope.
 Local Open Scope nat_scope.
 
 (* This will be replaced by PQASM. *)
-Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var).
+Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var) | BLe (x:var) (y:var).
 
 (*Pattern for walk. goto is describing matching patterns such as
     match |01> -> |10> | |00> -> |11> ...
@@ -35,7 +35,7 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
               | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | QWhile (x:var) (n:nat) (b:bexp) (e:pexp)
+            | QWhile (x:var) (n:var) (b:bexp) (e:pexp)
              (*quantum while, x is a variable, represents a monotonic function variable.
                  n is the upperbound, b is the boolean formula but it needs to be monotonic. 
                 e is an expression that does not contain x and no measurement.
@@ -48,7 +48,7 @@ Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
 
 Inductive predi := PTrue | PFalse | PEeq (x:var) (y:var)
-            | PnFix (x:var) (p:predi) | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
+            | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
             | PNot (p:predi) | Bool (b:bexp).
 
 Definition subst_var (x:var) (y:var) (z:var) := if x =? y then z else x.
@@ -56,12 +56,12 @@ Definition subst_var (x:var) (y:var) (z:var) := if x =? y then z else x.
 Definition substb (b:bexp) (x:var) (y:var) :=
    match b with BEq u v => BEq (subst_var u x y) (subst_var v x y)
             | BLt u v => BLt (subst_var u x y) (subst_var v x y)
+            | BLe u v => BLe (subst_var u x y) (subst_var v x y)
    end.
 
 Fixpoint subst (p:predi) (x:var) (y:var) :=
    match p with PTrue => PTrue | PFalse => PFalse
     | PEeq u v => PEeq (subst_var u x y) (subst_var v x y)
-    | PnFix u p => PnFix (subst_var u x y) (subst p x y)
     | PSum u p => PSum (subst_var u x y) (subst p x y)
     | PAnd p1 p2 => PAnd (subst p1 x y) (subst p2 x y)
     | PNot p => PNot (subst p x y)
@@ -70,10 +70,9 @@ Fixpoint subst (p:predi) (x:var) (y:var) :=
 
 Inductive triple : predi -> pexp -> predi -> Prop :=
       | TQWhile : forall P x y n b e,
-           triple (PAnd P (Bool b)) e (P) ->
-           triple (PnFix y (subst P x y)) (While b e) 
-                     (PAnd ((PnFix y (subst P x y))) (PNot (Bool (substb b x y)))) ->
-           triple (PSum (x) (PnFix x P)) (QWhile x n b e) (PAnd (PSum (x) (PnFix x P)) (PNot (Bool b))).
+           triple ((PAnd P (Bool (BLe y n))))  (While (substb b n y) e) 
+                     (PAnd (PAnd P (PNot (Bool (substb b n y)))) (PNot (Bool (BLe y n)))) ->
+           triple (PSum (x) P) (QWhile x n b e) (PAnd (PSum (x) P) (PNot (Bool b))).
 
 
 
