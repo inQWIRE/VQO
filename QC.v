@@ -21,9 +21,24 @@ Local Open Scope nat_scope.
 (* This will be replaced by PQASM. *)
 Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var).
 
+(*Pattern for walk. goto is describing matching patterns such as
+    match |01> -> |10> | |00> -> |11> ...
+    three type restriction: 
+    1.left-hand and right hand must have the same number of bits.
+    2. the number of cases are exactly 2^n where n is the bit number.
+    3. only permutation, both the left and right bitstrings must be distinct. *)
+
+Inductive pattern := Adj (x:var) (* going to adj nodes. *)
+                   | Match (x:var) (n:nat) (nll:list (list bool * list bool)).
+                        (*n here means n bits starting from the 0 position in x. *)
+
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
               | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
-            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | WhileExp (b:bexp) (p:pexp).
+            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | WhileExp (b:bexp) (p:pexp)
+            | QWalk (n:nat) (b:bexp) (t:pattern) (e:exp).
+           (*In the QWalk syntax, n is the max number of loops,
+             b is the quantum control, t is the walk step determining the next step of the graph.
+             the variable appears in b and t must be the same, and e must not contain x. *)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
