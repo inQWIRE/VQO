@@ -59,7 +59,7 @@ Qed.
 
 Definition rz_val : Type := (nat -> bool).
 
-Inductive val := nval (b:bool) (r:rz_val) | hval (b1:bool) (b2:bool) (r:rz_val) | qval (rc:rz_val) (r:rz_val).
+Inductive val := nval (b:bool) (r:rz_val) | qval (rc:rz_val) (r:rz_val).
 
 (* Update the value at one index of a boolean function. *)
 Definition eupdate {S} (f : posi -> S) (i : posi) (x : S) :=

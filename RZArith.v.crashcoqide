@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import OQASM.
+Require Import PQASM.
 Require Import CLArith.
 
 Local Open Scope exp_scope.
@@ -18,12 +18,15 @@ Local Opaque CNOT. Local Opaque CCX.
   This file contains an implementation and proof of correctness for the modular
   multiplier circuit based on QFT.
 
+  @Liyi: Link to relevant paper?
   https://arxiv.org/abs/quant-ph/0205095
   The modular multiplier circuit computes ((A * x) % N) where A and N are integer
   constants and x is an integer variable. The main definition in this file is 
   (rz_modmult_full y x n c A Ainv N). The main correctness property is
   rz_modmult_full_sem.
 
+  @Liyi: Describe the different arguments to rz_modmult_full and summarize what
+  rz_modmult_full_sem is saying.
   In rz_modmult_full (y:var) (x:var) (n:nat) (c:posi) (A:nat) (Ainv :nat) (N:nat),
   y is a group of n ancilla qubits, x is the input number, (n-2) is the qubit size of x.
   c is an ancilla qubit for storing data, A is the input number and Ainv is the invers of A,
@@ -130,7 +133,7 @@ Definition trans_rz_modmult_rev_alt (M C Cinv size:nat) :=
 
 (*********** Proofs ***********)
 Lemma rz_adder_well_typed : forall n x size M aenv tenv, n <= size -> size = aenv x -> 
-           Env.MapsTo x (Phi (aenv x)) tenv -> well_typed_oexp aenv tenv (rz_adder' x n size M) tenv.
+           Env.MapsTo x (Phi (aenv x)) tenv -> well_typed_pexp aenv tenv (rz_adder' x n size M) tenv.
 Proof.
  induction n; intros; simpl.
  constructor. constructor.
@@ -261,7 +264,7 @@ Proof.
 Qed.
 
 Lemma rz_sub_well_typed : forall n x size M aenv tenv, n <= size -> size = aenv x -> 
-           Env.MapsTo x (Phi (aenv x)) tenv -> well_typed_oexp aenv tenv (rz_sub' x n size M) tenv.
+           Env.MapsTo x (Phi (aenv x)) tenv -> well_typed_pexp aenv tenv (rz_sub' x n size M) tenv.
 Proof.
  induction n; intros; simpl.
  constructor. constructor.
@@ -431,7 +434,7 @@ Qed.
 Lemma rz_compare_half_well_typed : forall x c size M aenv tenv, 
            x <> fst c -> size = aenv x -> 
            Env.MapsTo (fst c) Nor tenv -> Env.MapsTo x (Phi (aenv x)) tenv ->
-           well_typed_oexp aenv tenv (rz_compare_half x size c M) (Env.add x Nor tenv).
+           well_typed_pexp aenv tenv (rz_compare_half x size c M) (Env.add x Nor tenv).
 Proof.
  intros. unfold rz_compare_half.
  apply pe_seq with (env' := (Env.add x Nor tenv)).
@@ -453,11 +456,11 @@ Lemma rz_compare_half_sem : forall size f c x A M aenv tenv,
                   get_cua ((exp_sem aenv (rz_compare_half x (S size) c M) f) c) = (A <? M).
 Proof.
   intros. unfold rz_compare_half.
-  assert (well_typed_oexp aenv tenv (rz_sub x (S size) (nat2fb M)) tenv) as X1.
+  assert (well_typed_pexp aenv tenv (rz_sub x (S size) (nat2fb M)) tenv) as X1.
   apply rz_sub_well_typed; try easy.
-  assert (well_typed_oexp aenv tenv (RQFT x) (Env.add x Nor tenv)) as X2.
+  assert (well_typed_pexp aenv tenv (RQFT x) (Env.add x Nor tenv)) as X2.
   apply rqft_phi; try easy.
-  assert (well_typed_oexp aenv (Env.add x Nor tenv) (CNOT (@pair var nat x O) c) (Env.add x Nor tenv)) as X3.
+  assert (well_typed_pexp aenv (Env.add x Nor tenv) (CNOT (@pair var nat x O) c) (Env.add x Nor tenv)) as X3.
   apply cnot_wt_nor. destruct c. iner_p.
   simpl. apply Env.add_1. easy.
   apply Env.add_2. iner_p. easy.
@@ -507,11 +510,11 @@ Lemma rz_compare_sem : forall size f c x A M aenv tenv,
                      exp_sem aenv (rz_compare x (S size) c M) f = f[c|-> put_cu (f c) (A <? M)].
 Proof.
   intros. unfold rz_compare. unfold rz_compare_half in *. 
-  assert (well_typed_oexp aenv tenv (rz_sub x (S size) (nat2fb M)) tenv) as X1.
+  assert (well_typed_pexp aenv tenv (rz_sub x (S size) (nat2fb M)) tenv) as X1.
   apply rz_sub_well_typed; try easy.
-  assert (well_typed_oexp aenv tenv (RQFT x) (Env.add x Nor tenv)) as X2.
+  assert (well_typed_pexp aenv tenv (RQFT x) (Env.add x Nor tenv)) as X2.
   apply rqft_phi; try easy.
-  assert (well_typed_oexp aenv (Env.add x Nor tenv) (CNOT (@pair var nat x O) c) (Env.add x Nor tenv)) as X3.
+  assert (well_typed_pexp aenv (Env.add x Nor tenv) (CNOT (@pair var nat x O) c) (Env.add x Nor tenv)) as X3.
   apply cnot_wt_nor. destruct c. iner_p.
   simpl. apply Env.add_1. easy.
   apply Env.add_2. iner_p. easy.
@@ -1325,7 +1328,7 @@ Qed.
 
 Lemma mod_adder_half_well_typed : forall x c size A M aenv tenv,
             aenv x = size -> fst c <> x -> Env.MapsTo x (Phi (aenv x)) tenv -> Env.MapsTo (fst c) Nor tenv
-          -> well_typed_oexp aenv tenv (mod_adder_half x size c A M) tenv.
+          -> well_typed_pexp aenv tenv (mod_adder_half x size c A M) tenv.
 Proof.
  intros. unfold mod_adder_half.
  apply pe_seq with (env' := tenv).
@@ -1363,7 +1366,7 @@ Qed.
 
 Lemma mod_adder_well_typed : forall x c size A M aenv tenv,
             aenv x = size -> fst c <> x -> Env.MapsTo x (Phi (aenv x)) tenv -> Env.MapsTo (fst c) Nor tenv
-          -> well_typed_oexp aenv tenv (mod_adder x size c A M) tenv.
+          -> well_typed_pexp aenv tenv (mod_adder x size c A M) tenv.
 Proof.
  intros. unfold mod_adder,mod_adder_half,clean_hbit.
  apply pe_seq with (env' := tenv).
@@ -1821,7 +1824,7 @@ Qed.
 Lemma rz_modmult'_well_typed : forall n size x y c A M aenv tenv, n <= size ->
           aenv y = size -> fst c <> x -> fst c <> y -> x <> y -> Env.MapsTo y (Phi (aenv y)) tenv
                -> Env.MapsTo x Nor tenv -> Env.MapsTo (fst c) Nor tenv
-          -> well_typed_oexp aenv tenv (rz_modmult' y x n size c A M) tenv.
+          -> well_typed_pexp aenv tenv (rz_modmult' y x n size c A M) tenv.
 Proof.
  induction n; intros;simpl.
  constructor. constructor.
@@ -2815,7 +2818,7 @@ Definition rz_comparator (x:var) (n:nat) (c:posi) (M:nat) :=
 
 (* Implementing x + y / X + M addition. *)
 Lemma xfactor_well_typed : forall x aenv tenv,
-      Env.MapsTo x Nor tenv -> well_typed_oexp aenv tenv (Rev x; QFT x) (Env.add x (Phi (aenv x)) tenv).
+      Env.MapsTo x Nor tenv -> well_typed_pexp aenv tenv (Rev x; QFT x) (Env.add x (Phi (aenv x)) tenv).
 Proof.
  intros.
   apply pe_seq with (env' := tenv).
@@ -3029,7 +3032,7 @@ Qed.
 
 Lemma rz_full_adder_well_typed : forall n x y size aenv tenv, x <> y -> n <= size -> size = aenv x -> size = aenv y ->
            Env.MapsTo x (Phi (aenv x)) tenv -> Env.MapsTo y Nor tenv
-           -> well_typed_oexp aenv tenv (rz_full_adder' x n size y) tenv.
+           -> well_typed_pexp aenv tenv (rz_full_adder' x n size y) tenv.
 Proof.
  induction n; intros; simpl.
  constructor. constructor.
@@ -3289,7 +3292,7 @@ Definition rz_adder_form (x:var) (n:nat) (M:nat -> bool) :=
   inv_exp ( (Rev x); QFT x).
 
 Lemma rz_adder_form_well_typed : forall n x M aenv tenv, aenv x = n ->
-      Env.MapsTo x Nor tenv -> well_typed_oexp aenv tenv (rz_adder_form x n M) tenv.
+      Env.MapsTo x Nor tenv -> well_typed_pexp aenv tenv (rz_adder_form x n M) tenv.
 Proof.
  intros. unfold rz_adder_form.
   apply pe_seq with (env' := Env.add x (Phi (aenv x)) tenv).
@@ -3702,7 +3705,7 @@ Qed.
 
 Lemma rz_full_sub_well_typed : forall n x y size aenv tenv, x <> y -> n <= size -> size = aenv x -> size = aenv y ->
            Env.MapsTo x (Phi (aenv x)) tenv -> Env.MapsTo y Nor tenv
-           -> well_typed_oexp aenv tenv (rz_full_sub' x n size y) tenv.
+           -> well_typed_pexp aenv tenv (rz_full_sub' x n size y) tenv.
 Proof.
  induction n; intros; simpl.
  constructor. constructor.
@@ -4242,17 +4245,17 @@ Definition rz_div_mod_out (size:nat) :=
 Definition nat_con_add_mult (n:nat) (x y re:var) :=
     Rev re; QFT re; 
     rz_full_adder re n x;
-    Rev x; nat_full_mult' n n x y re ; Rev x;
+    Rev x; nat_full_mult n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult' n n y x re ; Rev y;
+    Rev y; nat_full_mult n y x re ; Rev y;
     rz_full_adder re n x;
-    Rev x; nat_full_mult' n n x y re ; Rev x;
+    Rev x; nat_full_mult n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult' n n y x re ; Rev y;
+    Rev y; nat_full_mult n y x re ; Rev y;
     rz_full_adder re n x;
-    Rev x; nat_full_mult' n n x y re ; Rev x;
+    Rev x; nat_full_mult n x y re ; Rev x;
     rz_full_adder re n y;
-    Rev y; nat_full_mult' n n y x re ; Rev y;
+    Rev y; nat_full_mult n y x re ; Rev y;
     RQFT re; Rev re.
 
 Definition vars_for_nat_con_add_mult_out (size:nat) := 

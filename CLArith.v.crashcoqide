@@ -6,7 +6,7 @@ Require Import Dirac.
 Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
-Require Import OQASM.
+Require Import PQASM.
 
 Local Open Scope exp_scope.
 Local Open Scope nat_scope.
@@ -16,7 +16,7 @@ Local Opaque CNOT. Local Opaque CCX.
 (* 
   This file contains an implementation and proof of correctness for a modular
   multiplier similar to the one defined in shor/ModMult.v, but rewritten to
-  use VQO.
+  use QVM.
 *)
 
 
@@ -160,7 +160,7 @@ Definition hbf n M x := fun (i : nat) =>
 
 Lemma maj_wt : forall aenv env x y z, x <> y -> y <> z -> z <> x ->
                    Env.MapsTo (fst x) Nor env -> Env.MapsTo (fst y) Nor env
-                   -> Env.MapsTo (fst z) Nor env -> well_typed_oexp aenv env (MAJ x y z) env.
+                   -> Env.MapsTo (fst z) Nor env -> well_typed_pexp aenv env (MAJ x y z) env.
 Proof.
   intros.
   unfold MAJ.
@@ -173,7 +173,7 @@ Qed.
 
 Lemma uma_wt : forall aenv env x y z, x <> y -> y <> z -> z <> x ->
                    Env.MapsTo (fst x) Nor env -> Env.MapsTo (fst y) Nor env
-                   -> Env.MapsTo (fst z) Nor env -> well_typed_oexp aenv env (UMA x y z) env.
+                   -> Env.MapsTo (fst z) Nor env -> well_typed_pexp aenv env (UMA x y z) env.
 Proof.
   intros.
   unfold UMA.
@@ -238,7 +238,7 @@ Local Opaque CNOT CCX.
 
 Lemma MAJseq'_wt : forall n aenv tenv x y c, x <> fst c -> y <> fst c -> x <> y -> Env.MapsTo x Nor tenv
       -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c) Nor tenv -> 
-       well_typed_oexp aenv tenv (MAJseq' n x y c) tenv.
+       well_typed_pexp aenv tenv (MAJseq' n x y c) tenv.
 Proof.
  induction n;intros;simpl.
  apply maj_wt. iner_p. iner_p. iner_p. easy. simpl. easy. simpl. easy.
@@ -268,7 +268,7 @@ Qed.
 
 Lemma MAJseq_wt : forall n aenv tenv x y c, x <> fst c -> y <> fst c -> x <> y -> Env.MapsTo x Nor tenv
       -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c) Nor tenv -> 
-       well_typed_oexp aenv tenv (MAJseq n x y c) tenv.
+       well_typed_pexp aenv tenv (MAJseq n x y c) tenv.
 Proof.
  intros. unfold MAJseq. apply MAJseq'_wt; try easy.
 Qed.
@@ -286,7 +286,7 @@ Qed.
 
 Lemma UMAseq'_wt : forall n aenv tenv x y c, x <> fst c -> y <> fst c -> x <> y -> Env.MapsTo x Nor tenv
       -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c) Nor tenv -> 
-       well_typed_oexp aenv tenv (UMAseq' n x y c) tenv.
+       well_typed_pexp aenv tenv (UMAseq' n x y c) tenv.
 Proof.
  induction n;intros;simpl.
  apply uma_wt. iner_p. iner_p. iner_p. easy. simpl. easy. simpl. easy.
@@ -316,7 +316,7 @@ Qed.
 
 Lemma UMAseq_wt : forall n aenv tenv x y c, x <> fst c -> y <> fst c -> x <> y -> Env.MapsTo x Nor tenv
       -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c) Nor tenv -> 
-       well_typed_oexp aenv tenv (UMAseq n x y c) tenv.
+       well_typed_pexp aenv tenv (UMAseq n x y c) tenv.
 Proof.
  intros. unfold UMAseq. apply UMAseq'_wt; try easy.
 Qed.
@@ -333,7 +333,7 @@ Proof.
 Qed.
 
 Lemma negator0_wt : forall n aenv tenv x, Env.MapsTo x Nor tenv ->
-       well_typed_oexp aenv tenv (negator0 n x) tenv.
+       well_typed_pexp aenv tenv (negator0 n x) tenv.
 Proof.
  induction n;intros;simpl. constructor. constructor.
   apply pe_seq with (env' := tenv).
@@ -1705,7 +1705,7 @@ Qed.
 
 Lemma comparator01_wt : forall n x y c1 c2 aenv tenv, no_equal x y c1 c2 ->
     Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c1) Nor tenv ->
-    Env.MapsTo (fst c2) Nor tenv -> well_typed_oexp aenv tenv (comparator01 n x y c1 c2) tenv.
+    Env.MapsTo (fst c2) Nor tenv -> well_typed_pexp aenv tenv (comparator01 n x y c1 c2) tenv.
 Proof.
   Local Transparent highb01 highbit.
   intros. unfold comparator01.
@@ -2308,7 +2308,7 @@ Local Opaque comparator01.
 
 Lemma subtractor01_wt : forall n x y c aenv tenv, x <> y -> x <> fst c -> y <> fst c ->
     Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> Env.MapsTo (fst c) Nor tenv ->
-    well_typed_oexp aenv tenv (subtractor01 n x y c) tenv.
+    well_typed_pexp aenv tenv (subtractor01 n x y c) tenv.
 Proof.
   intros. unfold subtractor01.
   apply pe_seq with (env' := tenv).
@@ -2401,7 +2401,7 @@ Qed.
 Lemma modadder21_wt : forall aenv tenv n x y M c1 c2,
     no_equal_5 x y M c1 c2 -> Env.MapsTo (fst c1) Nor tenv -> Env.MapsTo (fst c2) Nor tenv -> 
     Env.MapsTo M Nor tenv -> Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> 
-    well_typed_oexp aenv tenv (modadder21 n x y M c1 c2) tenv.
+    well_typed_pexp aenv tenv (modadder21 n x y M c1 c2) tenv.
 Proof.
   intros. unfold modadder21.
   unfold no_equal_5 in *.
@@ -2437,7 +2437,7 @@ Qed.
 Lemma moddoubler01_wt: forall aenv tenv n x y c1 c2,
     no_equal x y c1 c2 -> Env.MapsTo (fst c1) Nor tenv -> Env.MapsTo (fst c2) Nor tenv -> 
     Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> 
-    well_typed_oexp aenv tenv (moddoubler01 n x y c1 c2) tenv.
+    well_typed_pexp aenv tenv (moddoubler01 n x y c1 c2) tenv.
 Proof.
   intros. unfold moddoubler01.
   unfold no_equal in *.
@@ -2459,7 +2459,7 @@ Qed.
 Lemma modsummer'_wt : forall i n aenv tenv M x y c1 s fc,
     i < n -> no_equal_5a x y M s c1 -> Env.MapsTo s Nor tenv -> Env.MapsTo (fst c1) Nor tenv -> 
     Env.MapsTo M Nor tenv -> Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> 
-    well_typed_oexp aenv tenv (modsummer' i n M x y c1 s fc) tenv.
+    well_typed_pexp aenv tenv (modsummer' i n M x y c1 s fc) tenv.
 Proof.
   induction i;intros;simpl.
   constructor. constructor.
@@ -2482,7 +2482,7 @@ Qed.
 Lemma modsummer_wt : forall n aenv tenv M x y c1 s fc,
     0 < n -> no_equal_5a x y M s c1 -> Env.MapsTo s Nor tenv -> Env.MapsTo (fst c1) Nor tenv -> 
     Env.MapsTo M Nor tenv -> Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> 
-    well_typed_oexp aenv tenv (modsummer n M x y c1 s fc) tenv.
+    well_typed_pexp aenv tenv (modsummer n M x y c1 s fc) tenv.
 Proof.
   intros. unfold modsummer.
   apply modsummer'_wt; try easy. lia.
@@ -2491,7 +2491,7 @@ Qed.
 Lemma modmult_half_wt : forall n aenv tenv M x y c1 s fc,
     0 < n -> no_equal_5a x y M s c1 -> Env.MapsTo s Nor tenv -> Env.MapsTo (fst c1) Nor tenv -> 
     Env.MapsTo M Nor tenv -> Env.MapsTo x Nor tenv -> Env.MapsTo y Nor tenv -> 
-    well_typed_oexp aenv tenv (modmult_half n M x y c1 s fc) tenv.
+    well_typed_pexp aenv tenv (modmult_half n M x y c1 s fc) tenv.
 Proof.
   intros. unfold modmult_half.
   apply pe_seq with (env' := tenv).
@@ -4390,8 +4390,7 @@ Definition cl_moder_out (size:nat)  :=
 (* x / M circuit. *)
 Definition cl_div (n:nat) (x re y ex:var) c1 (M:nat) := 
     let i := findnum M n in 
-         cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M)) ; copyto ex re n;
-                inv_exp (cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M))).
+         cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M)) ; copyto ex re n; inv_exp (cl_moder' (S i) n x y ex c1 (nat2fb (2^i*M))).
 
 Definition vars_for_cl_div' (size:nat) := 
   gen_vars size (x_var::(y_var::(z_var::(s_var::[])))).
