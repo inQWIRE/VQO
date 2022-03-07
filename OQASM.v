@@ -352,7 +352,7 @@ Fixpoint assign_h (f:posi -> val) (x:var) (n:nat) (i:nat) :=
   end.
 
 Definition turn_qft (st : posi -> val) (x:var) (b:nat) (rmax : nat) := 
-       assign_h (assign_r st x (get_cus (rmax - b) st x) (rmax - b)) x rmax b.
+       assign_h (assign_r st x (get_cus b st x) b) x rmax (rmax - b).
 
 
 (* Semantic function for RQFT gate. *)
@@ -377,7 +377,7 @@ Definition get_r_qft (f:posi -> val) (x:var) :=
       end.
 
 Definition turn_rqft (st : posi -> val) (x:var) (b:nat) (rmax : nat) := 
-           assign_h_r (assign_seq st x (get_r_qft st x) (rmax -b)) x rmax b.
+           assign_h_r (assign_seq st x (get_r_qft st x) b) x rmax (rmax - b).
 
 
 (* This is the semantics for basic gate set of the language. *)
@@ -469,8 +469,8 @@ Inductive well_typed_exp (AE: var -> nat) : env -> exp -> Prop :=
                          -> well_typed_exp env (HCNOT p1 p2) *)
     | rz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RZ q p)
     | rrz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RRZ q p)
-    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < (AE x - b) -> well_typed_exp AE env (SR m x)
-    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < (AE x - b) -> well_typed_exp AE env (SRR m x)
+    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp AE env (SR m x)
+    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp AE env (SRR m x)
     | lshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Lshift x)
     | rshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rshift x)
     | rev_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rev x).
@@ -521,8 +521,8 @@ Inductive exp_WF (aenv:var -> nat): exp -> Prop :=
       | lshift_wf : forall x, 0 < aenv x -> exp_WF aenv  (Lshift x)
       | rshift_wf : forall x, 0 < aenv x -> exp_WF aenv  (Rshift x)
       | rev_wf : forall x, 0 < aenv x -> exp_WF aenv  (Rev x)
-      | qft_wf : forall x b, b < aenv x -> exp_WF aenv (QFT x b)
-      | rqft_wf : forall x b, b < aenv x -> exp_WF aenv (RQFT x b).
+      | qft_wf : forall x b, b <= aenv x -> exp_WF aenv (QFT x b)
+      | rqft_wf : forall x b, b <= aenv x -> exp_WF aenv (RQFT x b).
 
 Fixpoint init_v (n:nat) (x:var) (M: nat -> bool) :=
       match n with 0 => (SKIP (x,0))
