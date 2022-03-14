@@ -293,23 +293,6 @@ Definition hexchange (v1:val) (v2:val) :=
 Definition reverse (f:posi -> val) (x:var) (n:nat) := fun (a: var * nat) =>
              if ((fst a) =? x) && ((snd a) <? n) then f (x, (n-1) - (snd a)) else f a.
 
-(* Semantic definition for H gate. *)
-(*
-Definition h_case (v : val) :=
-    match v with nval b r => if r 0 then hval false b (rotate r 1) else hval true (¬ b) r
-               | hval true true r => nval false r
-               | hval true false r => nval true r
-               | hval false true r => nval true (rotate r 1)
-               | hval false false r => nval false (rotate r 1)
-               | a => a
-    end.
-
-
-Fixpoint h_sem (f:posi -> val) (x:var) (n : nat) := 
-    match n with 0 => f
-              | S m => (h_sem f x m)[(x,m) |-> h_case (f (x,m))]
-    end.
-*)
 (* Semantics function for QFT gate. *)
 Definition seq_val (v:val) :=
   match v with nval b r => b
@@ -348,11 +331,11 @@ Definition up_h (v:val)  :=
 
 Fixpoint assign_h (f:posi -> val) (x:var) (n:nat) (i:nat) := 
    match i with 0 => f
-          | S m => (assign_h f x n m)[(x,n-i) |-> up_h (f (x,n-i))]
+          | S m => (assign_h f x n m)[(x,n+m) |-> up_h (f (x,n+m))]
   end.
 
 Definition turn_qft (st : posi -> val) (x:var) (b:nat) (rmax : nat) := 
-       assign_h (assign_r st x (get_cus b st x) b) x rmax (rmax - b).
+       assign_h (assign_r st x (get_cus b st x) b) x b (rmax - b).
 
 
 (* Semantic function for RQFT gate. *)
@@ -368,7 +351,7 @@ Definition up_h_r (v:val)  :=
 
 Fixpoint assign_h_r (f:posi -> val) (x:var) (n:nat) (i:nat) := 
    match i with 0 => f
-          | S m => (assign_h_r f x n m)[(x,n-i) |-> up_h_r (f (x,n-i))]
+          | S m => (assign_h_r f x n m)[(x,n+m) |-> up_h_r (f (x,n+m))]
   end.
 
 Definition get_r_qft (f:posi -> val) (x:var) :=
@@ -377,7 +360,7 @@ Definition get_r_qft (f:posi -> val) (x:var) :=
       end.
 
 Definition turn_rqft (st : posi -> val) (x:var) (b:nat) (rmax : nat) := 
-           assign_h_r (assign_seq st x (get_r_qft st x) b) x rmax (rmax - b).
+           assign_h_r (assign_seq st x (get_r_qft st x) b) x b (rmax - b).
 
 
 (* This is the semantics for basic gate set of the language. *)
@@ -392,8 +375,8 @@ Fixpoint exp_sem (env:var -> nat) (e:exp) (st: posi -> val) : (posi -> val) :=
               | Lshift x => (lshift st x (env x))
               | Rshift x => (rshift st x (env x))
               | Rev x => (reverse st x (env x))
-               | QFT x b => turn_qft st x (env x) b
-               | RQFT x b => turn_rqft st x (env x) b
+               | QFT x b => turn_qft st x b (env x)
+               | RQFT x b => turn_rqft st x b (env x)
               | e1 ; e2 => exp_sem env e2 (exp_sem env e1 st)
     end.
 
@@ -469,8 +452,8 @@ Inductive well_typed_exp (AE: var -> nat) : env -> exp -> Prop :=
                          -> well_typed_exp env (HCNOT p1 p2) *)
     | rz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RZ q p)
     | rrz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RRZ q p)
-    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp AE env (SR m x)
-    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp AE env (SRR m x)
+    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b <= AE x -> well_typed_exp AE env (SR m x)
+    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b <= AE x -> well_typed_exp AE env (SRR m x)
     | lshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Lshift x)
     | rshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rshift x)
     | rev_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rev x).
@@ -496,10 +479,10 @@ Fixpoint get_vars e : list var :=
 Inductive well_typed_oexp (aenv: var -> nat) : env -> exp -> env -> Prop :=
     | exp_refl : forall env e, 
                 well_typed_exp aenv env e -> well_typed_oexp aenv env e env
-    | qft_nor :  forall env env' x b,
+    | qft_nor :  forall env env' x b, b <= aenv x -> 
                Env.MapsTo x Nor env -> Env.Equal env' (Env.add x (Phi b) env)
                    -> well_typed_oexp aenv env (QFT x b) env'
-    | rqft_phi :  forall env env' x b, 
+    | rqft_phi :  forall env env' x b, b <= aenv x ->
                Env.MapsTo x (Phi b) env -> Env.Equal env' (Env.add x Nor env) -> 
                  well_typed_oexp aenv env (RQFT x b) env'
     | pcu_nor : forall env p e, Env.MapsTo (fst p) Nor env -> exp_fresh aenv p e -> exp_neu (get_vars e) e ->
@@ -521,8 +504,8 @@ Inductive exp_WF (aenv:var -> nat): exp -> Prop :=
       | lshift_wf : forall x, 0 < aenv x -> exp_WF aenv  (Lshift x)
       | rshift_wf : forall x, 0 < aenv x -> exp_WF aenv  (Rshift x)
       | rev_wf : forall x, 0 < aenv x -> exp_WF aenv  (Rev x)
-      | qft_wf : forall x b, b <= aenv x -> exp_WF aenv (QFT x b)
-      | rqft_wf : forall x b, b <= aenv x -> exp_WF aenv (RQFT x b).
+      | qft_wf : forall x b, b <= aenv x -> 0 < aenv x -> exp_WF aenv (QFT x b)
+      | rqft_wf : forall x b, b <= aenv x -> 0 < aenv x -> exp_WF aenv (RQFT x b).
 
 Fixpoint init_v (n:nat) (x:var) (M: nat -> bool) :=
       match n with 0 => (SKIP (x,0))
@@ -544,3 +527,12 @@ Definition nor_mode (f : posi -> val)  (x:posi) : Prop :=
 Definition nor_modes (f:posi -> val) (x:var) (n:nat) :=
       forall i, i < n -> nor_mode f (x,i).
 
+Definition get_snd_r (f:posi -> val) (p:posi) :=
+    match (f p) with qval rc r => r | _ => allfalse end.
+
+Definition qft_uniform (aenv: var -> nat) (tenv:env) (f:posi -> val) :=
+   forall x b, Env.MapsTo x (Phi b) tenv -> 
+             (forall i, i < b -> get_snd_r f (x,i) = (lshift_fun (get_r_qft f x) i)).
+
+Definition qft_gt (aenv: var -> nat) (tenv:env) (f:posi -> val) :=
+   forall x b, Env.MapsTo x (Phi b) tenv -> (forall i, b < i -> get_r_qft f x i = false).
