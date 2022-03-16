@@ -326,7 +326,7 @@ Fixpoint assign_r (f:posi -> val) (x:var) (r : nat -> bool) (n:nat) :=
 Definition up_h (v:val)  :=
    match v with nval true r => qval r (rotate allfalse 1)
               | nval false r => qval r allfalse
-              | a => a
+              | qval r f => nval (f 0) r
    end.
 
 Fixpoint assign_h (f:posi -> val) (x:var) (n:nat) (i:nat) := 
@@ -344,14 +344,9 @@ Fixpoint assign_seq (f:posi -> val) (x:var) (vals : nat -> bool) (n:nat) :=
               | S m => (assign_seq f x vals m)[(x,m) |-> nval (vals m) (get_r (f (x,m)))]
    end.
 
-Definition up_h_r (v:val)  :=
-   match v with qval r f => nval (f 0) r
-           | a => a
-   end. 
-
 Fixpoint assign_h_r (f:posi -> val) (x:var) (n:nat) (i:nat) := 
    match i with 0 => f
-          | S m => (assign_h_r f x n m)[(x,n+m) |-> up_h_r (f (x,n+m))]
+          | S m => (assign_h_r f x n m)[(x,n+m) |-> up_h (f (x,n+m))]
   end.
 
 Definition get_r_qft (f:posi -> val) (x:var) :=
@@ -444,19 +439,19 @@ Definition exp_neu_prop (l:list sexp) :=
     (forall i a, i + 1 < length l -> nth_error l i = Some a -> nth_error l (i+1) <> Some (opp_ls a)).
 
 (* Type System. *)
-Inductive well_typed_exp (AE: var -> nat) : env -> exp -> Prop :=
-    | skip_refl : forall env, forall p, well_typed_exp AE env (SKIP p)
-    | x_nor : forall env p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (X p)
+Inductive well_typed_exp: env -> exp -> Prop :=
+    | skip_refl : forall env, forall p, well_typed_exp env (SKIP p)
+    | x_nor : forall env p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (X p)
     (*| x_had : forall env p, Env.MapsTo (fst p) Had env -> well_typed_exp env (X p) *)
     (*| cnot_had : forall env p1 p2, p1 <> p2 -> Env.MapsTo (fst p1) Had env -> Env.MapsTo (fst p2) Had env
                          -> well_typed_exp env (HCNOT p1 p2) *)
-    | rz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RZ q p)
-    | rrz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp AE env (RRZ q p)
-    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b <= AE x -> well_typed_exp AE env (SR m x)
-    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b <= AE x -> well_typed_exp AE env (SRR m x)
-    | lshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Lshift x)
-    | rshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rshift x)
-    | rev_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp AE env (Rev x).
+    | rz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (RZ q p)
+    | rrz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (RRZ q p)
+    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp env (SR m x)
+    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp env (SRR m x)
+    | lshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Lshift x)
+    | rshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Rshift x)
+    | rev_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Rev x).
 
 Fixpoint get_vars e : list var :=
     match e with SKIP p => [(fst p)]
@@ -478,7 +473,7 @@ Fixpoint get_vars e : list var :=
 
 Inductive well_typed_oexp (aenv: var -> nat) : env -> exp -> env -> Prop :=
     | exp_refl : forall env e, 
-                well_typed_exp aenv env e -> well_typed_oexp aenv env e env
+                well_typed_exp env e -> well_typed_oexp aenv env e env
     | qft_nor :  forall env env' x b, b <= aenv x -> 
                Env.MapsTo x Nor env -> Env.Equal env' (Env.add x (Phi b) env)
                    -> well_typed_oexp aenv env (QFT x b) env'
@@ -535,4 +530,7 @@ Definition qft_uniform (aenv: var -> nat) (tenv:env) (f:posi -> val) :=
              (forall i, i < b -> get_snd_r f (x,i) = (lshift_fun (get_r_qft f x) i)).
 
 Definition qft_gt (aenv: var -> nat) (tenv:env) (f:posi -> val) :=
-   forall x b, Env.MapsTo x (Phi b) tenv -> (forall i, b < i -> get_r_qft f x i = false).
+   forall x b, Env.MapsTo x (Phi b) tenv -> (forall i,0 < b <= i -> get_r_qft f x i = false)
+                                      /\ (forall j, b <= j < aenv x -> (forall i, 0 < i -> get_snd_r f (x,j) i = false )).
+
+Definition at_match (aenv: var -> nat) (tenv:env) := forall x b, Env.MapsTo x (Phi b) tenv -> b <= aenv x.
