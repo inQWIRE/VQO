@@ -7,7 +7,7 @@ Require Import QPE.
 Require Import BasicUtility.
 Require Import Classical_Prop.
 Require Import MathSpec.
-Require Import OQASMSEM.
+Require Import OQASM.
 (**********************)
 (** Unitary Programs **)
 (**********************)
@@ -27,6 +27,26 @@ Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var) | BLe (x:var) (y:var
     1.left-hand and right hand must have the same number of bits.
     2. the number of cases are exactly 2^n where n is the bit number.
     3. only permutation, both the left and right bitstrings must be distinct. *)
+Inductive numvar := Num (n:nat) | Var (x:var) | FunApp (x:var) (y:var).
+
+Inductive state :Type :=
+             | STrue (* meaning that the initial state with any possible values. *)
+             | Ket (phase:R) (n:nat) (x:list numvar)
+     (* state R*|x>_m or R*|n>_m where n is a number or x is a variable.
+        m is the number of qubits in R*|..> *)
+             | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
+             | Plus (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
+             | Sigma (n:nat) (N:nat) (s:state) (* the state represents Sigma_0^n s,
+                                               e.g. 1/(sqrt N) * Sigma n (ket n x) is Sigma_0^n |x> *)
+             | NTensor (n:nat) (s:state) (* the state represents Tensor_0^n s
+                                       e.g. 1/(sqrt N) * Tensor n (Plus (Ket 1 0) (Ket 1 1) is Tensor_0^n (|0> + |1>) *)
+             | Const (p:R) (n:nat) (* a constant of evaluating a group of qubits.
+                                       n is range from 0 to 2^n-1,
+                                      and it's the decimal representation of the binary array measured from n qubits. *)
+             | When (s:state) (x:var) (p:R) (n:nat) 
+                          (*This is the resulting state of a partial measurement on x. 
+                             The meaning is that when x is evaluated as n
+                                   with the probablity p, what happen in the other qubits s. *).
 
 Inductive pattern := Adj (x:var) (* going to adj nodes. *)
                    | Match (x:var) (n:nat) (nll:list (list bool * list bool)).
