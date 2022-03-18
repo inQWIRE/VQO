@@ -10435,16 +10435,16 @@ Definition div_two_spec (f:nat->bool) := fun i => f (i+1).
 Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
-  | S m => if b <=? m then (appx_adder' x m b size M ; 
-            if M m then SR (size - n - b) x else SKIP (x,m)) else SKIP (x,m)
+  | S m => if n <=? b then (appx_adder' x m b size M ; 
+            if M m then SR (size - n) x else SKIP (x,m)) else SKIP (x,m)
   end.
 Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b n M.
 
 Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
-  | S m => if b <=? m then (appx_sub' x m b size M ;
-            if M m then SRR (size - n - b) x else SKIP (x,m)) else SKIP (x,m)
+  | S m => if n <=? b then (appx_sub' x m b size M ;
+            if M m then SRR (size - n) x else SKIP (x,m)) else SKIP (x,m)
   end.
 
 Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b n M.
