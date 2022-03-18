@@ -10520,3 +10520,49 @@ Definition app_div_mod_aout (size:nat) :=
 Definition trans_app_div_mod_a (size M:nat) :=
   trans_exp (vars_for_app_div_mod size) (2 * (S size)) 
      (app_div_mod_aout size M) (avs_for_app_div_mod size). 
+
+Fixpoint rz_adder' (x:var) (n:nat) (size:nat) (M: nat -> bool) :=
+  match n with 
+  | 0 => SKIP (x,0)
+  | S m => rz_adder' x m size M ; if M m then SR (size - n) x else SKIP (x,m)
+  end.
+
+Definition rz_adder (x:var) (n:nat) (M:nat -> bool) := rz_adder' x n n M.
+
+Fixpoint rz_sub' (x:var) (n:nat) (size:nat) (M: nat -> bool) :=
+  match n with 
+  | 0 => SKIP (x,0)
+  | S m => rz_sub' x m size M ; if M m then SRR (size - n) x else SKIP (x,m)
+  end.
+
+Definition rz_sub (x:var) (n:nat) (M:nat -> bool) := rz_sub' x n n M.
+
+Definition rz_compare_half3 (x:var) (n:nat) (c:posi) (M:nat -> bool) := 
+   (rz_sub x n M) ; RQFT x n ; (CNOT (x,0) c).
+
+(* if x >= M, then the effect of x states. at this point, high-bit of x is 0. 
+    otherwise, clean up x, and move on. *)
+Fixpoint rz_moder' i (n:nat) (x ex:var) (M:nat -> bool) := 
+     match i with 0 =>  (SKIP (x,0))
+           | S j => rz_compare_half3 x n (ex,j) M ; QFT x n;
+                      (CU (ex,j) ((rz_adder x n M)));
+                      (X (ex,j));
+                       rz_moder' j n x ex (cut_n (div_two_spec M) n)
+     end.
+
+Definition rz_div_mod (n:nat) (x ex:var) (M:nat) := 
+    let i := findnum M (n-1) in 
+         (Rev x); QFT x n;
+            rz_moder' (S i) n x ex (nat2fb (2^i * M));
+        inv_exp ( (Rev x); QFT x n).
+
+Definition vars_for_rz_div_mod (size:nat) := 
+  gen_vars (S size) (x_var::(y_var::(([])))).
+
+Definition avs_for_rz_div_mod (size:nat) := fun x => (x/ (S size), x mod (S size)).
+
+Definition rz_div_mod_out (size:nat) := 
+   rz_div_mod (S size) x_var y_var.
+
+Definition trans_rz_div_mod (size M:nat) :=
+  trans_exp (vars_for_rz_div_mod size) (2 * (S size)) (rz_div_mod_out size M) (avs_for_rz_div_mod size). 
