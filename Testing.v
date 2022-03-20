@@ -1,9 +1,10 @@
 Require Import Arith NArith Vector Bvector Equality MSets OrderedTypeEx Lia BasicUtility VectorStates Utilities.
-Require Import OQASM MathSpec.
+Require Import OQASM OQASMProof MathSpec.
 From QuickChick Require Import QuickChick.
 Import Vector (hd, tl).
 Import Decidability (dec).
-Import OQASM (exp(..), CNOT).
+Import OQASM (exp(..)).
+Import OQASMProof (CNOT).
 
 Require FMapAVL.
 Module Posi_as_OT := PairOrderedType Nat_as_OT Nat_as_OT.
@@ -176,7 +177,7 @@ Definition turn_rqft (st : state) (x:var) (n:nat) (rmax : nat) := assign_seq st 
 Fixpoint exp_sem (env:var -> nat) (rmax : nat) (e:exp) (st: state) : state :=
    match e with (SKIP p) => st
               | X p => M.add p (exchange (get_state p st)) st
-              | HCNOT p1 p2 => M.add p1 (hexchange (get_state p1 st) (get_state p2 st)) st
+             (* | HCNOT p1 p2 => M.add p1 (hexchange (get_state p1 st) (get_state p2 st)) st *)
               | CU p e' => if get_cua (get_state p st) then exp_sem env rmax e' st else st
               | RZ q p => M.add p (times_rotate (get_state p st) q rmax) st
               | RRZ q p => M.add p (times_r_rotate (get_state p st) q rmax) st
@@ -185,9 +186,9 @@ Fixpoint exp_sem (env:var -> nat) (rmax : nat) (e:exp) (st: state) : state :=
               | Lshift x => lshift st x (env x)
               | Rshift x => rshift st x (env x)
               | Rev x => (reverse st x (env x))
-              | H x => h_sem st x (env x) rmax
-              | QFT x => turn_qft st x (env x) rmax
-              | RQFT x => turn_rqft st x (env x) rmax
+           (*   | H x => h_sem st x (env x) rmax *)
+              | QFT x b => turn_qft st x (env x) rmax
+              | RQFT x b => turn_rqft st x (env x) rmax
               | e1 ; e2 => exp_sem env rmax e2 (exp_sem env rmax e1 st)
     end.
 
@@ -417,13 +418,13 @@ Fixpoint get_vars e :=
   | RRZ _ p => singleton (fst p)
   | SR _ x => singleton x
   | SRR _ x => singleton x
-  | HCNOT p1 p2 => add (fst p1) (singleton (fst p2))
+  (*| HCNOT p1 p2 => add (fst p1) (singleton (fst p2)) *)
   | Lshift x => singleton x
   | Rshift x => singleton x
   | Rev x => singleton x
-  | QFT x => singleton x
-  | RQFT x => singleton x
-  | H x => singleton x
+  | QFT x b => singleton x
+  | RQFT x b => singleton x
+  (*| H x => singleton x *)
   | e1; e2 => union (get_vars e1) (get_vars e2)
   end.
 
@@ -437,13 +438,13 @@ Fixpoint get_prec (env : f_env) e :=
   | RRZ n _ => n
   | SR n _ => n
   | SRR n _ => n
-  | HCNOT _ _ => 0
+  (*| HCNOT _ _ => 0 *)
   | Lshift _ => 0
   | Rshift _ => 0
   | Rev _ => 0
-  | QFT x => env x
-  | RQFT x => env x
-  | H _ => 0
+  | QFT x b => env x
+  | RQFT x b  => env x
+ (* | H _ => 0 *)
   | e1; e2 => max (get_prec env e1) (get_prec env e2)
   end.
 

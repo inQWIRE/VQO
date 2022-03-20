@@ -5,7 +5,7 @@ Require Import VectorStates UnitaryOps Coq.btauto.Btauto Coq.NArith.Nnat.
 Require Import Dirac.
 Require Import QPE.
 From QuickChick Require Import QuickChick.
-Require Import MathSpec BasicUtility OQASM.
+Require Import MathSpec BasicUtility OQASM OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
 Require Import OQIMP.
