@@ -2707,7 +2707,7 @@ Proof.
   rewrite eupdate_index_neq. apply H2. easy.
 Qed.
 
-(*
+
 Lemma qft_gt_put_cus_same : 
     forall f x g n aenv tenv, qft_gt aenv tenv f -> nor_modes f x n
                  -> qft_gt aenv tenv (put_cus f x g n).
@@ -2732,8 +2732,17 @@ Proof.
   specialize (H4 j H2 i H3).
   unfold get_snd_r in *. simpl.
   bdestruct (x0 =? x). subst.
+  bdestruct (j <? n). 
+  unfold nor_modes in H0. specialize (H0 j H5).
+  unfold nor_mode in H0.
+  destruct (f (x,j)) eqn:eq1.
+  unfold put_cu.
+  assert ((f (@pair Env.key nat x j)) = (f (@pair var nat x j))) by easy.
+  rewrite H6.
+  rewrite eq1. easy.
+  lia. easy.
+  easy.
 Qed.
-*)
 (*
 Lemma assign_r_cover_full : forall n f x g aenv tenv,
             0 < aenv x -> n <= aenv x ->
@@ -9986,15 +9995,16 @@ Proof.
 Qed.
 
 
-Lemma exp_WF_init: forall n x M aenv, n < aenv x -> exp_WF aenv (init_v n x M).
+Lemma exp_WF_init: forall n x M aenv, n <= aenv x -> 0 < aenv x -> exp_WF aenv (init_v n x M).
 Proof.
  induction n;intros;simpl.
  constructor. simpl. easy.
  destruct (M n). constructor.
-  apply IHn. lia.
+  apply IHn. lia. lia.
   constructor. simpl. lia.
- apply IHn. lia.
+ apply IHn. lia. lia.
 Qed.
+
 
 Lemma init_v_sem : forall n size x M f aenv tenv, get_cus size f x = nat2fb 0 -> 
             n <= size -> size = aenv x -> Env.MapsTo x Nor tenv
@@ -10075,15 +10085,15 @@ Proof.
   simpl. easy.
   rewrite efresh_exp_sem_irrelevant ; try easy.
   destruct (M n). constructor.
-  apply exp_WF_init. lia. constructor. simpl. lia.
-  apply exp_WF_init. lia.
+  apply exp_WF_init; try lia. constructor. simpl. lia.
+  apply exp_WF_init; try lia.
   destruct (M n). constructor.
   apply exp_fresh_init. lia. constructor. iner_p.
   apply exp_fresh_init. lia.
   rewrite efresh_exp_sem_irrelevant ; try easy.
   destruct (M n). constructor.
-  apply exp_WF_init. lia. constructor. simpl. lia.
-  apply exp_WF_init. lia.
+  apply exp_WF_init; try lia. constructor. simpl. lia.
+  apply exp_WF_init; try lia.
   destruct (M n). constructor.
   apply exp_fresh_init_1. lia. constructor. iner_p.
   apply exp_fresh_init_1. lia.  
@@ -10176,7 +10186,7 @@ Proof.
   assert ((@pair var nat x n0) = (@pair Env.key nat x n0)) by easy.
   rewrite H7 in *. rewrite eq2 in *. easy.
   lia.
-  apply exp_WF_init. lia. apply exp_fresh_init. lia.
+  apply exp_WF_init; try lia. apply exp_fresh_init. lia.
   rewrite eupdate_index_neq by iner_p.
   rewrite IHn.
   bdestruct (n0 <? n).
@@ -10520,49 +10530,3 @@ Definition app_div_mod_aout (size:nat) :=
 Definition trans_app_div_mod_a (size M:nat) :=
   trans_exp (vars_for_app_div_mod size) (2 * (S size)) 
      (app_div_mod_aout size M) (avs_for_app_div_mod size). 
-
-Fixpoint rz_adder' (x:var) (n:nat) (size:nat) (M: nat -> bool) :=
-  match n with 
-  | 0 => SKIP (x,0)
-  | S m => rz_adder' x m size M ; if M m then SR (size - n) x else SKIP (x,m)
-  end.
-
-Definition rz_adder (x:var) (n:nat) (M:nat -> bool) := rz_adder' x n n M.
-
-Fixpoint rz_sub' (x:var) (n:nat) (size:nat) (M: nat -> bool) :=
-  match n with 
-  | 0 => SKIP (x,0)
-  | S m => rz_sub' x m size M ; if M m then SRR (size - n) x else SKIP (x,m)
-  end.
-
-Definition rz_sub (x:var) (n:nat) (M:nat -> bool) := rz_sub' x n n M.
-
-Definition rz_compare_half3 (x:var) (n:nat) (c:posi) (M:nat -> bool) := 
-   (rz_sub x n M) ; RQFT x n ; (CNOT (x,0) c).
-
-(* if x >= M, then the effect of x states. at this point, high-bit of x is 0. 
-    otherwise, clean up x, and move on. *)
-Fixpoint rz_moder' i (n:nat) (x ex:var) (M:nat -> bool) := 
-     match i with 0 =>  (SKIP (x,0))
-           | S j => rz_compare_half3 x n (ex,j) M ; QFT x n;
-                      (CU (ex,j) ((rz_adder x n M)));
-                      (X (ex,j));
-                       rz_moder' j n x ex (cut_n (div_two_spec M) n)
-     end.
-
-Definition rz_div_mod (n:nat) (x ex:var) (M:nat) := 
-    let i := findnum M (n-1) in 
-         (Rev x); QFT x n;
-            rz_moder' (S i) n x ex (nat2fb (2^i * M));
-        inv_exp ( (Rev x); QFT x n).
-
-Definition vars_for_rz_div_mod (size:nat) := 
-  gen_vars (S size) (x_var::(y_var::(([])))).
-
-Definition avs_for_rz_div_mod (size:nat) := fun x => (x/ (S size), x mod (S size)).
-
-Definition rz_div_mod_out (size:nat) := 
-   rz_div_mod (S size) x_var y_var.
-
-Definition trans_rz_div_mod (size M:nat) :=
-  trans_exp (vars_for_rz_div_mod size) (2 * (S size)) (rz_div_mod_out size M) (avs_for_rz_div_mod size). 

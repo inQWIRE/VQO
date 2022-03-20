@@ -7,6 +7,7 @@ Require Import QPE.
 Require Import BasicUtility.
 Require Import MathSpec.
 Require Import OQASM.
+Require Import OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
 
@@ -1981,7 +1982,7 @@ Lemma clt_circuit_right_sem : forall aenv vmap tenv f b size fl x y v stack temp
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
       Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (clt_circuit_right size fl b vmap x y stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) <? a_nat2fb v (get_size size b)).
 Proof.
@@ -2007,6 +2008,7 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
@@ -2019,8 +2021,8 @@ Proof.
   easy.
   bdestruct ((a_nat2fb x (get_size size b) <? a_nat2fb v (get_size size b))).
   easy. lia.
+  rewrite H19.
   rewrite H18.
-  rewrite H17.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -2057,13 +2059,13 @@ Proof.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (S sn)).
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (sn)).
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite get_r_put_same. easy.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
@@ -2084,6 +2086,7 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
@@ -2096,8 +2099,8 @@ Proof.
   easy.
   bdestruct ((a_nat2fb x (get_size size b) <? a_nat2fb v (get_size size b))).
   easy. lia.
+  rewrite H19.
   rewrite H18.
-  rewrite H17.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -2134,13 +2137,13 @@ Proof.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (S sn)).
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (sn)).
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite get_r_put_same. easy.
 Qed.
 
@@ -2153,7 +2156,7 @@ Lemma ceq_circuit_right_sem : forall aenv vmap tenv f b size fl x y v stack temp
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
       Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (ceq_circuit_right size fl b vmap x y stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
 Proof.
@@ -2169,16 +2172,16 @@ Proof.
   apply type_nor_modes with (env := tenv); try easy.
   assert (get_cua (f (stack,sn)) = false) as V4.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H16.
+  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   assert (get_cua (f (stack,S sn)) = false) as V5.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H16.
+  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   unfold ceq_circuit_right.
   bdestruct (fl =fl= Classic).
   remember ( X (stack, sn)) as xop.
@@ -2210,16 +2213,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b))). lia. easy.
@@ -2236,7 +2240,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b)))) = 
              ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -2281,16 +2285,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b))). easy. lia.
@@ -2393,16 +2398,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b))). lia. easy.
@@ -2419,7 +2425,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b)))) = 
              ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -2464,16 +2470,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb x (get_size size b))). easy. lia.
@@ -2558,7 +2565,7 @@ Lemma clt_circuit_left_sem : forall aenv vmap tenv f b size fl x y v stack temp 
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
       Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (clt_circuit_left size fl b vmap y x stack temp sn) f (stack, sn))
          = (a_nat2fb v (get_size size b) <? a_nat2fb x (get_size size b)).
 Proof.
@@ -2584,6 +2591,7 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
@@ -2596,8 +2604,8 @@ Proof.
   easy.
   bdestruct ((a_nat2fb v (get_size size b) <? a_nat2fb x (get_size size b))).
   easy. lia.
+  rewrite H19.
   rewrite H18.
-  rewrite H17.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -2634,13 +2642,13 @@ Proof.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (S sn)).
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (sn)).
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite get_r_put_same. easy.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
@@ -2661,6 +2669,7 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
@@ -2673,8 +2682,8 @@ Proof.
   easy.
   bdestruct ((a_nat2fb v (get_size size b) <? a_nat2fb x (get_size size b))).
   easy. lia.
+  rewrite H19.
   rewrite H18.
-  rewrite H17.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -2711,13 +2720,13 @@ Proof.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (S sn)).
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite cus_get_neq by iner_p.
   unfold store_match_st in H8.
   specialize (H8 (sn)).
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite get_r_put_same. easy.
 Qed.
 
@@ -2730,7 +2739,7 @@ Lemma ceq_circuit_left_sem : forall aenv vmap tenv f b size fl x y v stack temp 
       store_match_st sl sn stack f vmap ->
       get_cus (get_size size b) f temp = nat2fb 0 ->
       Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv -> Env.MapsTo temp OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (ceq_circuit_left size fl b vmap y x stack temp sn) f (stack, sn))
          = (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
 Proof.
@@ -2746,16 +2755,16 @@ Proof.
   apply type_nor_modes with (env := tenv); try easy.
   assert (get_cua (f (stack,sn)) = false) as V4.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H16.
+  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   assert (get_cua (f (stack,S sn)) = false) as V5.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H16.
+  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= S sn) by lia. apply H8 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= S sn) by lia. apply H8 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   unfold ceq_circuit_left.
   bdestruct (fl =fl= Classic).
   remember ( X (stack, sn)) as xop.
@@ -2786,16 +2795,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))). lia. easy.
@@ -2812,7 +2822,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b)))) = 
              ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -2857,16 +2867,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))). easy. lia.
@@ -2968,16 +2979,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))). lia. easy.
@@ -2994,7 +3006,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b)))) = 
              ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -3039,16 +3051,17 @@ Proof.
   apply right_mode_exp_up_same; try easy.
   apply qft_uniform_put_cu_same. easy.
   apply qft_gt_put_cu_same; easy.
+  apply exp_WF_init. lia. rewrite H5. unfold get_size. bdestruct (b =b= Bl); lia.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
   rewrite put_cus_update_flip. easy. iner_p.
   rewrite get_cus_up by iner_p.
   easy.
   apply right_mode_exp_up_same; try easy.
-  rewrite H18.
+  rewrite H19.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb x (get_size size b) =? a_nat2fb v (get_size size b)).
-  rewrite H19. 
+  rewrite H20. 
   bdestruct ((a_nat2fb v (get_size size b) <=? a_nat2fb v (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))). easy. lia.
@@ -3134,7 +3147,7 @@ Lemma clt_circuit_two_sem : forall aenv vmap tenv f b size fl x y v1 v2 stack sn
       get_cus (get_size size b) f (vmap y) = v2 ->
       store_match_st sl sn stack f vmap ->
       Env.MapsTo (vmap x) OQASM.Nor tenv -> Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (clt_circuit_two size fl b vmap x y stack sn) f (stack, sn))
          = (a_nat2fb v1 (get_size size b) <? a_nat2fb v2 (get_size size b)).
 Proof.
@@ -3151,7 +3164,7 @@ Proof.
   easy.
   bdestruct ((a_nat2fb v1 (get_size size b) <? a_nat2fb v2 (get_size size b))).
   easy. lia.
-  rewrite H17.
+  rewrite H18.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -3181,12 +3194,12 @@ Proof.
   lia. easy.
   unfold store_match_st in H9.
   specialize (H9 (S sn)).
-  assert (sn <= S sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   unfold store_match_st in H9.
   specialize (H9 (sn)).
-  assert (sn <= sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v2 (get_size size b))
            (v2:= (a_nat2fb v1 (get_size size b))) (f':=f) ; try easy.
   assert ((¬ (a_nat2fb v2 (get_size size b) <=? a_nat2fb v1 (get_size size b)))
@@ -3196,7 +3209,7 @@ Proof.
   easy.
   bdestruct ((a_nat2fb v1 (get_size size b) <? a_nat2fb v2 (get_size size b))).
   easy. lia.
-  rewrite H17.
+  rewrite H18.
   rewrite eupdate_index_eq.
   apply get_put_cu.
   unfold nor_mode.
@@ -3226,12 +3239,12 @@ Proof.
   lia. easy.
   unfold store_match_st in H9.
   specialize (H9 (S sn)).
-  assert (sn <= S sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= S sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
   unfold store_match_st in H9.
   specialize (H9 (sn)).
-  assert (sn <= sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17 by lia. easy.
+  assert (sn <= sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18 by lia. easy.
 Qed.
 
 Lemma ceq_circuit_two_sem : forall aenv vmap tenv f b size fl x y v1 v2 stack sn sl,
@@ -3244,7 +3257,7 @@ Lemma ceq_circuit_two_sem : forall aenv vmap tenv f b size fl x y v1 v2 stack sn
       get_cus (get_size size b) f (vmap y) = v2 ->
       store_match_st sl sn stack f vmap ->
       Env.MapsTo (vmap x) OQASM.Nor tenv -> Env.MapsTo (vmap y) OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
-      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+      right_mode_env aenv tenv f ->  qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
       get_cua (exp_sem aenv (ceq_circuit_two size fl b vmap x y stack sn) f (stack, sn))
          = (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
 Proof.
@@ -3260,16 +3273,16 @@ Proof.
   apply type_nor_modes with (env := tenv); try easy.
   assert (get_cua (f (stack,sn)) = false) as V4.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H16.
+  specialize (V3 sn). assert (sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   assert (get_cua (f (stack,S sn)) = false) as V5.
   unfold nor_modes,nor_mode in *.
-  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H16.
+  specialize (V3 (S sn)). assert (S sn < sl) by lia. apply V3 in H17.
   unfold store_match_st in *.
-  assert (sn <= S sn) by lia. apply H9 in H17.
-  rewrite get_cus_cua in H17. easy. lia.
+  assert (sn <= S sn) by lia. apply H9 in H18.
+  rewrite get_cus_cua in H18. easy. lia.
   unfold ceq_circuit_two.
   bdestruct (fl =fl= Classic).
   remember ( X (stack, sn)) as xop.
@@ -3290,7 +3303,7 @@ Proof.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
-  rewrite H18. 
+  rewrite H19. 
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v2 (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b))). lia. easy.
@@ -3301,7 +3314,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b)))) = 
              ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -3334,7 +3347,7 @@ Proof.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
-  rewrite H18. 
+  rewrite H19. 
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v2 (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b))). easy. lia.
@@ -3409,7 +3422,7 @@ Proof.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
-  rewrite H18. 
+  rewrite H19. 
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v2 (get_size size b))). easy.
   lia.
   bdestruct ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b))). lia. easy.
@@ -3420,7 +3433,7 @@ Proof.
   rewrite get_put_cu.
   assert ((¬ (¬ (a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b)))) = 
              ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b)))) by btauto.
-  rewrite H18. easy.
+  rewrite H19. easy.
   apply V3. lia. unfold get_size. destruct b. simpl. lia. simpl. lia. simpl. lia.
   simpl. subst. lia. simpl. subst. lia.
   apply a_nat2fb_scope.
@@ -3453,7 +3466,7 @@ Proof.
   rewrite eupdate_index_eq.
   rewrite get_put_cu.
   bdestruct (a_nat2fb v1 (get_size size b) =? a_nat2fb v2 (get_size size b)).
-  rewrite H18. 
+  rewrite H19. 
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v2 (get_size size b))). lia.
   easy.
   bdestruct ((a_nat2fb v1 (get_size size b) <=? a_nat2fb v2 (get_size size b))). easy. lia.
@@ -3768,7 +3781,7 @@ Lemma compile_cexp_sem : forall t sl size smap vmap bv fl rh rl stack temp sn e 
       -> aenv (get_size size (snd t)) stack = sl -> get_cus size f temp = nat2fb 0 ->
       Env.MapsTo temp OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env (aenv (get_size size (snd t))) tenv f -> qft_uniform (aenv (get_size size (snd t))) tenv f 
-         -> qft_gt (aenv (get_size size (snd t)))  tenv f
+         -> qft_gt (aenv (get_size size (snd t)))  tenv f -> at_match (aenv (get_size size (snd t))) tenv 
           -> vmap_bij vmap
          -> (st = Error /\ re = Error) \/ (exists b, st = Value (None,sn,Some b) /\ re = Value b)
               \/ (exists p, st = Value (Some p, S sn,None) 
@@ -3849,7 +3862,7 @@ Proof.
   simpl in *.
   assert (par_find_var_check smap bv size rl y = Some Error).
   apply type_cfac_find_var_error with (t := (Q,b0)) (rh := rh); try easy.
-  rewrite H23 in *.
+  rewrite H24 in *.
   inv H1. inv H0. left. easy.
   simpl in *. inv H1.
   simpl in *. 
@@ -3857,7 +3870,7 @@ Proof.
   simpl in *. destruct v.
   assert (par_eval_cfac_check smap bv size rl x = Some Error).
   rewrite sem_cfac_par_eval_same_c with (t := (C, b0)) (rh := rh); try easy.
-  rewrite H23 in *.
+  rewrite H24 in *.
   simpl in *.
   destruct (sem_cfac smap size rh y). simpl in *.
   inv H1. inv H0. left. easy.
@@ -4013,7 +4026,7 @@ Proof.
   unfold qvar_eq in Y1.
   rewrite eq7 in Y1. rewrite eq8 in Y1.
   bdestruct (x2 =qd= x3). inv Y1. easy.
-  apply H22. easy.
+  apply H23. easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
   apply (not_eq_stack_var stack temp vmap smap
          (get_var_cfac x ++ get_var_cfac y) bv size rl x x4 x2 (Q, b0)); try easy.
@@ -4343,7 +4356,7 @@ Proof.
   unfold qvar_eq in Y1.
   rewrite eq7 in Y1. rewrite eq8 in Y1.
   bdestruct (x2 =qd= x3). inv Y1. easy.
-  apply H22. easy.
+  apply H23. easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
   apply (not_eq_stack_var stack temp vmap smap
          (get_var_cfac x ++ get_var_cfac y) bv size rl x x4 x2 (Q, b0)); try easy.
@@ -5892,7 +5905,7 @@ Lemma unary_core_app_left :
     get_cua (f c) = false ->
     Env.MapsTo x OQASM.Nor tenv -> Env.MapsTo y OQASM.Nor tenv -> Env.MapsTo (fst c) OQASM.Nor tenv ->
     right_mode_env aenv tenv f ->
-    qft_uniform aenv tenv f -> qft_gt aenv tenv f ->
+    qft_uniform aenv tenv f -> qft_gt aenv tenv f -> at_match aenv tenv ->
     x <> y -> x <> fst c -> y <> fst c ->
     exp_sem aenv (unary_circuit_left_core_cl op n x y c) f =
         (put_cus f y (unary_arith_op_sem op n (get_cus n f x) (get_cus n f y)) n).
@@ -5938,7 +5951,7 @@ Lemma compile_unary_sem : forall bv' t sl size smap vmap fv bv fl rh rl stack te
       -> aenv (get_size size (snd t)) stack = sl -> get_cus size f temp = nat2fb 0 ->
       Env.MapsTo temp OQASM.Nor tenv -> Env.MapsTo stack OQASM.Nor tenv ->
       right_mode_env (aenv (get_size size (snd t))) tenv f -> qft_uniform (aenv (get_size size (snd t))) tenv f 
-         -> qft_gt (aenv (get_size size (snd t)))  tenv f
+         -> qft_gt (aenv (get_size size (snd t)))  tenv f -> at_match (aenv (get_size size (snd t))) tenv
           -> vmap_bij vmap
          -> (st = Error /\ re = Error) 
               \/ (exists xn xvl b, 
@@ -5969,11 +5982,11 @@ Proof.
   destruct (Store.find (elt:=list exp) x0 es) eqn:eq6. 
   destruct (unary_circuit_left op b size fl vmap x0 x1 stack temp sn) eqn:eq7. simpl in *.
   inv H2.
-  apply eval_cfac_sem_error in H29.
-  apply type_cfac_find_var_error with (t := (Q, b)) (bv := bv') (rl := rl) in H29; try easy.
-  rewrite H29 in *. easy.
-  rewrite <- sem_cfac_par_eval_same_c with (t := (C,b0)) (bv := bv') (rl := rl) in H29; try easy.
-  rewrite H29 in *. easy.
+  apply eval_cfac_sem_error in H30.
+  apply type_cfac_find_var_error with (t := (Q, b)) (bv := bv') (rl := rl) in H30; try easy.
+  rewrite H30 in *. easy.
+  rewrite <- sem_cfac_par_eval_same_c with (t := (C,b0)) (bv := bv') (rl := rl) in H30; try easy.
+  rewrite H30 in *. easy.
   unfold qvar_eq_eval in *. 
   destruct (eval_var smap size rh x) eqn:eq8. destruct v.
   destruct (eval_var smap size rh y) eqn:eq9. destruct v.
@@ -5994,14 +6007,14 @@ Proof.
   specialize (get_var_same_type_same bv' q x y (Q, b) (C,b0) eq1 H H0 eq2) as eq8.
   inv eq8. 
   specialize (par_find_eval_var_same smap bv' rh rl size x (Q, b) x0 xn
-                H0 H7 H6 H5 eq4 H28) as X1. subst.
+                H0 H7 H6 H5 eq4 H29) as X1. subst.
   right. right. inv H1.
   exists xn. exists (x_val :: xl).
   exists e. exists l. split. easy. split. easy. split. easy. split.
   apply Store.find_2 in eq6. easy.
   assert (x1 = val).
   rewrite sem_cfac_par_eval_same_c with (t :=  (C, b0)) (rh := rh) in eq5; try easy.
-  rewrite eq5 in *. inv H33. easy. subst.
+  rewrite eq5 in *. inv H34. easy. subst.
   apply andb_true_iff in eq3.
   destruct eq3. clear H1.
   apply andb_true_iff in H. destruct H.
@@ -6012,7 +6025,7 @@ Proof.
   simpl in *.
   bdestruct (op =op= qxor). subst.
   unfold apply_unary.
-  rewrite H0 in H32. inv H32. simpl in *.
+  rewrite H0 in H33. inv H33. simpl in *.
   bdestruct (b =b= Bl). subst.
   Local Opaque init_v.
   simpl in *. inv eq7.
@@ -6057,7 +6070,7 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv' size rl x x0 xn (Q, Bl)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy.
-  rewrite H25. easy.
+  rewrite H26. easy.
   replace ((get_size size Bl)) with ((get_size size (snd (Q, Bl)))) by easy.
   rewrite <- (aenv_match_value_cfac x (Q, Bl) xn size 
        (aenv (get_size size Bl)) bv' smap vmap rh rl stack temp); try easy.
@@ -6139,7 +6152,7 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy.
-  rewrite H26. easy.
+  rewrite H27. easy.
   replace ((get_size size b)) with ((get_size size (snd (Q, b)))) by easy.
   rewrite <- (aenv_match_value_cfac x (Q, b) xn size 
        (aenv (get_size size b)) bv' smap vmap rh rl stack temp); try easy.
@@ -6187,8 +6200,8 @@ Proof.
   assert (get_size size b = size) as eq9.
   unfold get_size. bdestruct (b =b= Bl).
   destruct eq8. subst. easy.
-  destruct H29. subst. easy.
-  destruct H29. subst. easy.
+  destruct H30. subst. easy.
+  destruct H30. subst. easy.
   subst. easy. easy.
   assert (vmap xn <> stack) as V1.
   apply par_find_get_var in eq4 as X1. destruct X1.
@@ -6241,12 +6254,13 @@ Proof.
   apply right_mode_exp_put_cus_same; try easy.
   apply qft_uniform_put_cus_same; try easy.
   apply qft_gt_put_cus_same; try easy.
+  apply exp_WF_init. lia. rewrite H15. lia. easy.
   rewrite init_v_sem with (size := size) (tenv := tenv); try easy.
   rewrite get_cus_put_neq by lia. easy.
   apply right_mode_exp_put_cus_same; try easy.
-  rewrite H26. clear H26.
+  rewrite H27. clear H27.
   rewrite get_put_cus_cut_n; try easy.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   Check q_var_same_value.
   simpl in *. rewrite eq9 in *.
   assert ((get_cus size f (vmap xn)) = cut_n x_val size).
@@ -6254,7 +6268,7 @@ Proof.
   rewrite (q_var_same_value x xn (Q, b) x_val smap vmap bv' size rh rl); try easy.
   Check par_find_var_store_value.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
-  rewrite H26.
+  rewrite H27.
   assert ((cut_n val size) = val).
   rewrite cut_n_eq. easy.
   rewrite <- eq9.
@@ -6262,27 +6276,27 @@ Proof.
   assert (b = b0).
   destruct eq8. subst.
   destruct b0. destruct b. 1-5:easy.
-  destruct H29. subst.
+  destruct H30. subst.
   destruct b0. destruct b. 1-5:easy.
-  destruct H29. subst.
+  destruct H30. subst.
   destruct b0. destruct b. 1-3:easy.
   destruct b. 1-4:easy.
   subst.
   destruct b0. destruct b. 1-3:easy.
-  destruct b. 1-4:easy. rewrite H29 in *.
+  destruct b. 1-4:easy. rewrite H30 in *.
   apply (stored_value_typed smap rh bv' size y val C b0); try easy.
-  rewrite H29.
+  rewrite H30.
   assert ((cut_n x_val size) = x_val).
   rewrite cut_n_eq. easy.
   rewrite <- eq9.
   Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x
            xn x_val xl Q b); try easy.
-  rewrite H31.
+  rewrite H32.
   unfold apply_unary,unary_arith_op_sem.
   destruct eq8. subst. easy.
-  destruct H32. subst. easy.
-  destruct H32. subst. easy.
+  destruct H33. subst. easy.
+  destruct H33. subst. easy.
   subst. easy.
   simpl in *. rewrite V4. easy.
   simpl in *. lia.
@@ -6306,8 +6320,8 @@ Proof.
   assert (get_size size b = size) as eq9.
   unfold get_size. bdestruct (b =b= Bl).
   destruct eq8. subst. easy.
-  destruct H31. subst. easy.
-  destruct H31. subst. easy.
+  destruct H32. subst. easy.
+  destruct H32. subst. easy.
   subst. easy. easy.
   rewrite eq9 in *.
   assert (aenv size (vmap xn) = (get_size size (snd (Q,b)))) as V1.
@@ -6339,7 +6353,7 @@ Proof.
   inv eq7.
   rewrite rz_adder_form_correct_1 with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n by easy.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
@@ -6350,7 +6364,7 @@ Proof.
   Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
-  rewrite H29. easy.
+  rewrite H30. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6359,7 +6373,7 @@ Proof.
   inv eq7.
   rewrite rz_sub_right_sem_1 with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n by easy.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
@@ -6370,7 +6384,7 @@ Proof.
   Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
-  rewrite H29. easy.
+  rewrite H30. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6379,7 +6393,7 @@ Proof.
   easy. inv eq7.
   rewrite rz_adder_form_correct_1 with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n by easy.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
@@ -6390,7 +6404,7 @@ Proof.
   Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
-  rewrite H29. easy.
+  rewrite H30. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6399,7 +6413,7 @@ Proof.
   inv eq7.
   rewrite rz_sub_right_sem_1 with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n by easy.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
@@ -6410,7 +6424,7 @@ Proof.
   Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
-  rewrite H29. easy.
+  rewrite H30. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6423,8 +6437,8 @@ Proof.
   inv H1. left. easy. inv H1. left. easy.
   inv H1. left. easy.
   rewrite <- sem_cfac_par_eval_same_c 
-          with (t := (C,b0)) (bv := bv') (rl := rl) in H33; try easy.
-  rewrite H33 in *. easy.
+          with (t := (C,b0)) (bv := bv') (rl := rl) in H34; try easy.
+  rewrite H34 in *. easy.
   easy.
   destruct a1.
   simpl in *. easy.
@@ -6432,12 +6446,12 @@ Proof.
   destruct (par_find_var_check smap bv' size rl y) eqn:eq5. destruct v.
   simpl in *.
   inv H2.
-  apply eval_cfac_sem_error in H29.
-  apply type_cfac_find_var_error with (t := (Q, b)) (bv := bv') (rl := rl) in H29; try easy.
-  rewrite H29 in *. easy.
+  apply eval_cfac_sem_error in H30.
+  apply type_cfac_find_var_error with (t := (Q, b)) (bv := bv') (rl := rl) in H30; try easy.
+  rewrite H30 in *. easy.
   apply type_cfac_sem_value with (t := (Q,b0)) (bv := bv') (rh := rh) in eq5; try easy.
   destruct eq5.
-  rewrite H29 in *. easy.
+  rewrite H30 in *. easy.
   unfold qvar_eq_eval in *. 
   destruct (eval_var smap size rh x) eqn:eq8. destruct v.
   destruct (eval_var smap size rh y) eqn:eq9. destruct v.
@@ -6466,11 +6480,11 @@ Proof.
   rewrite V3 in *. rewrite V4 in *.
   simpl in *.
   bdestruct ((x0 =qd= x1)).
-  apply H27 in H0. easy.
+  apply H28 in H0. easy.
   destruct (Store.find (elt:=list exp) x0 es) eqn:eq6. 
   destruct (unary_circuit_two op b size fl vmap x0 x1 stack sn) eqn:eq7. simpl in *.
-  unfold unary_circuit_two in *. inv H28.
-  assert (vmap xn <> vmap x1) as V1. apply H23. easy.
+  unfold unary_circuit_two in *. inv H29.
+  assert (vmap xn <> vmap x1) as V1. apply H24. easy.
   assert (aenv (get_size size b) (vmap xn) = (get_size size (snd (Q,b)))) as V2.
   Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q,b) xn size (aenv (get_size size b)) bv' smap vmap
@@ -6536,7 +6550,7 @@ Proof.
   rewrite copyto_sem with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n by easy.
   unfold apply_unary.
-  rewrite H0 in *. inv H32.
+  rewrite H0 in *. inv H33.
   simpl in *.
   assert ((get_cus (get_size size b0) f (vmap xn)) = x_val).
   rewrite <- V2.
@@ -6553,7 +6567,7 @@ Proof.
   rewrite cut_n_eq. easy.
   rewrite V5.
   apply (stored_value_typed smap rh bv' size y val Q b0); try easy.
-  rewrite H1. rewrite H31.
+  rewrite H1. rewrite H32.
   bdestruct (b0 =b= Bl).
   unfold bin_xor,get_size. subst. simpl.
   rewrite cut_n_twice_same. easy.
@@ -6581,14 +6595,14 @@ Proof.
   assert (get_size size b = size) as eq9.
   unfold get_size. bdestruct (b =b= Bl).
   destruct eq8. subst. easy.
-  destruct H34. subst. easy.
-  destruct H34. subst. easy.
+  destruct H35. subst. easy.
+  destruct H35. subst. easy.
   subst. easy. easy.
   assert (get_size size b0 = size) as eq10.
   unfold get_size. bdestruct (b0 =b= Bl).
   destruct eq8. subst. easy.
-  destruct H34. subst. easy.
-  destruct H34. subst. easy.
+  destruct H35. subst. easy.
+  destruct H35. subst. easy.
   subst. easy. easy.
   rewrite eq9 in *. rewrite eq10 in *.
   bdestruct (fl =fl= Classic).
@@ -6637,10 +6651,10 @@ Proof.
   apply (stored_value_typed smap rh bv' size y val Q b0); try easy.
   assert (get_cua (f (stack,sn)) = false) as eq11.
   unfold nor_modes,nor_mode in *.
-  specialize (V8 sn). assert (sn < aenv size stack) by lia. apply V8 in H36.
+  specialize (V8 sn). assert (sn < aenv size stack) by lia. apply V8 in H37.
   unfold store_match_st in *.
-  assert (sn <= sn) by lia. apply H10 in H37.
-  rewrite get_cus_cua in H37. easy. lia.
+  assert (sn <= sn) by lia. apply H10 in H38.
+  rewrite get_cus_cua in H38. easy. lia.
   destruct eq8. subst.
   inv eq7.
   rewrite adder01_correct_fb; try easy.
@@ -6648,7 +6662,7 @@ Proof.
   unfold apply_unary.
   rewrite eq11. easy.
   apply V8. lia. lia.
-  destruct H36. subst.
+  destruct H37. subst.
   inv eq7.
   rewrite subtractor01_correct_fb with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n; try easy.
@@ -6664,7 +6678,7 @@ Proof.
             bv' size rl x x0 xn (Q,b)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. lia.
-  destruct H36. subst.
+  destruct H37. subst.
   inv eq7.
   rewrite adder01_correct_fb; try easy.
   rewrite get_put_cus_cut_n; try easy.
@@ -6717,7 +6731,7 @@ Proof.
             bv' size rl y x0 x1 (Q,b0)); try easy.
   simpl. apply in_or_app. right.
   apply hd_list_in. easy.
-  destruct H36. subst. inv eq7.
+  destruct H37. subst. inv eq7.
   rewrite rz_full_sub_form_correct with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n; try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
@@ -6730,7 +6744,7 @@ Proof.
             bv' size rl y x0 x1 (Q,b0)); try easy.
   simpl. apply in_or_app. right.
   apply hd_list_in. easy.
-  destruct H36. subst. inv eq7.
+  destruct H37. subst. inv eq7.
   rewrite rz_full_adder_form_correct with (tenv := tenv); try easy.
   rewrite get_put_cus_cut_n; try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
@@ -6798,7 +6812,7 @@ Proof.
   apply par_find_eval_var_same_1 with (rh := rh) (t := (C,b)) (x2 := Error) in eq4; try easy.
   simpl in *.
   apply par_find_eval_var_same_1 with (rh := rh) (t := (C,b)) (x2 := Error) in eq4; try easy. easy. easy.
-  rewrite H0 in *. inv H33.
+  rewrite H0 in *. inv H34.
   apply par_find_eval_var_same with (rh := rh) (t := (C,b)) (x2 := xn) in eq4 as V1; try easy. subst.
   exists xn. exists (x_val :: xl). exists b2. split. easy. split. easy. split. easy.
   apply Store.find_2 in eq6.
@@ -6807,11 +6821,11 @@ Proof.
           xn b1 x_val xl) in eq6; try easy. subst.
   unfold unary_c_value,apply_unary,is_unary,is_c_unary in *. simpl in *.
   rewrite sem_cfac_par_eval_same_c with (t := (C,b0)) (rh := rh) in eq5; try easy.
-  rewrite eq5 in *. inv H37.
+  rewrite eq5 in *. inv H38.
   destruct op. inv eq7. easy.
   inv eq7. easy. easy. inv eq7. easy. inv eq7. easy. easy.
   inv eq7.
-  rewrite H0 in *. inv H36. unfold get_size. simpl in *.
+  rewrite H0 in *. inv H37. unfold get_size. simpl in *.
   1-3:easy.
   inv eq7. easy.
   inv eq7. 1-3:easy.
