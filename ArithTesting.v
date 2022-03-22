@@ -92,9 +92,9 @@ Module RzAdd.
 
   Definition rz_add_circ n :=
     Rev x;
-    QFT x;
+    QFT x n;
     rz_full_adder x n y;
-    RQFT x;
+    RQFT x n;
     Rev x.
 
   Definition rz_add_env n : f_env := fun _ => n.
@@ -119,7 +119,7 @@ Module AddParam.
   Definition re := 1.
 
   Definition add_param_circ n (vm : Bvector n) :=
-    Rev x; QFT x; rz_adder x n (nth_or_false vm); RQFT x; Rev x.
+    Rev x; QFT x n; rz_adder x n (nth_or_false vm); RQFT x n; Rev x.
 
   Definition add_param_vars n := get_vars (add_param_circ n (Bvect_false n)).
 
@@ -467,8 +467,9 @@ Module ModMul8.
 
 End ModMul8.
 
+(*
 QuickChick ModMul8.mod_mul_8_spec.
-
+ *)
 
 Module ModMul8Rz.
 
@@ -497,4 +498,6 @@ Module ModMul8Rz.
 
 End ModMul8Rz.
 
+(*
 QuickChick ModMul8Rz.mod_mul_8_spec.
+ *)
