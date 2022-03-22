@@ -2819,7 +2819,7 @@ Proof.
   assert (nval true r = put_cu (f c1) true).
   rewrite eq2. easy. rewrite H15. 
   Check adder01_correct_carry1.
-  rewrite adder01_correct_carry1 with (S := f) (v1 := (2 ^ n - 1 - v1)) (v2:=v2)
+  rewrite adder01_correct_carry1 with (S0 := f) (v1 := (2 ^ n - 1 - v1)) (v2:=v2)
        (S'' := reg_push (reg_push (f [c1 |-> put_cu (f c1) true])
               x (2 ^ n - 1 - v1) n) y ((2 ^ n - 1 - v1) + v2 + 1) n); try easy.
   rewrite reg_push_twice_neq by iner_p.

@@ -3233,7 +3233,10 @@ Proof.
   unfold right_mode_env in H0.
   specialize (H0 (Phi b) (x,i)) as eq1.
   simpl in eq1.
-  apply eq1 in H2 as X1.
+  unfold at_match in H1.
+  apply H1 in H2 as Y1.
+  assert (i < aenv x) as Y2 by lia.
+  apply eq1 in Y2 as X1; try easy.
   specialize (H0 (Phi b) (x,0)) as eq2.
   simpl in eq2.
   apply H1 in H2 as X2.
@@ -3263,7 +3266,7 @@ Proof.
   rewrite <- H10 in *. easy.
   assert (n = 0) by lia. subst.
   apply H with (b := b); try easy.
-  apply H1 in H2. lia.
+  apply H1 in H2 as X1; try easy.
   apply H with (b := b); try easy.
 Qed.
 
@@ -8744,7 +8747,7 @@ Proof.
   rewrite vkron_proj_neq with (b := false) (r := Cexp (2 * PI * turn_angle r rmax)); try easy.
   unfold get_cua in H11.
   rewrite plus_comm in H11. rewrite <- H11.
-  rewrite update_same with (b := false).
+  rewrite update_same with (b1 := false).
   unfold compile_val. Msimpl. easy.
   rewrite lshift_fun_gen_ge by lia. easy.
   intros. rewrite update_twice_eq.

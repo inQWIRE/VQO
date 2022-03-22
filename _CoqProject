@@ -19,6 +19,8 @@ externals/SQIR/examples/Utilities.v
 BasicUtility.v
 MathSpec.v
 OQASM.v
+PQASM.v
+OQASMProof.v
 Testing.v
 CLArith.v
 RZArith.v
