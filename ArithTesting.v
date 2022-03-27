@@ -1,6 +1,6 @@
 From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
-Require Import BasicUtility OQASM Testing RZArith CLArith.
+Require Import BasicUtility OQASM OQASMProof Testing RZArith CLArith.
 
 Extract Inductive positive => int
 [ "(fun p->1+2*p)" "(fun p->2*p)" "1" ]
@@ -92,9 +92,9 @@ Module RzAdd.
 
   Definition rz_add_circ n :=
     Rev x;
-    QFT x;
+    QFT x n;
     rz_full_adder x n y;
-    RQFT x;
+    RQFT x n;
     Rev x.
 
   Definition rz_add_env n : f_env := fun _ => n.
@@ -119,7 +119,7 @@ Module AddParam.
   Definition re := 1.
 
   Definition add_param_circ n (vm : Bvector n) :=
-    Rev x; QFT x; rz_adder x n (nth_or_false vm); RQFT x; Rev x.
+    Rev x; QFT x n; rz_adder x n (nth_or_false vm); RQFT x n; Rev x.
 
   Definition add_param_vars n := get_vars (add_param_circ n (Bvect_false n)).
 

@@ -25,7 +25,7 @@ Open Scope exp_scope.
 
 Definition rz_val := nat.
 
-Inductive val := nval (b:bool) (r:rz_val) | hval (b1:bool) (b2:bool) (r:rz_val) | qval (rc:rz_val) (r:rz_val).
+Inductive val := nval (b:bool) (r:rz_val) (*| hval (b1:bool) (b2:bool) (r:rz_val) *) | qval (rc:rz_val) (r:rz_val).
 
 Definition addto (r : rz_val) (n : nat) (rmax : nat) : rz_val :=
   (r + 2^(rmax - n)) mod 2^rmax.
@@ -43,10 +43,10 @@ Definition get_state (p : posi) (f : state) :=
 
 Definition exchange (v: val) :=
      match v with nval b r => nval (¬ b) r
-                  | hval b1 b2 r => hval b2 b1 r
                   | a => a
      end.
 
+(*
 Definition hexchange (v1:val) (v2:val) :=
   match v1 with hval b1 b2 r1 => 
     match v2 with hval b3 b4 r2 => if Bool.eqb b3 b4 then v1 else hval b1 (¬ b2) r1
@@ -54,6 +54,7 @@ Definition hexchange (v1:val) (v2:val) :=
     end
              | _ => v1
   end.
+*)
 
 Definition put_cu (v:val) (b:bool) :=
     match v with nval x r => nval b r | a => a end.
@@ -69,21 +70,18 @@ Definition put_cus (f:posi -> val) (x:var) (g:nat -> bool) (n:nat) : (posi -> va
 
 Definition get_cu (v : val) :=
     match v with nval b r => Some b 
-                 | hval b1 b2 r => Some b1
                  | _ => None
     end.
 
 Definition get_r (v:val) :=
    match v with nval x r => r
               | qval rc r => rc
-              | hval x y r => r
    end.
 
 Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
 
 Definition times_rotate (v : val) (q:nat) rmax := 
      match v with nval b r => if b then nval b (rotate r q rmax) else nval b r
-                  | hval b1 b2 r => hval b1 (¬ b2) r
                   | qval rc r =>  qval rc (rotate r q rmax)
      end.
 
@@ -91,7 +89,6 @@ Definition r_rotate (r :rz_val) (q:nat) rmax := addto_n r q rmax.
 
 Definition times_r_rotate (v : val) (q:nat) rmax := 
      match v with nval b r =>  if b then nval b (r_rotate r q rmax) else nval b r
-                  | hval b1 b2 r => hval b1 (¬ b2) r
                   | qval rc r =>  qval rc (r_rotate r q rmax)
      end.
 
@@ -129,6 +126,7 @@ Fixpoint reverse' (f : state) (x : var) (n : nat) i (f' : state) :=
 Definition reverse (f:state) (x:var) (n:nat) :=
   reverse' f x n n f.
 
+(*
 Definition h_case (v : val) (rmax : nat) :=
     match v with nval b r => if r <? 2^(rmax-1) then hval true (¬ b) r else hval false b (rotate r 1 rmax)
                | hval true true r => nval false r
@@ -142,6 +140,20 @@ Fixpoint h_sem (f:state) (x:var) (n : nat) (rmax : nat) :=
     match n with 0 => f
               | S m => M.add (x,m) (h_case (get_state (x,m) f) rmax) (h_sem f x m rmax)
     end.
+*)
+
+Definition up_h (v:val) rmax :=
+   match v with nval true r => qval r (rotate 0 1 rmax)
+              | nval false r => qval r 0
+              | qval r f => nval (2^(rmax -1) <=? f) r
+   end.
+
+
+Fixpoint assign_h (f:state) (x:var) (n:nat) (i:nat) rmax := 
+   match i with 0 => f
+          | S m => assign_h (M.add (x,n+m) (up_h (get_state (x,n+m) f) rmax) f) x n m rmax
+  end.
+
 
 Definition up_qft (v:val) (f:rz_val) :=
    match v with nval b r => qval r f
@@ -159,8 +171,9 @@ Fixpoint assign_r (f:state) (x:var) (r : nat) (n:nat) (size :nat) (rmax:nat) :=
     | S m =>  (assign_r (M.add (x,size - n) (up_qft (get_state (x,size - n) f) r) f) x ((r * 2) mod 2^rmax) m size rmax)
     end.
 
+
 Definition turn_qft (f:state) (x:var) (n:nat) (rmax:nat) :=
-      assign_r f x (2^(rmax - n) * a_nat2fb (fbrev n (get_cus n f x)) n) n rmax rmax.
+      assign_h (assign_r f x (2^(rmax - n) * a_nat2fb (fbrev n (get_cus n f x)) n) n n rmax) x n (rmax -n) rmax.
 
 Fixpoint assign_seq (f:state) (x:var) (vals : nat -> bool) (size:nat) (n:nat) :=
    match n with 0 => f
@@ -172,7 +185,8 @@ Definition get_r_qft (f:state) (x:var) (n:nat) (rmax:nat) :=
                       | _ => allfalse
       end.
 
-Definition turn_rqft (st : state) (x:var) (n:nat) (rmax : nat) := assign_seq st x (get_r_qft st x n rmax) rmax rmax.
+Definition turn_rqft (st : state) (x:var) (n:nat) (rmax : nat) := 
+            assign_h (assign_seq st x (get_r_qft st x n rmax) n rmax) x n (rmax -n) rmax.
 
 Fixpoint exp_sem (env:var -> nat) (rmax : nat) (e:exp) (st: state) : state :=
    match e with (SKIP p) => st
@@ -376,14 +390,9 @@ Instance dec_val_eq :
   forall v v' : val, Dec (v = v').
 Proof.
   intros v v'. constructor.
-  destruct v as [b z | b0 b1 z | z0 z1 ], v' as [b' z' | b0' b1' z' | z0' z1'];
+  destruct v as [b z | z0 z1 ], v' as [b' z' | z0' z1'];
   try (right; intros H; inversion H; discriminate).
   - destruct (bool_dec b b'); try (right; intros H; inversion H; contradiction).
-    subst. bdestruct (z =? z'); subst.
-    + left. reflexivity.
-    + right. congruence.
-  - destruct (bool_dec b0 b0'), (bool_dec b1 b1');
-    try (right; intros H; inversion H; contradiction).
     subst. bdestruct (z =? z'); subst.
     + left. reflexivity.
     + right. congruence.
