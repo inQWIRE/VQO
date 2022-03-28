@@ -6,7 +6,7 @@
 Require Import Prelim.
 Require Import RCIR.
 Require Import AltGateSet.
-Require Import MathSpec BasicUtility OQASM.
+Require Import MathSpec BasicUtility OQASM OQASMProof.
 Require Import RZArith.
 Require Import CLArith.
 Require Import OQIMP.
@@ -48,12 +48,19 @@ Fixpoint QFT_gen (f : vars) (x:var) (n : nat) (size:nat) : ucom U :=
              (controlled_rotations_gen f x (size-m) m))
     end.
 
-Definition trans_qft (f:vars) (x:var) : ucom U := 
-    QFT_gen f x (vsize f x) (vsize f x).
+Fixpoint nH (f : vars) (x:var) (n:nat) (b:nat) : ucom U :=
+     match n with 0 => ID (find_pos f (x,0))
+               | S m => (nH f x m b) >> (AltGateSet.H (find_pos f (x,(b+m)%nat))) 
+     end.
 
-Definition trans_rqft (f:vars) (x:var) : ucom U :=
-          invert (QFT_gen f x (vsize f x) (vsize f x)).
+Definition trans_qft (f:vars) (x:var) (b:nat) : ucom U := 
+    QFT_gen f x b b >> nH f x (vsize f x - b) b.
 
+
+Definition trans_rqft (f:vars) (x:var) (b:nat) : ucom U :=
+          invert (QFT_gen f x b b >> nH f x (vsize f x - b) b).
+
+(*
 Fixpoint nH (f : vars) (x:var) (n:nat) : ucom U :=
     match n with 
     | 0 => ID (find_pos f (x,0))
@@ -61,6 +68,7 @@ Fixpoint nH (f : vars) (x:var) (n:nat) : ucom U :=
     end.
 
 Definition trans_h (f : vars) (x:var) : ucom U := nH f x (vsize f x).
+*)
 
 Fixpoint trans_exp' (f : vars) (dim:nat) (exp:exp) (avs: nat -> posi) : (ucom U * vars * (nat -> posi)) :=
     match exp with
@@ -73,12 +81,12 @@ Fixpoint trans_exp' (f : vars) (dim:nat) (exp:exp) (avs: nat -> posi) : (ucom U 
     | Lshift x => (ID (find_pos f (x,0)), trans_lshift f x, lshift_avs dim f avs x)
     | Rshift x => (ID (find_pos f (x,0)), trans_rshift f x, rshift_avs dim f avs x)
     | Rev x => (ID (find_pos f (x,0)), trans_rev f x, rev_avs dim f avs x)
-    | HCNOT p1 p2 => (AltGateSet.CX (find_pos f p1) (find_pos f p2), f, avs)
+    (*| HCNOT p1 p2 => (AltGateSet.CX (find_pos f p1) (find_pos f p2), f, avs) *)
     | CU p e1 => match trans_exp' f dim e1 avs with 
                  | (e1', f',avs') => (control (find_pos f p) e1', f, avs) end
-    | QFT x => (trans_qft f x, f, avs)
-    | RQFT x => (trans_rqft f x, f, avs)
-    | H x => (trans_h f x, f, avs)
+    | QFT x b => (trans_qft f x b, f, avs)
+    | RQFT x b => (trans_rqft f x b, f, avs)
+    (*| H x => (trans_h f x, f, avs) *)
     | (e1 ; e2)%exp => match trans_exp' f dim e1 avs with 
                  | (e1', f', avs') => 
                         match trans_exp' f' dim e2 avs' with 
@@ -93,43 +101,43 @@ Definition trans_exp f dim exp avs :=
 
 (* z = x + y (TOFF-based) *)
 Definition trans_cl_adder (size:nat) :=
-  trans_exp (CLArith.vars_for_adder01 size) (2 * size + 1) (CLArith.adder01_out size) (OQASM.avs_for_arith size).
+  trans_exp (CLArith.vars_for_adder01 size) (2 * size + 1) (CLArith.adder01_out size) (OQASMProof.avs_for_arith size).
 
 (* z = M * x (TOFF-based) *)
 Definition trans_cl_const_mul (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_m size) (2 * size + 1) (CLArith.cl_nat_mult_out size (nat2fb M)) (OQASM.avs_for_arith size).
+  trans_exp (CLArith.vars_for_cl_nat_m size) (2 * size + 1) (CLArith.cl_nat_mult_out size (nat2fb M)) (OQASMProof.avs_for_arith size).
 
 (* z = x * y (TOFF-based) *)
 Definition trans_cl_mul (size:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASM.avs_for_arith size).
+  trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASMProof.avs_for_arith size).
 
 (* z = M + x (QFT-based) *)
 Definition trans_rz_const_adder (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_adder size) size (RZArith.rz_adder_out size (nat2fb M)) (OQASM.avs_for_arith size).
+  trans_exp (RZArith.vars_for_rz_adder size) size (RZArith.rz_adder_out size (nat2fb M)) (OQASMProof.avs_for_arith size).
 
 (* z = x + y (QFT-based) *)
 Definition trans_rz_adder (size:nat) :=
-  trans_exp (RZArith.vars_for_rz_full_add size) (2 * size) (RZArith.rz_full_adder_out size) (OQASM.avs_for_arith size).
+  trans_exp (RZArith.vars_for_rz_full_add size) (2 * size) (RZArith.rz_full_adder_out size) (OQASMProof.avs_for_arith size).
 
 (* z = M * x (QFT-based) *)
 Definition trans_rz_const_mul (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_nat_m size) (2 * size) (RZArith.nat_mult_out size (nat2fb M)) (OQASM.avs_for_arith size).
+  trans_exp (RZArith.vars_for_rz_nat_m size) (2 * size) (RZArith.nat_mult_out size (nat2fb M)) (OQASMProof.avs_for_arith size).
 
 (* z = x * y (QFT-based) *)
 Definition trans_rz_mul (size:nat) :=
-  trans_exp (RZArith.vars_for_rz_nat_full_m size) (3 * size) (RZArith.nat_full_mult_out size) (OQASM.avs_for_arith size). 
+  trans_exp (RZArith.vars_for_rz_nat_full_m size) (3 * size) (RZArith.nat_full_mult_out size) (OQASMProof.avs_for_arith size). 
 
 (* z = x mod y (TOFF-based) *)
 Definition trans_cl_mod (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_moder size) (4 * size + 1) (CLArith.cl_moder_out size M) (OQASM.avs_for_arith size). 
+  trans_exp (CLArith.vars_for_cl_moder size) (4 * size + 1) (CLArith.cl_moder_out size M) (OQASMProof.avs_for_arith size). 
 
 (* z = x / y (TOFF-based) *)
 Definition trans_cl_div (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_div size) (4 * size + 1) (CLArith.cl_div_out size M) (OQASM.avs_for_arith size). 
+  trans_exp (CLArith.vars_for_cl_div size) (4 * size + 1) (CLArith.cl_div_out size M) (OQASMProof.avs_for_arith size). 
 
 (* z = x mod y,x/y (TOFF-based) *)
 Definition trans_cl_div_mod (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_div_mod size) (3 * size + 1) (CLArith.cl_div_mod_out size M) (OQASM.avs_for_arith size). 
+  trans_exp (CLArith.vars_for_cl_div_mod size) (3 * size + 1) (CLArith.cl_div_mod_out size M) (OQASMProof.avs_for_arith size). 
 
 (* z = x mod y (QFT-based) *)
 Definition trans_rz_mod (size M:nat) :=
@@ -143,23 +151,33 @@ Definition trans_rz_div (size M:nat) :=
 Definition trans_rz_div_mod (size M:nat) :=
   trans_exp (RZArith.vars_for_rz_div_mod size) (2 * (S size)) (RZArith.rz_div_mod_out size M) (RZArith.avs_for_rz_div_mod size). 
 
+(* approx moder, where shifting is using OQASM shift. *)
+Definition trans_rz_div_mod_app_shift (size M:nat) :=
+  trans_exp (OQASMProof.vars_for_app_div_mod size) (2 * (S size))
+        (OQASMProof.app_div_mod_out size M) (OQASMProof.avs_for_app_div_mod size). 
+
+(* approx moder, where shifting is using SQIR SWAPs. *)
+Definition trans_rz_div_mod_app_swaps (size M:nat) :=
+  trans_exp (OQASMProof.vars_for_app_div_mod size) (2 * (S size))
+        (OQASMProof.app_div_mod_aout size M) (OQASMProof.avs_for_app_div_mod size). 
+
 (* z = ((z+x); (z*x)); ((z+y); (z*y));
         ((z+x); (z*x)); ((z+y); (z*y));
        ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based) *)
 Definition trans_rz_add_mul_opt (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_con_add_mult_out size) (3 * size) (RZArith.nat_con_add_mult_out size) (OQASM.avs_for_arith size). 
+  trans_exp (RZArith.vars_for_nat_con_add_mult_out size) (3 * size) (RZArith.nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
 
 (* z = ((z+x); (z*x)); ((z+y); (z*y));
         ((z+x); (z*x)); ((z+y); (z*y));
        ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based-Not-Optimized) *)
 Definition trans_rz_add_mul (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_old_con_add_mult_out size) (3 * size) (RZArith.nat_old_con_add_mult_out size) (OQASM.avs_for_arith size). 
+  trans_exp (RZArith.vars_for_nat_old_con_add_mult_out size) (3 * size) (RZArith.nat_old_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
 
 (* z = ((z+x); (z*x)); ((z+y); (z*y));
         ((z+x); (z*x)); ((z+y); (z*y));
        ((z+x); (z*x)); ((z+y); (z*y)); (TOFF-based) *)
 Definition trans_cl_add_mul (size:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size + 1) (CLArith.cl_nat_con_add_mult_out size) (OQASM.avs_for_arith size). 
+  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size + 1) (CLArith.cl_nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
 
 (* Redefine funcs in RZArith and CLArith to use the new trans_exp *)
 Definition trans_rz_modmult_rev (M C Cinv size:nat) :=
@@ -209,27 +227,27 @@ Fixpoint bc2ucom (bc : bccom) : ucom U :=
 (** Proof that these new definitions match the ones in OQASM **)
 
 
-Lemma gen_sr_gate_same : forall dim f x n,
-  to_base_ucom dim (gen_sr_gate f x n) = OQASM.gen_sr_gate f dim x n.
+Lemma gen_sr_gate_same : forall dim f x n, 
+   to_base_ucom dim (gen_sr_gate f x n) = OQASMProof.gen_sr_gate f dim x n.
 Proof.
   intros dim f x n.
-  unfold gen_sr_gate, OQASM.gen_sr_gate.
+  unfold gen_sr_gate, OQASMProof.gen_sr_gate.
   assert (forall a b, 
           to_base_ucom dim (gen_sr_gate' f x a b) 
-            = OQASM.gen_sr_gate' f dim x a b).
+            = OQASMProof.gen_sr_gate' f dim x a b).
   { intros. induction a. reflexivity.
     simpl. rewrite IHa. reflexivity. }
   apply H.
 Qed.
 
 Lemma gen_srr_gate_same : forall dim f x n,
-  to_base_ucom dim (gen_srr_gate f x n) = OQASM.gen_srr_gate f dim x n.
+  to_base_ucom dim (gen_srr_gate f x n) = OQASMProof.gen_srr_gate f dim x n.
 Proof.
   intros dim f x n.
-  unfold gen_srr_gate, OQASM.gen_srr_gate.
+  unfold gen_srr_gate, OQASMProof.gen_srr_gate.
   assert (forall a b, 
           to_base_ucom dim (gen_srr_gate' f x a b) 
-            = OQASM.gen_srr_gate' f dim x a b).
+            = OQASMProof.gen_srr_gate' f dim x a b).
   { intros. induction a. reflexivity.
     simpl. rewrite IHa. reflexivity. }
   apply H.
@@ -237,7 +255,7 @@ Qed.
 
 Lemma controlled_rotations_gen_same : forall dim f x n i, 
   to_base_ucom dim (controlled_rotations_gen f x n i)
-    = OQASM.controlled_rotations_gen f dim x n i.
+    = OQASMProof.controlled_rotations_gen f dim x n i.
 Proof.
   intros.
   destruct n; try reflexivity.
@@ -266,7 +284,7 @@ Proof.
 Qed.
 
 Lemma QFT_gen_same : forall dim f x n size, 
-  to_base_ucom dim (QFT_gen f x n size) = OQASM.QFT_gen f dim x n size.
+  to_base_ucom dim (QFT_gen f x n size) = OQASMProof.QFT_gen f dim x n size.
 Proof.
   intros.
   induction n; try reflexivity.
@@ -286,42 +304,56 @@ Proof.
   apply controlled_rotations_WF.
 Qed.
 
-Lemma trans_qft_same : forall dim f x,
-  to_base_ucom dim (trans_qft f x) = OQASM.trans_qft f dim x.
-Proof. intros. apply QFT_gen_same. Qed.
-
-Lemma trans_rqft_same : forall dim f x,
-  uc_eval dim (trans_rqft f x) = UnitarySem.uc_eval (OQASM.trans_rqft f dim x).
-Proof. 
-  intros. 
-  unfold trans_rqft, OQASM.trans_rqft.
-  unfold uc_eval.
-  rewrite <- QFT_gen_same.
-  apply invert_same.
-  apply QFT_gen_WF.
-Qed.
-
-Lemma trans_h_same : forall dim f x,
-  to_base_ucom dim (trans_h f x) = OQASM.trans_h f dim x.
+Lemma nH_WF : forall f x n b, well_formed (nH f x n b).
 Proof.
   intros.
-  unfold trans_h, OQASM.trans_h.
-  assert (forall n, to_base_ucom dim (nH f x n) = OQASM.nH f dim x n).
-  { induction n. reflexivity.
-    simpl. rewrite IHn. reflexivity. }
-  apply H.
+  induction n; simpl. 
+  constructor. auto.
+  repeat constructor. 
+  apply IHn.
 Qed.
+
+Lemma trans_h_same : forall dim f x n b,
+  to_base_ucom dim (nH f x n b) = OQASMProof.nH f dim x n b.
+Proof.
+   intros. induction n. reflexivity.
+    simpl. rewrite IHn. reflexivity. 
+Qed.
+
+Lemma trans_qft_same : forall dim f x b,
+  to_base_ucom dim (trans_qft f x b) = OQASMProof.trans_qft f dim x b.
+Proof.
+   intros.
+   unfold trans_qft, OQASMProof.trans_qft. simpl.
+   rewrite QFT_gen_same.
+   rewrite trans_h_same. reflexivity. 
+Qed.
+
+Lemma trans_rqft_same : forall dim f x b,
+  uc_eval dim (trans_rqft f x b) = UnitarySem.uc_eval (OQASMProof.trans_rqft f dim x b).
+Proof. 
+  intros. 
+  unfold trans_rqft, OQASMProof.trans_rqft.
+  unfold uc_eval.
+  rewrite <- QFT_gen_same.
+  rewrite <- trans_h_same.
+  apply invert_same.
+  constructor.
+  apply QFT_gen_WF.
+  apply nH_WF.
+Qed.
+
 
 Lemma trans_exp_same : forall f dim exp avs,
   uc_eval dim (trans_exp f dim exp avs) 
-    = UnitarySem.uc_eval (fst (fst (OQASM.trans_exp f dim exp avs))).
+    = UnitarySem.uc_eval (fst (fst (OQASMProof.trans_exp f dim exp avs))).
 Proof.
   intros.
   unfold trans_exp.
   rewrite decompose_CU1_and_C3X_preserves_semantics.
   assert (forall u1 u2 f1 f2 avs1 avs2,
           trans_exp' f dim exp avs = (u1, f1, avs1) ->
-          OQASM.trans_exp f dim exp avs = (u2, f2, avs2) ->
+          OQASMProof.trans_exp f dim exp avs = (u2, f2, avs2) ->
           uc_eval dim u1 =  UnitarySem.uc_eval u2 /\ f1 = f2 /\ avs1 = avs2).
   { generalize dependent avs.
     generalize dependent dim.
@@ -336,7 +368,7 @@ Proof.
     simpl in H1, H2.
     destruct (trans_exp' f dim exp avs) eqn:transexp'.
     destruct p0.
-    destruct (OQASM.trans_exp f dim exp avs) eqn:transexp.
+    destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
     destruct p0.
     eapply IHexp in transexp' as [? [? ?]].
     2: apply transexp.
@@ -371,25 +403,18 @@ Proof.
     rewrite trans_rqft_same.
     auto.
 
-    (* H x *)
-    simpl in H1, H2.
-    unfold uc_eval.
-    inversion H1; inversion H2; subst.
-    rewrite trans_h_same.
-    auto.
-
     (* exp1 ; exp2 *)
     simpl in H1, H2.
     destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
     destruct p.
-    destruct (OQASM.trans_exp f dim exp1 avs) eqn:transexp2.
+    destruct (OQASMProof.trans_exp f dim exp1 avs) eqn:transexp2.
     destruct p.
     eapply IHexp1 in transexp1 as [? [? ?]].
     2: apply transexp2.
     subst.
     destruct (trans_exp' v0 dim exp2 p1) eqn:transexp3.
     destruct p.
-    destruct (OQASM.trans_exp v0 dim exp2 p1) eqn:transexp4.
+    destruct (OQASMProof.trans_exp v0 dim exp2 p1) eqn:transexp4.
     destruct p.
     eapply IHexp2 in transexp3 as [? [? ?]].
     2: apply transexp4.

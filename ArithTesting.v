@@ -1,6 +1,6 @@
 From Coq Require Import Arith NArith Vector Bvector.
 From QuickChick Require Import QuickChick.
-Require Import BasicUtility OQASM Testing RZArith CLArith.
+Require Import BasicUtility OQASM OQASMProof Testing RZArith CLArith.
 
 Extract Inductive positive => int
 [ "(fun p->1+2*p)" "(fun p->2*p)" "1" ]
