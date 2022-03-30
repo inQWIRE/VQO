@@ -29,9 +29,19 @@ Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var) | BLe (x:var) (y:var
     3. only permutation, both the left and right bitstrings must be distinct. *)
 Inductive numvar := Num (n:nat) | Var (x:var) | FunApp (x:var) (y:var).
 
+Definition rz_val := nat.
+
+Definition addto (r : rz_val) (n : nat) (rmax : nat) : rz_val :=
+  (r + 2^(rmax - n)) mod 2^rmax.
+
+Definition addto_n (r : rz_val) n (rmax : nat) :=
+  (r + 2^rmax - 2^(rmax - n)) mod 2^rmax.
+
+Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
+
 Inductive state :Type :=
              | STrue (* meaning that the initial state with any possible values. *)
-             | Ket (phase:R) (n:nat) (x:list numvar)
+             | Ket (phase:rz_val) (n:nat) (x:list numvar)
      (* state R*|x>_m or R*|n>_m where n is a number or x is a variable.
         m is the number of qubits in R*|..> *)
              | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
@@ -56,6 +66,7 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
               | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
             | QWhile (x:var) (n:var) (b:bexp) (e:pexp)
+            | Reflect (p:posi)
              (*quantum while, x is a variable, represents a monotonic function variable.
                  n is the upperbound, b is the boolean formula but it needs to be monotonic. 
                 e is an expression that does not contain x and no measurement.
@@ -67,9 +78,10 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
 
-Inductive predi := PTrue | PFalse | PEeq (x:var) (y:var)
+Inductive predi := PTrue | PFalse | PState (s:state) | PEeq (x:var) (y:var)
             | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
             | PNot (p:predi) | Bool (b:bexp).
+
 
 Definition subst_var (x:var) (y:var) (z:var) := if x =? y then z else x.
 
@@ -79,6 +91,7 @@ Definition substb (b:bexp) (x:var) (y:var) :=
             | BLe u v => BLe (subst_var u x y) (subst_var v x y)
    end.
 
+
 Fixpoint subst (p:predi) (x:var) (y:var) :=
    match p with PTrue => PTrue | PFalse => PFalse
     | PEeq u v => PEeq (subst_var u x y) (subst_var v x y)
@@ -86,17 +99,20 @@ Fixpoint subst (p:predi) (x:var) (y:var) :=
     | PAnd p1 p2 => PAnd (subst p1 x y) (subst p2 x y)
     | PNot p => PNot (subst p x y)
     | Bool b => Bool (substb b x y)
+    | PState s => PState s
    end.
 
 Inductive triple : predi -> pexp -> predi -> Prop :=
       | TQWhile : forall P x y n b e,
-           triple ((PAnd P (Bool (BLe y n))))  (While (substb b n y) e) 
-                     (PAnd (PAnd P (PNot (Bool (substb b n y)))) (PNot (Bool (BLe y n)))) ->
-           triple (PSum (x) P) (QWhile x n b e) (PAnd (PSum (x) P) (PNot (Bool b))).
+           triple ((PAnd P (PAnd ((Bool b)) (Bool (BLe y n)))))  e P ->
+           triple (PSum (x) P) (QWhile x n b e) (PAnd (PSum (x) P) (PNot (Bool b)))
+      | TReflect : forall a n x i,
+           triple (PSum (x) (PState (Ket a n [Var x]))) (Reflect (x,i)) (PSum (x) (PState (Ket a n [Var x]))).
 
 
 
 (* An example expressions for pexp. This is the C-Uf gate in Shor's algorithm *)
+(*
 Fixpoint shor_u' (x:var) (y:var) (n:nat) (size:nat) :=
     match n with 0 => PSKIP (x,0)
         | S m => PCU (x,size - n) (PUf m y) ; shor_u' x y m size
@@ -223,7 +239,7 @@ if a = r', we apply reflection on |c> (-2/sqrt n, ...)
 
 This is implementable in the current QC.
 *)
-
+*)
 
 
 
