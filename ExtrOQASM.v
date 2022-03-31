@@ -153,13 +153,28 @@ Definition trans_rz_div_mod (size M:nat) :=
 
 (* approx moder, where shifting is using OQASM shift. *)
 Definition trans_rz_div_mod_app_shift (size M:nat) :=
-  trans_exp (OQASMProof.vars_for_app_div_mod size) (2 * (S size))
-        (OQASMProof.app_div_mod_out size M) (OQASMProof.avs_for_app_div_mod size). 
+  trans_exp (RZArith.vars_for_app_div_mod size) (2 * (S size))
+        (RZArith.app_div_mod_out size M) (RZArith.avs_for_app_div_mod size). 
 
 (* approx moder, where shifting is using SQIR SWAPs. *)
 Definition trans_rz_div_mod_app_swaps (size M:nat) :=
-  trans_exp (OQASMProof.vars_for_app_div_mod size) (2 * (S size))
-        (OQASMProof.app_div_mod_aout size M) (OQASMProof.avs_for_app_div_mod size). 
+  trans_exp (RZArith.vars_for_app_div_mod size) (2 * (S size))
+        (RZArith.app_div_mod_aout size M) (RZArith.avs_for_app_div_mod size). 
+
+(* approx circuits. b is a number <= size for the precetion. *)
+Definition trans_appx_adder (size:nat) (b:nat) :=
+  trans_exp (RZArith.vars_for_rz_full_add size) 
+   (2 * size) (RZArith.appx_full_adder_out size b) (OQASMProof.avs_for_arith size).
+
+
+Definition trans_appx_const_adder (size:nat) (b:nat) (M:nat) :=
+  trans_exp (RZArith.vars_for_rz_adder size) 
+   (2 * size) (RZArith.appx_adder_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
+
+Definition trans_appx_const_sub (size:nat) (b:nat)  (M:nat):=
+  trans_exp (RZArith.vars_for_rz_adder size) 
+   (2 * size) (RZArith.appx_sub_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
+
 
 (* z = ((z+x); (z*x)); ((z+y); (z*y));
         ((z+x); (z*x)); ((z+y); (z*y));
