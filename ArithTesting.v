@@ -501,3 +501,32 @@ End ModMul8Rz.
 (*
 QuickChick ModMul8Rz.mod_mul_8_spec.
  *)
+
+Module AppxAdd.
+
+  Definition x := 0.
+  Definition y := 1.
+  Definition ex := 2.
+
+  Definition appx_add_circ n := OQASMProof.rz_full_adder_form x n 1 y.
+
+  Definition appx_add_env n : f_env := fun _ => n.
+
+  Definition appx_add_prec n : nat := get_prec (appx_add_env n) (appx_add_circ n).
+
+  Conjecture appx_add_spec :
+    forall (n : nat) (vx vy : Bvector n),
+    st_equivb (get_vars (appx_add_circ n)) (appx_add_env n)
+      (exp_sem (fun _ => n) n (appx_add_circ n) (x |=> vx, y |=> vy))
+          (x |=> vx [+] vy, y |=> vy) = true.
+
+  Definition n := 2.
+  Definition vx := Bcons true _ (Bvect_false 1).
+  Definition vy := Bvect_true 2.
+  Compute (M.elements (x |=> vx [+] vy, y |=> vy)).
+  Compute (M.elements (exp_sem (fun _ => n) n (appx_add_circ n) (x |=> vx, y |=> vy))).
+
+End AppxAdd.
+
+QuickChick (AppxAdd.appx_add_spec 5).
+ *)
