@@ -4567,13 +4567,13 @@ Definition nat_old_con_add_mult_out (size:nat) := nat_old_con_add_mult size x_va
 Fixpoint appx_full_adder' (x:var) (n:nat) (b:nat) (size:nat) (y:var) :=
   match n with
   | 0 => (SKIP (x,0))
-  | S m => (if n <=? b then (CU (y,m) (SR (b - n) x)) else (SKIP (x,m))); appx_full_adder' x m b size y
+  | S m => (if n <=? b then (CU (y,(size-b) + m) (SR (b - n) x)) else (SKIP (x,m))); appx_full_adder' x m b size y
   end.
 Definition appx_full_adder (x:var) (n:nat) (b:nat) (y:var) := appx_full_adder' x n b n y.
 
 Definition appx_full_adder_form (x:var) (n:nat) (b:nat) (y:var) :=
-   (Rev y;Rev x; QFT x b) ; appx_full_adder x n b y ; 
-  inv_exp (Rev y;Rev x; QFT x b).
+   (Rev x; QFT x b) ; appx_full_adder x n b y ; 
+  inv_exp (Rev x; QFT x b).
 
 Definition appx_full_adder_out (size:nat) (b:nat) := appx_full_adder_form x_var size b y_var.
 
