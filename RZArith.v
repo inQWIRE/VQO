@@ -4583,7 +4583,7 @@ Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
   | S m => appx_adder' x m b size M ;
-           if n <=? b then (if M m then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
+           if n <=? b then (if M ((size-b)+m) then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
   end.
 Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b n M.
 
@@ -4597,7 +4597,7 @@ Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
   | S m => appx_sub' x m b size M;
-             (if n <=? b then (if M m then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
+             (if n <=? b then (if M ((size-b)+m) then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
   end.
 
 Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b n M.
