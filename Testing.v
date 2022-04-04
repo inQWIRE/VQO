@@ -347,6 +347,17 @@ Notation "x |=> vx , st" :=
 
 Infix "|=>" := (update_var zero_state) (at level 100).
 
+Fixpoint get_statevector' n x st :=
+  match n with
+  | 0 => Some Bnil
+  | S n' => match get_state x st, get_statevector' n' (next_pos x) st with
+            | nval b 0, Some v => Some (Bcons b n' v)
+            | _, _ => None
+            end
+  end.
+
+Definition get_statevector n x st := get_statevector' n (x, 0) st.
+
 (* A finite set of variables (nats) *)
 Definition var_set := VarSet.t.
 

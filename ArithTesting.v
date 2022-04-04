@@ -1,6 +1,7 @@
-From Coq Require Import Arith NArith Vector Bvector.
+From Coq Require Import Arith NArith Vector Bvector ZArith.
 From QuickChick Require Import QuickChick.
 Require Import BasicUtility OQASM OQASMProof Testing RZArith CLArith.
+Import BinInt (Z).
 
 Extract Inductive positive => int
 [ "(fun p->1+2*p)" "(fun p->2*p)" "1" ]
@@ -508,25 +509,27 @@ Module AppxAdd.
   Definition y := 1.
   Definition ex := 2.
 
-  Definition appx_add_circ n := OQASMProof.rz_full_adder_form x n 1 y.
+  Definition appx_add_circ n b := appx_full_adder_form x n (n-b) y.
 
-  Definition appx_add_env n : f_env := fun _ => n.
+  Definition bv_dist {n} (v v' : Bvector n) :=
+    let z := Z.of_N (bvector2n v) in
+    let z' := Z.of_N (bvector2n v') in
+    Z.abs_N (Z.min (Z.modulo (z - z') (Z.of_N (exp2 n))) (BinInt.Z.modulo (z' - z) (Z.of_N (exp2 n)))).
 
-  Definition appx_add_prec n : nat := get_prec (appx_add_env n) (appx_add_circ n).
+  Definition st_dist n (st1 st2 : state) :=
+    match get_statevector n x st1, get_statevector n x st2 with
+    | Some v1, Some v2 => bv_dist v1 v2
+    | _, _ => exp2 n
+    end.
 
   Conjecture appx_add_spec :
-    forall (n : nat) (vx vy : Bvector n),
-    st_equivb (get_vars (appx_add_circ n)) (appx_add_env n)
-      (exp_sem (fun _ => n) n (appx_add_circ n) (x |=> vx, y |=> vy))
-          (x |=> vx [+] vy, y |=> vy) = true.
-
-  Definition n := 2.
-  Definition vx := Bcons true _ (Bvect_false 1).
-  Definition vy := Bvect_true 2.
-  Compute (M.elements (x |=> vx [+] vy, y |=> vy)).
-  Compute (M.elements (exp_sem (fun _ => n) n (appx_add_circ n) (x |=> vx, y |=> vy))).
+    forall (n : nat) b (vx vy : Bvector n),
+    (st_dist n
+      (exp_sem (fun _ => n) n (appx_add_circ n b) (x |=> vx, y |=> vy))
+      (x |=> vx [+] vy, y |=> vy) <=? exp2 b)%N = true.
 
 End AppxAdd.
 
-QuickChick (AppxAdd.appx_add_spec 5).
+(*
+QuickChick (AppxAdd.appx_add_spec).
  *)
