@@ -4567,7 +4567,7 @@ Definition nat_old_con_add_mult_out (size:nat) := nat_old_con_add_mult size x_va
 Fixpoint appx_full_adder' (x:var) (n:nat) (b:nat) (size:nat) (y:var) :=
   match n with
   | 0 => (SKIP (x,0))
-  | S m => (if n <=? b then (CU (y,m) (SR (b - n) x)) else (SKIP (x,m))); appx_full_adder' x m b size y
+  | S m => (if n <=? b then (CU (y,(size-b) + m) (SR (b - n) x)) else (SKIP (x,m))); appx_full_adder' x m b size y
   end.
 Definition appx_full_adder (x:var) (n:nat) (b:nat) (y:var) := appx_full_adder' x n b n y.
 
@@ -4583,7 +4583,7 @@ Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
   | S m => appx_adder' x m b size M ;
-           if n <=? b then (if M m then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
+           if n <=? b then (if M ((size-b)+m) then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
   end.
 Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b n M.
 
@@ -4597,7 +4597,7 @@ Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
   | S m => appx_sub' x m b size M;
-             (if n <=? b then (if M m then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
+             (if n <=? b then (if M ((size-b)+m) then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
   end.
 
 Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b n M.
