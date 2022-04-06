@@ -19,7 +19,8 @@ Fixpoint sumR (lst : list R) : R :=
  * This is missing quite a bit of reasonable features.
  * Particularly, we can't check two distrs are equal mathematically...
  * There is no way to simplify by collating terms either.
- * It might be better to find and use a library. *)
+ * It might be better to find and use a library.
+ *)
 Record distr (T : Type) := make_distr {
   probabilities : list (T * R);
   probability_wf : forall (i : nat),
@@ -30,6 +31,20 @@ Record distr (T : Type) := make_distr {
     end;
   distr_is_full :
     sumR (map snd probabilities) = 1%R;
+}.
+
+(* There is an argument to do the following instead.
+ * https://coq.inria.fr/library/Coq.Init.Specif.html
+ *
+ * Currently unused.
+ *)
+Definition distr' (T : Type) : Type := { probabilities : list (T * R) |
+   forall i,
+    match nth_error probabilities i with
+    | None => True
+    | Some element => let p := snd element in (p >= 0)%R /\ (p <= 1)%R
+    end &
+  sumR (map snd probabilities) = 1%R
 }.
 
 Lemma singleton_distr_wf :
