@@ -111,13 +111,18 @@ Inductive eq_state : state -> state -> Prop :=
 
 
 Inductive triple : predi -> pexp -> predi -> Prop :=
-     | appH : forall x i y n b s P, 
-         triple (PAnd (PState ([(x,Num n)]) (NTensor (BA (Num n)) y (BA b) s)) P)
-              (AppH (x,i)) (PAnd (PState ([(x,Num n)]) 
-                    (Tensor (NTensor (BA (Num n)) y (BA b) s) s (NTensor (BA (Num n)) y (BA b) s) )) P).
+     | conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q)
+     | tensorSep : forall x n P P' Q e , 
+           triple (PState ([(x,Num n)]) P) e (PState ([(x,Num n)]) P') ->
+           triple (PState ([(x,Num n)]) (Tensor P Q)) e (PState ([(x,Num n)]) (Tensor P' Q))
+     | appH : forall x i b k y n s, 
+         triple (PState ([(x,Num n)]) (Tensor (ket b) (NTensor (BA (Num n)) y (BA (Num (i+1))) s)))
+              (AppH (x,(Num i)))
+               (PState ([(x,Num n)]) (Tensor (Sigma (BA (Num 2)) 
+                   k (BA (Num 0)) (ket (Var k))) (NTensor (BA (Num n)) y (BA (Num (i+1))) s))).
 
 
-
+(*
 Inductive state :Type :=
              | STrue (* meaning that the initial state with any possible values. *)
              | ket (b:basic) (*normal state |0> false or |1> true *)
@@ -175,7 +180,7 @@ Inductive triple : predi -> pexp -> predi -> Prop :=
            triple (PSum (x) P) (QWhile x n b e) (PAnd (PSum (x) P) (PNot (Bool b)))
       | TReflect : forall a n x i,
            triple (PSum (x) (PState (Ket a n [Var x]))) (Reflect (x,i)) (PSum (x) (PState (Ket a n [Var x]))).
-
+*)
 
 
 (* An example expressions for pexp. This is the C-Uf gate in Shor's algorithm *)

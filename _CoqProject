@@ -35,6 +35,3 @@ externals/SQIR/examples/shor/ModMult.v
 externals/SQIR/utilities/AltGateSet.v
 externals/SQIR/utilities/ExtrOcamlList.v
 externals/SQIR/utilities/ExtrOcamlR.v
-
-QC.v
-QC_OpSem.v
