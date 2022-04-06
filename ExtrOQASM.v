@@ -111,6 +111,12 @@ Definition trans_cl_const_mul (size M:nat) :=
 Definition trans_cl_mul (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASMProof.avs_for_arith size).
 
+(* z = x * y (TOFF-based): Quipper Out Place *)
+Definition trans_cl_mul_out_place (size:nat) :=
+  trans_exp (CLArith.vars_for_cl_nat_full_out_place_m size)
+           (4 * size + 1) (CLArith.cl_full_mult_out_place_out size) (OQASMProof.avs_for_arith size).
+
+
 (* z = M + x (QFT-based) *)
 Definition trans_rz_const_adder (size M:nat) :=
   trans_exp (RZArith.vars_for_rz_adder size) size (RZArith.rz_adder_out size (nat2fb M)) (OQASMProof.avs_for_arith size).

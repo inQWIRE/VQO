@@ -8,6 +8,7 @@ Require Import BasicUtility.
 Require Import Classical_Prop.
 Require Import MathSpec.
 Require Import OQASM.
+Require Import OQIMP.
 (**********************)
 (** Unitary Programs **)
 (**********************)
@@ -19,7 +20,11 @@ Local Open Scope pexp_scope.
 Local Open Scope nat_scope.
 
 (* This will be replaced by PQASM. *)
-Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var) | BLe (x:var) (y:var).
+Inductive basic := Var (x:var) | Num (n:nat) | Bool (b:bool) | Fixed (n:nat).
+
+Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | TwoTo (e1:basic).
+
+Inductive bexp := BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BLe (x:aexp) (y:aexp).
 
 (*Pattern for walk. goto is describing matching patterns such as
     match |01> -> |10> | |00> -> |11> ...
@@ -27,7 +32,7 @@ Inductive bexp := BEq (x:var) (y:var) | BLt (x:var) (y:var) | BLe (x:var) (y:var
     1.left-hand and right hand must have the same number of bits.
     2. the number of cases are exactly 2^n where n is the bit number.
     3. only permutation, both the left and right bitstrings must be distinct. *)
-Inductive numvar := Num (n:nat) | Var (x:var) | FunApp (x:var) (y:var).
+Inductive numvar := NNum (n:nat) | NVar (x:var) | NFunApp (x:var) (y:var).
 
 Definition rz_val := nat.
 
@@ -41,31 +46,44 @@ Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
 
 Inductive state :Type :=
              | STrue (* meaning that the initial state with any possible values. *)
-             | Ket (phase:rz_val) (n:nat) (x:list numvar)
+             | ket (b:basic) (*normal state |0> false or |1> true *)
+             | Plus (phasea: basic) (phaseb: basic)
      (* state R*|x>_m or R*|n>_m where n is a number or x is a variable.
         m is the number of qubits in R*|..> *)
              | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
-             | Plus (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
-             | Sigma (n:nat) (N:nat) (s:state) (* the state represents Sigma_0^n s,
-                                               e.g. 1/(sqrt N) * Sigma n (ket n x) is Sigma_0^n |x> *)
-             | NTensor (n:nat) (s:state) (* the state represents Tensor_0^n s
-                                       e.g. 1/(sqrt N) * Tensor n (Plus (Ket 1 0) (Ket 1 1) is Tensor_0^n (|0> + |1>) *)
-             | Const (p:R) (n:nat) (* a constant of evaluating a group of qubits.
-                                       n is range from 0 to 2^n-1,
-                                      and it's the decimal representation of the binary array measured from n qubits. *)
-             | When (s:state) (x:var) (p:R) (n:nat) 
-                          (*This is the resulting state of a partial measurement on x. 
-                             The meaning is that when x is evaluated as n
-                                   with the probablity p, what happen in the other qubits s. *).
+             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
+             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
+             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
+
+
+Inductive predi := PTrue | PFalse | PState (l:list (var * basic)) (s:state)
+                    (* quantum variable, its qubit size and the state representation*)
+            | CState (b:bexp)
+               (* bexp is a constant variable predicate. *)
+            | PMea (x:var) (p:R) (n:nat) 
+                (* partial measumrement on the varible x with the probability of p at a value n. *)
+            | PAnd (p1:predi) (p2:predi)
+            | PNot (p:predi).
+
 
 Inductive pattern := Adj (x:var) (* going to adj nodes. *)
                    | Match (x:var) (n:nat) (nll:list (list bool * list bool)).
                         (*n here means n bits starting from the 0 position in x. *)
 
-Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
-              | InitQubit (p:posi) | AppU (e:pexp) (p:posi)  | PSeq (s1:pexp) (s2:pexp)
+Definition posi :Type := (var * basic).
+
+Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) 
+              | InitQubit (p:posi) | AppU (e:pexp) (p:posi) 
+            | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | QWhile (x:var) (n:var) (b:bexp) (e:pexp)
+            | AppH (p:posi)
+            | State (x:var)
+            | QFT (x:var)
+            | RQFT (x:var)
+            | Meas (x:var)
+            | CX (x:posi) (y:posi)
+            | CU (x:posi) (y:prog) (z:var)
+            | QWhile (n:var) (x:var) (f:nat -> nat) (b:bexp) (e:pexp)
             | Reflect (p:posi)
              (*quantum while, x is a variable, represents a monotonic function variable.
                  n is the upperbound, b is the boolean formula but it needs to be monotonic. 
@@ -77,12 +95,61 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:nat) | Meas (p:posi)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
+Definition add_num (x:aexp) (n:nat) := 
+    match x with APlus e1 (BA (Num m)) => APlus e1 (BA (Num (m+n)))
+               | APlus (BA (Num m)) e2 => APlus (BA (Num (m+n))) e2
+               | a => APlus a (BA (Num n))
+    end.
 
-Inductive predi := PTrue | PFalse | PState (s:state) | PEeq (x:var) (y:var)
-            | PSum (x:var) (p:predi) | PAnd (p1:predi) (p2:predi)
-            | PNot (p:predi) | Bool (b:bexp).
+
+Inductive eq_state : state -> state -> Prop :=
+      | tensor_assoc : forall s1 s2 s3, eq_state (Tensor s1 (Tensor s2 s3)) (Tensor (Tensor s1 s2) s3)
+      | tensor_break_1 : forall n i j s,
+           eq_state (NTensor n i j s) (Tensor s  (NTensor n i (add_num j 1) s))
+      | tensor_empty : forall n i a s,
+           eq_state (Tensor a (NTensor n i n s)) a.
 
 
+Inductive triple : predi -> pexp -> predi -> Prop :=
+     | appH : forall x i y n b s P, 
+         triple (PAnd (PState ([(x,Num n)]) (NTensor (BA (Num n)) y (BA b) s)) P)
+              (AppH (x,i)) (PAnd (PState ([(x,Num n)]) 
+                    (Tensor (NTensor (BA (Num n)) y (BA b) s) s (NTensor (BA (Num n)) y (BA b) s) )) P).
+
+
+
+Inductive state :Type :=
+             | STrue (* meaning that the initial state with any possible values. *)
+             | ket (b:basic) (*normal state |0> false or |1> true *)
+             | Plus (phasea: basic) (phaseb: basic)
+     (* state R*|x>_m or R*|n>_m where n is a number or x is a variable.
+        m is the number of qubits in R*|..> *)
+             | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
+             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
+             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
+             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
+
+
+
+Inductive predi := PTrue | PFalse | PState (l:list (var * nat)) (s:state)
+                    (* quantum variable, its qubit size and the state representation*)
+            | CState (b:bexp)
+               (* bexp is a constant variable predicate. *)
+            | PMea (x:var) (p:R) (n:nat) 
+                (* partial measumrement on the varible x with the probability of p at a value n. *)
+            | PAnd (p1:predi) (p2:predi)
+            | PNot (p:predi).
+
+(*
+      | TQWhile : forall P x y n b e,
+           triple ((PAnd P (PAnd ((Bool b)) (Bool (BLe y n)))))  e P ->
+           triple (PSum (x) P) (QWhile x n b e) (PAnd (PSum (x) P) (PNot (Bool b)))
+      | TReflect : forall a n x i,
+           triple (PSum (x) (PState (Ket a n [Var x]))) (Reflect (x,i)) (PSum (x) (PState (Ket a n [Var x]))).
+*)
+
+
+(* here. *)
 Definition subst_var (x:var) (y:var) (z:var) := if x =? y then z else x.
 
 Definition substb (b:bexp) (x:var) (y:var) :=
