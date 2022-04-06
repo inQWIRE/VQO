@@ -4544,6 +4544,7 @@ Fixpoint cl_full_mult' (n:nat) (size:nat) (x:var) (y:var) (re:var) (c:posi) :=
 Definition cl_full_mult (size:nat) (x y:var) (re:var) (c:posi) :=
    (cl_full_mult' size size x y re c).
 
+
 Definition vars_for_cl_nat_full_m' (size:nat) := 
   gen_vars size (x_var::(y_var::(z_var::([])))).
 
@@ -4553,6 +4554,30 @@ Definition vars_for_cl_nat_full_m (size:nat) :=
 
 Definition cl_full_mult_out (size:nat) := 
    cl_full_mult size x_var y_var z_var (s_var,0).
+
+(* Quipper implementation of out-of-place mult. *)
+Definition one_cu_cl_full_adder_out_place (c2:posi) (x:var) (re ex:var) (c1:posi) (n:nat) (i:nat) := 
+  CU c2 (copyto x ex n); adder_i n ex re c1 i; CU c2 (copyto x ex n).
+
+Fixpoint cl_full_mult_out_place' (n:nat) (size:nat) (x:var) (y:var) (re ex:var) (c:posi) :=
+   match n with 
+   | 0 => SKIP (re,0)
+   | S m => cl_full_mult_out_place' m size x y re ex c;
+           one_cu_cl_full_adder_out_place (y,m) x re ex c (size-m) m
+   end.
+
+Definition cl_full_mult_out_place (size:nat) (x y:var) (re ex:var) (c:posi) :=
+   (cl_full_mult_out_place' size size x y re ex c).
+
+Definition vars_for_cl_nat_full_out_place_m' (size:nat) := 
+  gen_vars size (x_var::(y_var::(z_var::(s_var::([]))))).
+
+Definition vars_for_cl_nat_full_out_place_m (size:nat) :=
+  fun x => if x =? c_var then (size * 4,1,id_nat,id_nat) 
+        else vars_for_cl_nat_full_out_place_m' size x.
+
+Definition cl_full_mult_out_place_out (size:nat) := 
+   cl_full_mult_out_place size x_var y_var z_var s_var (c_var,0).
 
 
 (* x * y circuit for fixedP values. *)
