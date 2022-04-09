@@ -42,8 +42,9 @@ Run `make` in the top level directory to compile our Coq proofs. See the README 
 
 OQASM
 * OQASM.v - OQASM language, type system, and compilation from OQASM to SQIR
-* CLArith.v - "classical" arithmetic operations using X and CU gates
-* RZArith.v - arithmetic operations using QFT and Z axis rotations
+* OQASMProof.v - The proofs for the type soundness, language features, and the compilation correctness.
+* CLArith.v - "classical" arithmetic operations (including addition, multiplication, subtraction, division, modulo, division-modulo, modulo multiplication, and comparison operations for different combinations, such as if positions are constants or qubits, same below when talking about arithmetic operations) using X and CU gates
+* RZArith.v - arithmetic operations using QFT/AQFT and Z axis rotations
 
 OQIMP
 * OQIMP.v - OQIMP language, type system, and compilation from OQIMP to OQASM
@@ -51,11 +52,25 @@ OQIMP
 
 Testing
 * Testing.v - data structures and theorems for random testing
-* ArithTesting.v - random testing results for arithmetic operations
+* ArithTesting.v - random testing results for arithmetic operations.
 
 Utilities
 * BasicUtility.v - useful helper functions and tactics
-* MathSpec.v - abstract specifications for arithmetic operations
+* MathSpec.v - abstract specifications for arithmetic operations.
 * ExtrOQASM.v - alternate definitions using a gate set suitable for extraction 
 
 The `experiments` directory contains utilities for extracting VQO code & running the experiments in our paper. See the README in that directory for more information.
+
+
+## Summary of Key Results
+
+* Having a language (OQASM) to describe quantum oracle circuits by using a type system to classify non-entanglement status.
+* OQASM is verified to be correct with respect to the compilation to SQIR.
+* Be able to run random testing on large quantum oracle circuits.
+* Having different implementations of arithmetic operations for TOFF and QFT/AQFT-based.
+* Having a random testing framework not only being able to test circuit correctness, but also being able to compare distances between different approximate circuits (based on QFT/AQFT arithmetic implementations), and helping user figuring out the use case of approximate circuits. An example is given as the AQFT modulo circuit in RZArith.v
+* Having a high-level OQIMP language that allows users to describe quantum oracle programs based on C-like programs.
+* The OQIMP type system is a gradual type system. It labels variables with C or Q modes, where C refers to classical variables and Q refers to quantum variables. We partially evaluate the classical values in OQIMP, then we compile the programs to well-typed circuits in OQASM. The type system in OQASM is semi-dynamic that relies on the classical values to otimize arithmetic circuits efficiently. We are able to implement all arithemtic circuits by using in-place algorithms with effective qubit sizes.
+* We implemented many different quantum oracles in OQIMP including SHA224, ChaCha20, sin, cos, arcsin, x^n.
+* Having a testing framework based on OQIMP semantics. Users are able to test large programs. The OQIMP semantics is classical so the testing framework can be fast.
+

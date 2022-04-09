@@ -4579,32 +4579,32 @@ Definition appx_full_adder_out (size:nat) (b:nat) := appx_full_adder_form x_var 
 
 (* approximate x = (x % M, x / M)  circuit. *)
 
-Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
+Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
-  | S m => appx_adder' x m b size M ;
-           if n <=? b then (if M ((size-b)+m) then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
+  | S m => appx_adder' x m b M ;
+           if n <=? b then (if M (m) then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
   end.
-Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b n M.
+Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b M.
 
 Definition appx_adder_form (x:var) (n:nat) (b:nat) (M:nat -> bool) :=
-   (Rev x); QFT x n; appx_adder x n b M ;
-  inv_exp ( (Rev x); QFT x n).
+   (Rev x); QFT x b; appx_adder x n b M ;
+  inv_exp ( (Rev x); QFT x b).
 
 Definition appx_adder_out (size:nat) (b:nat) (M:nat-> bool) := appx_adder_form x_var size b M.
 
-Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (size:nat) (M: nat -> bool) :=
+Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (M: nat -> bool) :=
   match n with 
   | 0 => SKIP (x,0)
-  | S m => appx_sub' x m b size M;
-             (if n <=? b then (if M ((size-b)+m) then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
+  | S m => appx_sub' x m b M;
+             (if n <=? b then (if M (m) then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
   end.
 
-Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b n M.
+Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b M.
 
 Definition appx_sub_form (x:var) (n:nat) (b:nat) (M:nat -> bool) :=
-   (Rev x); QFT x n; appx_sub x n b M ;
-  inv_exp ( (Rev x); QFT x n).
+   (Rev x); QFT x b; appx_sub x n b M ;
+  inv_exp ( (Rev x); QFT x b).
 
 Definition appx_sub_out (size:nat) (b:nat) (M:nat-> bool) := appx_sub_form x_var size b M.
 
@@ -4626,8 +4626,8 @@ Fixpoint nLshift x (n:nat) := match n with 0 => SKIP (x,0)
 Definition appx_div_mod (n:nat) (x ex:var) (M:nat) := 
     let i := findnum M (n-1) in 
          (Rev x); QFT x n;
-            appx_moder' (S i) n (S i) x ex (nat2fb (2^i * M)); nLshift x (S i);
-        inv_exp ( (Rev x); QFT x n).
+            appx_moder' (S i) n n x ex (nat2fb (2^i * M)); RQFT x (n - S i); nLshift x (S i);
+         Rev x.
 
 Fixpoint rshift_by_swap (n:nat) (x:var) :=
     match n with 0 => SKIP (x,0)
@@ -4654,8 +4654,8 @@ Fixpoint appx_moder'_a i (n:nat) (b:nat) (x ex:var) (M:nat -> bool) :=
 Definition appx_div_mod_a (n:nat) (x ex:var) (M:nat) := 
     let i := findnum M (n-1) in 
          (Rev x); QFT x n;
-            appx_moder'_a (S i) n (S i) x ex (nat2fb (2^i * M)); nLshift_a x (S i);
-        inv_exp ( (Rev x); QFT x n).
+            appx_moder'_a (S i) n n x ex (nat2fb (2^i * M)); RQFT x (n - S i); nLshift_a x (S i);
+        (Rev x).
 
 Definition app_div_mod_out (size:nat) := 
    appx_div_mod (S size) x_var y_var.

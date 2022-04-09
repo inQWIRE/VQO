@@ -137,9 +137,9 @@ Module AddParam.
 
 End AddParam.
 
-(*
+
 QuickChick (AddParam.add_param_spec 60).
- *)
+
 
 Module RzMul.
 
@@ -283,6 +283,37 @@ End DivMod.
 (*
 QuickChick DivMod.div_mod_spec.
  *)
+
+Module AppDivMod.
+
+  Definition x  : var := 0.
+  Definition ex : var := 1.
+
+  Definition div_mod_circ n m :=
+    appx_div_mod (S n) x ex m.
+
+  Definition div_mod_vars n := get_vars (div_mod_circ n 1).
+
+  Definition div_mod_env n : f_env := fun _ => S n.
+
+  Definition div_mod_prec n : nat :=
+    get_prec (div_mod_env n) (div_mod_circ n 1).
+
+  Definition div_mod_spec : Checker :=
+    forAll (choose (60, 60)) (fun n =>
+    forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
+    forAllShrink arbitrary shrink (fun vx : Bvector n =>
+    dec2checker
+    (st_equivb (div_mod_vars n) (div_mod_env n)
+      (exp_sem (div_mod_env n) (S n) (div_mod_circ n m)
+        (x |=> vx))
+      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
+
+End AppDivMod.
+
+(*
+QuickChick AppDivMod.div_mod_spec.
+*)
 
 Module TofDivMod.
 
