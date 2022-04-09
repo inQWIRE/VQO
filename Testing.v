@@ -1,10 +1,9 @@
 Require Import Arith NArith Vector Bvector Equality MSets OrderedTypeEx Lia BasicUtility VectorStates Utilities.
-Require Import OQASM OQASMProof MathSpec.
+Require Import OQASM MathSpec.
 From QuickChick Require Import QuickChick.
 Import Vector (hd, tl).
 Import Decidability (dec).
 Import OQASM (exp(..)).
-Import OQASMProof (CNOT).
 
 Require FMapAVL.
 Module Posi_as_OT := PairOrderedType Nat_as_OT Nat_as_OT.
@@ -347,6 +346,17 @@ Notation "x |=> vx , st" :=
     (update_var st x vx) (at level 100, vx at next level, right associativity).
 
 Infix "|=>" := (update_var zero_state) (at level 100).
+
+Fixpoint get_statevector' n x st :=
+  match n with
+  | 0 => Some Bnil
+  | S n' => match get_state x st, get_statevector' n' (next_pos x) st with
+            | nval b 0, Some v => Some (Bcons b n' v)
+            | _, _ => None
+            end
+  end.
+
+Definition get_statevector n x st := get_statevector' n (x, 0) st.
 
 (* A finite set of variables (nats) *)
 Definition var_set := VarSet.t.
