@@ -4639,8 +4639,8 @@ Fixpoint lshift_by_swap (n:nat) (x:var) :=
               | S m => SWAP (x,m) (x,n); lshift_by_swap m x
     end.
 
-Fixpoint nLshift_a x (n:nat) := match n with 0 => SKIP (x,0)
-                         | S m => lshift_by_swap n x ; nLshift_a x m
+Fixpoint nLshift_a x (n:nat) (step:nat) := match step with 0 => SKIP (x,0)
+                         | S m => lshift_by_swap n x ; nLshift_a x n m
                      end.
 
 Fixpoint appx_moder'_a i (n:nat) (b:nat) (x ex:var) (M:nat -> bool) := 
@@ -4654,7 +4654,7 @@ Fixpoint appx_moder'_a i (n:nat) (b:nat) (x ex:var) (M:nat -> bool) :=
 Definition appx_div_mod_a (n:nat) (x ex:var) (M:nat) := 
     let i := findnum M (n-1) in 
          (Rev x); QFT x n;
-            appx_moder'_a (S i) n n x ex (nat2fb (2^i * M)); RQFT x (n - S i); nLshift_a x (S i);
+            appx_moder'_a (S i) n n x ex (nat2fb (2^i * M)); RQFT x (n - S i); nLshift_a x n (S i);
         (Rev x).
 
 Definition app_div_mod_out (size:nat) := 

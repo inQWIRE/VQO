@@ -290,7 +290,7 @@ Module AppDivMod.
   Definition ex : var := 1.
 
   Definition div_mod_circ n m :=
-    appx_div_mod (S n) x ex m.
+    appx_div_mod_a (S n) x ex m.
 
   Definition div_mod_vars n := get_vars (div_mod_circ n 1).
 
@@ -311,9 +311,9 @@ Module AppDivMod.
 
 End AppDivMod.
 
-(*
+
 QuickChick AppDivMod.div_mod_spec.
-*)
+
 
 Module TofDivMod.
 
