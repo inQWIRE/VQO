@@ -63,22 +63,28 @@ The `experiments` directory contains utilities for extracting VQO code & running
 
 ## Summary of Key Results
 
-### Basic Concepts
-
-* Having a language (OQASM) to describe quantum oracle circuits by using a type system to classify non-entanglement status.
-* OQASM is verified to be correct with respect to the compilation to SQIR.
-* Be able to run random testing on large quantum oracle circuits.
-* Having different implementations of arithmetic operations for TOFF and QFT/AQFT-based.
-* Having a random testing framework not only being able to test circuit correctness, but also being able to compare distances between different approximate circuits (based on QFT/AQFT arithmetic implementations), and helping user figuring out the use case of approximate circuits. An example is given as the AQFT modulo circuit in RZArith.v
-* Having a high-level OQIMP language that allows users to describe quantum oracle programs based on C-like programs.
-* The OQIMP type system is a gradual type system. It labels variables with C or Q modes, where C refers to classical variables and Q refers to quantum variables. We partially evaluate the classical values in OQIMP, then we compile the programs to well-typed circuits in OQASM. The type system in OQASM is semi-dynamic that relies on the classical values to otimize arithmetic circuits efficiently. We are able to implement all arithemtic circuits by using in-place algorithms with effective qubit sizes.
-* We implemented many different quantum oracles in OQIMP including SHA224, ChaCha20, sin, cos, arcsin, x^n.
-* Having a testing framework based on OQIMP semantics. Users are able to test large programs. The OQIMP semantics is classical so the testing framework can be fast.
-
 ### Fully Verified
-* Toffoli-based modular multiplication is correct (`modmult_correct` in CLArith.v)
+* Verified the shifting operations correctly represented in quantum program (`neu_trans_state` in OQASMProof.v)
+* Verified OQASM type soundness (`well_typed_right_mode_pexp` in OQASMProof.v)
 * Compilation from OQASM to SQIR is semantics preserving (`trans_exp_sem` in OQASMProof.v)
+* Copy circuit correctness (`copyto_sem` in OQASMProof.v)
+* Toffoli-based addition is correct (`adder01_sem_carry0` in CLArith.v)
+* Toffoli-based constant addition is correct (`adder01_correct_fb` in CLArith.v)
+* Toffoli-based subtraction is correct (`subtractor01_sem` in CLArith.v)
+* Toffoli-based lessthan circuit is correct (`comparator01_sem` in CLArith.v)
+* Toffoli-based modular multiplication is correct (`modmult_correct` in CLArith.v)
+* QFT-based addition is correct (`rz_full_adder_sem` in RZArith.v)
+* QFT-based constant addition is correct (`rz_adder_sem` in RZArith.v)
+* QFT-based constant subtraction is correct (`rz_sub_sem` in RZArith.v)
+* QFT-based constant subtraction (right format) is correct (`rz_sub_right` in RZArith.v)
+* QFT-based subtraction is correct (`rz_full_sub_sem` in RZArith.v)
+* QFT-based lessthan circuit is correct (`rz_compare_sem` in RZArith.v)
+* QFT-based modular multiplication is correct (`rz_modmult_full_sem` in RZArith.v)
+* OQIMP type soundness and compiler correctness (OQIMP.v)
+* OQIMP compilation correctness (OQIMP.v)
 
 ### Tested using PBT
-* Toffoli-based addition is correct (`tof_add_spec` in ArithTesting.v)
->>>>>>> 0c2d14494eaca7103db85c827661a3378e029c3e
+* 16 diferent arithemtic circuits are randomly tested. (ArithTesting.v)
+* sha256, Chacha20, sine, cosine, x^n are properly tested in OQIMP. (OracleExample.v)
+
+
