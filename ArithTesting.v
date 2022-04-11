@@ -573,7 +573,7 @@ Module AppxAdd.
 
 End AppxAdd.
 
-(* example: compute the maximum difference between the (8-1)-bit approximate adder and the 8-bit exact adder, over 100 samples *)
+(* example: compute the maximum difference between the (8-1)-bit approximate adder and the 8-bit exact adder, over 10000 samples *)
 (*
 Sample (AppxAdd.appx_add_check 10000 8 1).
  *)
