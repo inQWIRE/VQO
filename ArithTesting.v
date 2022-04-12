@@ -1,4 +1,4 @@
-From Coq Require Import Arith NArith Vector Bvector.
+From Coq Require Import Arith NArith Vector Bvector ZArith List.
 From QuickChick Require Import QuickChick.
 Require Import BasicUtility OQASM OQASMProof Testing RZArith CLArith.
 
@@ -137,9 +137,9 @@ Module AddParam.
 
 End AddParam.
 
-
+(*
 QuickChick (AddParam.add_param_spec 60).
-
+ *)
 
 Module RzMul.
 
@@ -498,8 +498,9 @@ Module ModMul8.
 
 End ModMul8.
 
+(*
 QuickChick ModMul8.mod_mul_8_spec.
-
+ *)
 
 Module ModMul8Rz.
 
@@ -528,4 +529,54 @@ Module ModMul8Rz.
 
 End ModMul8Rz.
 
+(*
 QuickChick ModMul8Rz.mod_mul_8_spec.
+ *)
+
+Module AppxAdd.
+
+  Definition x := 0.
+  Definition y := 1.
+  Definition ex := 2.
+
+  Definition appx_add_circ n b := appx_full_adder_form x n (n-b) y.
+
+  Definition bv_dist {n} (v v' : Bvector n) :=
+    let z := Z.of_N (bvector2n v) in
+    let z' := Z.of_N (bvector2n v') in
+    Z.abs_N (Z.min (Z.modulo (z - z') (Z.of_N (exp2 n))) (BinInt.Z.modulo (z' - z) (Z.of_N (exp2 n)))).
+
+  Definition st_dist n (st1 st2 : state) :=
+    match get_statevector n x st1, get_statevector n x st2 with
+    | Some v1, Some v2 => bv_dist v1 v2
+    | _, _ => exp2 n
+    end.
+
+  Definition appx_add_check m n b : G N :=
+    liftGen
+      (fun l =>
+        fold_left N.max
+          (map
+            (fun '(vx, vy) =>
+             st_dist n
+               (exp_sem (fun _ => n) n (appx_add_circ n b) (x |=> vx, y |=> vy))
+               (x |=> vx [+] vy, y |=> vy))
+            l)
+          0%N)
+      (vectorOf m (genPair (@gen_bvector' n) (@gen_bvector' n))).
+
+  Conjecture appx_add_spec :
+    forall (n : nat) b (vx vy : Bvector n),
+    (st_dist n
+      (exp_sem (fun _ => n) n (appx_add_circ n b) (x |=> vx, y |=> vy))
+      (x |=> vx [+] vy, y |=> vy) <=? exp2 b)%N = true.
+
+End AppxAdd.
+
+(* example: compute the maximum difference between the (8-1)-bit approximate adder and the 8-bit exact adder, over 10000 samples *)
+(*
+Sample (AppxAdd.appx_add_check 10000 8 1).
+ *)
+(*
+QuickChick (AppxAdd.appx_add_spec).
+ *)
