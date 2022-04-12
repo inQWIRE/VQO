@@ -214,6 +214,17 @@ Definition trans_dmq_cl (size:nat) :=
         | _ => None
    end.
 
+
+Definition compile_collision_sqir (t:option (@value (option exp * nat * cstore * estore)))  :=
+    match t 
+          with None => None
+             | Some (Error) => None
+             | Some (Value a) => match a with (None,b,c,d) => None
+                        | (Some e,sn,c,d) => 
+                    Some (trans_exp vars_for_collision sn (32*18 + S (S (S sn)))%nat e avs_for_collision)
+                                 end
+    end.
+
 (** Proof that these new definitions match the ones in OQASM **)
 
 Lemma gen_sr_gate_same : forall dim f x n, 
