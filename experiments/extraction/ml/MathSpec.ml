@@ -1,4 +1,3 @@
-open BinNat
 open Datatypes
 open Nat0
 open PeanoNat
@@ -37,7 +36,7 @@ let coq_N2fb n =
 (** val nat2fb : int -> int -> bool **)
 
 let nat2fb n =
-  coq_N2fb (N.of_nat n)
+  coq_N2fb ((fun x -> x) n)
 
 (** val carry : bool -> int -> (int -> bool) -> (int -> bool) -> bool **)
 
@@ -68,12 +67,12 @@ let cut_n f n i =
 (** val fbrev : int -> (int -> 'a1) -> int -> 'a1 **)
 
 let fbrev n f x =
-  if Nat.ltb x n then f (sub (sub n (Pervasives.succ 0)) x) else f x
+  if Nat.ltb x n then f ((-) ((-) n (Pervasives.succ 0)) x) else f x
 
 (** val times_two_spec : (int -> bool) -> int -> bool **)
 
 let times_two_spec f i =
-  if (=) i 0 then false else f (sub i (Pervasives.succ 0))
+  if (=) i 0 then false else f ((-) i (Pervasives.succ 0))
 
 (** val natsum : int -> (int -> int) -> int **)
 

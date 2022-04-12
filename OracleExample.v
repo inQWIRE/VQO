@@ -505,6 +505,12 @@ Definition collision_qexp
   skip) skip) skip) skip) skip) skip) skip) skip)
   skip) skip) skip) skip) skip) skip) skip) skip.
 
+
+Definition compile_collision (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
+    trans_qexp
+    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tmp tmp1 stack 0 nil qr_estore qr_estore
+    (collision_qexp v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15).
+
 (*
 Definition collision_spec
   (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 
@@ -744,6 +750,10 @@ Definition vars_for_dm_q (size:nat) :=
         else if x =? temp1_var then (size * 5,size,id_nat,id_nat)
              else if x =? stack_var then (size * 6, 1,id_nat,id_nat)
               else vars_for_dm_c' size x.
+
+
+
+
 
 
 

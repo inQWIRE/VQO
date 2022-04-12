@@ -2,6 +2,7 @@ open BasicUtility
 open MathSpec
 open Nat0
 open OQASM
+open OQASMProof
 open PeanoNat
 
 (** val coq_MAJ : posi -> posi -> posi -> exp **)
@@ -25,7 +26,7 @@ let rec coq_MAJseq' n x y c =
 (** val coq_MAJseq : int -> var -> var -> posi -> exp **)
 
 let coq_MAJseq n x y c =
-  coq_MAJseq' (sub n (Pervasives.succ 0)) x y c
+  coq_MAJseq' ((-) n (Pervasives.succ 0)) x y c
 
 (** val coq_UMAseq' : int -> var -> var -> posi -> exp **)
 
@@ -38,7 +39,7 @@ let rec coq_UMAseq' n x y c =
 (** val coq_UMAseq : int -> var -> var -> posi -> exp **)
 
 let coq_UMAseq n x y c =
-  coq_UMAseq' (sub n (Pervasives.succ 0)) x y c
+  coq_UMAseq' ((-) n (Pervasives.succ 0)) x y c
 
 (** val adder01 : int -> var -> var -> posi -> exp **)
 
@@ -48,9 +49,9 @@ let adder01 n x y c =
 (** val highbit : int -> var -> posi -> exp **)
 
 let highbit n x c2 =
-  Seq ((Seq ((Seq ((Seq ((X (x, (sub n (Pervasives.succ 0)))), (X c2))),
-    (coq_CNOT (x, (sub n (Pervasives.succ 0))) c2))), (X c2))), (X (x,
-    (sub n (Pervasives.succ 0)))))
+  Seq ((Seq ((Seq ((Seq ((X (x, ((-) n (Pervasives.succ 0)))), (X c2))),
+    (coq_CNOT (x, ((-) n (Pervasives.succ 0))) c2))), (X c2))), (X (x,
+    ((-) n (Pervasives.succ 0)))))
 
 (** val highb01 : int -> var -> var -> posi -> posi -> exp **)
 
@@ -110,7 +111,7 @@ let rec modsummer' i n m x y c1 s fC =
 (** val modsummer : int -> var -> var -> var -> posi -> var -> int -> exp **)
 
 let modsummer n m x y c1 s c =
-  modsummer' (sub n (Pervasives.succ 0)) n m x y c1 s (nat2fb c)
+  modsummer' ((-) n (Pervasives.succ 0)) n m x y c1 s (nat2fb c)
 
 (** val modmult_half :
     int -> var -> var -> var -> posi -> var -> int -> exp **)
@@ -217,7 +218,7 @@ let rec coq_MAJseq'_i n x y c i =
 (** val coq_MAJseq_i : int -> var -> var -> posi -> int -> exp **)
 
 let coq_MAJseq_i n x y c i =
-  coq_MAJseq'_i (sub n (Pervasives.succ 0)) x y c i
+  coq_MAJseq'_i ((-) n (Pervasives.succ 0)) x y c i
 
 (** val coq_UMAseq'_i : int -> var -> var -> posi -> int -> exp **)
 
@@ -231,7 +232,7 @@ let rec coq_UMAseq'_i n x y c i =
 (** val coq_UMAseq_i : int -> var -> var -> posi -> int -> exp **)
 
 let coq_UMAseq_i n x y c i =
-  coq_UMAseq'_i (sub n (Pervasives.succ 0)) x y c i
+  coq_UMAseq'_i ((-) n (Pervasives.succ 0)) x y c i
 
 (** val adder_i : int -> var -> var -> posi -> int -> exp **)
 
@@ -245,7 +246,7 @@ let rec cl_nat_mult' n size x re c m =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> SKIP (re, 0))
     (fun m0 -> Seq ((cl_nat_mult' m0 size x re c m),
-    (if m m0 then adder_i (sub size m0) x re c m0 else SKIP (re, 0))))
+    (if m m0 then adder_i ((-) size m0) x re c m0 else SKIP (re, 0))))
     n
 
 (** val cl_nat_mult : int -> var -> var -> posi -> (int -> bool) -> exp **)
@@ -279,7 +280,7 @@ let cl_nat_mult_out size m =
 let rec cl_flt_mult' n size x ex re c m =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> SKIP (x, 0))
-    (fun m0 -> Seq ((one_cl_cu_adder (x, (sub size n)) ex re size c m),
+    (fun m0 -> Seq ((one_cl_cu_adder (x, ((-) size n)) ex re size c m),
     (cl_flt_mult' m0 size x ex re c (cut_n (div_two_spec m) size))))
     n
 
@@ -301,7 +302,7 @@ let rec cl_full_mult' n size x y re c =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> SKIP (re, 0))
     (fun m -> Seq ((cl_full_mult' m size x y re c),
-    (one_cu_cl_full_adder_i (y, m) x re c (sub size m) m)))
+    (one_cu_cl_full_adder_i (y, m) x re c ((-) size m) m)))
     n
 
 (** val cl_full_mult : int -> var -> var -> var -> posi -> exp **)
@@ -328,6 +329,49 @@ let vars_for_cl_nat_full_m size x =
 
 let cl_full_mult_out size =
   cl_full_mult size x_var y_var z_var (s_var, 0)
+
+(** val one_cu_cl_full_adder_out_place :
+    posi -> var -> var -> var -> posi -> int -> int -> exp **)
+
+let one_cu_cl_full_adder_out_place c2 x re ex c1 n i =
+  Seq ((Seq ((CU (c2, (copyto x ex n))), (adder_i n ex re c1 i))), (CU (c2,
+    (copyto x ex n))))
+
+(** val cl_full_mult_out_place' :
+    int -> int -> var -> var -> var -> var -> posi -> exp **)
+
+let rec cl_full_mult_out_place' n size x y re ex c =
+  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+    (fun _ -> SKIP (re, 0))
+    (fun m -> Seq ((cl_full_mult_out_place' m size x y re ex c),
+    (one_cu_cl_full_adder_out_place (y, m) x re ex c ((-) size m) m)))
+    n
+
+(** val cl_full_mult_out_place :
+    int -> var -> var -> var -> var -> posi -> exp **)
+
+let cl_full_mult_out_place size x y re ex c =
+  cl_full_mult_out_place' size size x y re ex c
+
+(** val vars_for_cl_nat_full_out_place_m' :
+    int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
+
+let vars_for_cl_nat_full_out_place_m' size =
+  gen_vars size (x_var :: (y_var :: (z_var :: (s_var :: []))))
+
+(** val vars_for_cl_nat_full_out_place_m :
+    int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
+
+let vars_for_cl_nat_full_out_place_m size x =
+  if (=) x c_var
+  then ((((mul size (Pervasives.succ (Pervasives.succ (Pervasives.succ
+            (Pervasives.succ 0))))), (Pervasives.succ 0)), id_nat), id_nat)
+  else vars_for_cl_nat_full_out_place_m' size x
+
+(** val cl_full_mult_out_place_out : int -> exp **)
+
+let cl_full_mult_out_place_out size =
+  cl_full_mult_out_place size x_var y_var z_var s_var (c_var, 0)
 
 (** val one_cu_cl_full_adder : posi -> var -> var -> posi -> int -> exp **)
 

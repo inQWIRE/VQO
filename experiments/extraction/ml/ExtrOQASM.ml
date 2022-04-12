@@ -5,21 +5,21 @@ open Datatypes
 open MathSpec
 open Nat0
 open OQASM
+open OQASMProof
 open OQIMP
 open OracleExample
-open RCIR
 open RZArith
 
 (** val rz_ang : int -> float **)
 
 let rz_ang n =
-  ( /. ) (( *. ) 2.0 Float.pi) ((fun a b -> a ** Float.of_int b) 2.0 n)
+  ( /. ) (( *. ) 2.0 Float.pi) ((fun r n -> r ** (float_of_int n)) 2.0 n)
 
 (** val rrz_ang : int -> float **)
 
 let rrz_ang n =
   ( -. ) (( *. ) 2.0 Float.pi)
-    (( /. ) (( *. ) 2.0 Float.pi) ((fun a b -> a ** Float.of_int b) 2.0 n))
+    (( /. ) (( *. ) 2.0 Float.pi) ((fun r n -> r ** (float_of_int n)) 2.0 n))
 
 (** val coq_ID : int -> coq_U ucom **)
 
@@ -32,7 +32,7 @@ let rec gen_sr_gate' f x n size =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> coq_ID (find_pos f (x, 0)))
     (fun m -> Coq_useq ((gen_sr_gate' f x m size),
-    (coq_U1 (rz_ang (sub size m)) (find_pos f (x, m)))))
+    (coq_U1 (rz_ang ((-) size m)) (find_pos f (x, m)))))
     n
 
 (** val gen_sr_gate : vars -> var -> int -> coq_U ucom **)
@@ -46,7 +46,7 @@ let rec gen_srr_gate' f x n size =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> coq_ID (find_pos f (x, 0)))
     (fun m -> Coq_useq ((gen_srr_gate' f x m size),
-    (coq_U1 (rrz_ang (sub size m)) (find_pos f (x, m)))))
+    (coq_U1 (rrz_ang ((-) size m)) (find_pos f (x, m)))))
     n
 
 (** val gen_srr_gate : vars -> var -> int -> coq_U ucom **)
@@ -75,31 +75,26 @@ let rec coq_QFT_gen f x n size =
     (fun _ -> coq_ID (find_pos f (x, 0)))
     (fun m -> Coq_useq ((coq_QFT_gen f x m size), (Coq_useq
     ((coq_H (find_pos f (x, m))),
-    (controlled_rotations_gen f x (sub size m) m)))))
+    (controlled_rotations_gen f x ((-) size m) m)))))
     n
 
-(** val trans_qft : vars -> var -> coq_U ucom **)
+(** val nH : vars -> var -> int -> int -> coq_U ucom **)
 
-let trans_qft f x =
-  coq_QFT_gen f x (vsize f x) (vsize f x)
-
-(** val trans_rqft : vars -> var -> coq_U ucom **)
-
-let trans_rqft f x =
-  invert (coq_QFT_gen f x (vsize f x) (vsize f x))
-
-(** val nH : vars -> var -> int -> coq_U ucom **)
-
-let rec nH f x n =
+let rec nH f x n b =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
     (fun _ -> coq_ID (find_pos f (x, 0)))
-    (fun m -> Coq_useq ((nH f x m), (coq_H (find_pos f (x, m)))))
+    (fun m -> Coq_useq ((nH f x m b), (coq_H (find_pos f (x, (add b m))))))
     n
 
-(** val trans_h : vars -> var -> coq_U ucom **)
+(** val trans_qft : vars -> var -> int -> coq_U ucom **)
 
-let trans_h f x =
-  nH f x (vsize f x)
+let trans_qft f x b =
+  Coq_useq ((coq_QFT_gen f x b b), (nH f x ((-) (vsize f x) b) b))
+
+(** val trans_rqft : vars -> var -> int -> coq_U ucom **)
+
+let trans_rqft f x b =
+  invert (Coq_useq ((coq_QFT_gen f x b b), (nH f x ((-) (vsize f x) b) b)))
 
 (** val trans_exp' :
     vars -> int -> exp -> (int -> posi) -> (coq_U ucom * vars) * (int -> posi) **)
@@ -115,7 +110,6 @@ let rec trans_exp' f dim exp0 avs =
   | RRZ (q, p) -> (((coq_U1 (rrz_ang q) (find_pos f p)), f), avs)
   | SR (n, x) -> (((gen_sr_gate f x n), f), avs)
   | SRR (n, x) -> (((gen_srr_gate f x n), f), avs)
-  | HCNOT (p1, p2) -> (((coq_CX (find_pos f p1) (find_pos f p2)), f), avs)
   | Lshift x ->
     (((coq_ID (find_pos f (x, 0))), (trans_lshift f x)),
       (lshift_avs dim f avs x))
@@ -124,9 +118,8 @@ let rec trans_exp' f dim exp0 avs =
       (rshift_avs dim f avs x))
   | Rev x ->
     (((coq_ID (find_pos f (x, 0))), (trans_rev f x)), (rev_avs dim f avs x))
-  | QFT x -> (((trans_qft f x), f), avs)
-  | RQFT x -> (((trans_rqft f x), f), avs)
-  | H x -> (((trans_h f x), f), avs)
+  | QFT (x, b) -> (((trans_qft f x b), f), avs)
+  | RQFT (x, b) -> (((trans_rqft f x b), f), avs)
   | Seq (e1, e2) ->
     let (p, avs') = trans_exp' f dim e1 avs in
     let (e1', f') = p in
@@ -136,7 +129,7 @@ let rec trans_exp' f dim exp0 avs =
 (** val trans_exp : vars -> int -> exp -> (int -> posi) -> coq_U ucom **)
 
 let trans_exp f dim exp0 avs =
-  decompose_CU1_and_C3X (fst (fst (trans_exp' f dim exp0 avs)))
+  fst (fst (trans_exp' f dim exp0 avs))
 
 (** val trans_cl_adder : int -> coq_U ucom **)
 
@@ -158,6 +151,15 @@ let trans_cl_mul size =
   trans_exp (vars_for_cl_nat_full_m size)
     (add (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ 0))) size)
       (Pervasives.succ 0)) (cl_full_mult_out size) (avs_for_arith size)
+
+(** val trans_cl_mul_out_place : int -> coq_U ucom **)
+
+let trans_cl_mul_out_place size =
+  trans_exp (vars_for_cl_nat_full_out_place_m size)
+    (add
+      (mul (Pervasives.succ (Pervasives.succ (Pervasives.succ
+        (Pervasives.succ 0)))) size) (Pervasives.succ 0))
+    (cl_full_mult_out_place_out size) (avs_for_arith size)
 
 (** val trans_rz_const_adder : int -> int -> coq_U ucom **)
 
@@ -232,6 +234,41 @@ let trans_rz_div_mod size m =
     (mul (Pervasives.succ (Pervasives.succ 0)) (Pervasives.succ size))
     (rz_div_mod_out size m) (avs_for_rz_div_mod size)
 
+(** val trans_rz_div_mod_app_shift : int -> int -> coq_U ucom **)
+
+let trans_rz_div_mod_app_shift size m =
+  trans_exp (vars_for_app_div_mod size)
+    (mul (Pervasives.succ (Pervasives.succ 0)) (Pervasives.succ size))
+    (app_div_mod_out size m) (avs_for_app_div_mod size)
+
+(** val trans_rz_div_mod_app_swaps : int -> int -> coq_U ucom **)
+
+let trans_rz_div_mod_app_swaps size m =
+  trans_exp (vars_for_app_div_mod size)
+    (mul (Pervasives.succ (Pervasives.succ 0)) (Pervasives.succ size))
+    (app_div_mod_aout size m) (avs_for_app_div_mod size)
+
+(** val trans_appx_adder : int -> int -> coq_U ucom **)
+
+let trans_appx_adder size b =
+  trans_exp (vars_for_rz_full_add size)
+    (mul (Pervasives.succ (Pervasives.succ 0)) size)
+    (appx_full_adder_out size b) (avs_for_arith size)
+
+(** val trans_appx_const_adder : int -> int -> int -> coq_U ucom **)
+
+let trans_appx_const_adder size b m =
+  trans_exp (vars_for_rz_adder size)
+    (mul (Pervasives.succ (Pervasives.succ 0)) size)
+    (appx_adder_out size b (nat2fb m)) (avs_for_arith size)
+
+(** val trans_appx_const_sub : int -> int -> int -> coq_U ucom **)
+
+let trans_appx_const_sub size b m =
+  trans_exp (vars_for_rz_adder size)
+    (mul (Pervasives.succ (Pervasives.succ 0)) size)
+    (appx_sub_out size b (nat2fb m)) (avs_for_arith size)
+
 (** val trans_rz_add_mul_opt : int -> coq_U ucom **)
 
 let trans_rz_add_mul_opt size =
@@ -259,6 +296,13 @@ let trans_rz_modmult_rev m c cinv size =
   trans_exp (vars_for_rz size)
     (add (mul (Pervasives.succ (Pervasives.succ 0)) size) (Pervasives.succ 0))
     (real_rz_modmult_rev m c cinv size) (avs_for_arith size)
+
+(** val trans_rz_modmult_rev_alt : int -> int -> int -> int -> coq_U ucom **)
+
+let trans_rz_modmult_rev_alt m c cinv size =
+  trans_exp (vars_for_rz size)
+    (add (mul (Pervasives.succ (Pervasives.succ 0)) size) (Pervasives.succ 0))
+    (real_rz_modmult_rev_alt m c cinv size) (avs_for_arith size)
 
 (** val trans_modmult_rev : int -> int -> int -> int -> coq_U ucom **)
 
@@ -353,12 +397,3 @@ let trans_dmq_cl size =
         | None -> None)
      | Error -> None)
   | None -> None
-
-(** val bc2ucom : bccom -> coq_U ucom **)
-
-let rec bc2ucom = function
-| Coq_bcskip -> coq_ID 0
-| Coq_bcx a -> coq_X a
-| Coq_bcswap (a, b) -> AltGateSet.coq_SWAP a b
-| Coq_bccont (a, bc1) -> control a (bc2ucom bc1)
-| Coq_bcseq (bc1, bc2) -> Coq_useq ((bc2ucom bc1), (bc2ucom bc2))
