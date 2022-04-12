@@ -216,12 +216,13 @@ Definition trans_dmq_cl (size:nat) :=
 
 
 Definition compile_collision_sqir (t:option (@value (option exp * nat * cstore * estore)))  :=
-    match t 
+    match Collision.compile_collision 
           with None => None
              | Some (Error) => None
              | Some (Value a) => match a with (None,b,c,d) => None
                         | (Some e,sn,c,d) => 
-                    Some (trans_exp vars_for_collision sn (32*18 + S (S (S sn)))%nat e avs_for_collision)
+                    Some (trans_exp (Collision.vars_for_collision sn)
+                 (32*18 + S (S (S sn)))%nat e Collision.avs_for_collision)
                                  end
     end.
 
