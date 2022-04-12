@@ -20,6 +20,10 @@ let fst = function
 let snd = function
 | (_, y) -> y
 
+(** val length : 'a1 list -> int **)
+
+let rec length = (fun l -> Z.of_int (List.length l))
+
 type comparison =
 | Eq
 | Lt

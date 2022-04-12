@@ -1,17 +1,15 @@
-(* We need to redefine trans_pexp to output SQIR programs using the
+(* We need to redefine trans_exp to output SQIR programs using the
    alternate gate set & prove that this new definition is equivalent
-   to the old (see utilities/AltGateSet.v and examples/shor/AltShor.v
+   to the old (see SQIR/utilities/AltGateSet.v and SQIR/examples/shor/AltShor.v
    for examples). *)
 
 Require Import Prelim.
-Require Import RCIR.
 Require Import AltGateSet.
 Require Import MathSpec BasicUtility OQASM OQASMProof.
 Require Import RZArith.
 Require Import CLArith.
 Require Import OQIMP.
 Require Import OracleExample.
-(*Require Import OQIMP.*)
 
 Definition rz_ang (n:nat) : R := ((R2 * PI)%R / R2^n). (* redefined using R2 *)
 
@@ -56,19 +54,8 @@ Fixpoint nH (f : vars) (x:var) (n:nat) (b:nat) : ucom U :=
 Definition trans_qft (f:vars) (x:var) (b:nat) : ucom U := 
     QFT_gen f x b b >> nH f x (vsize f x - b) b.
 
-
 Definition trans_rqft (f:vars) (x:var) (b:nat) : ucom U :=
           invert (QFT_gen f x b b >> nH f x (vsize f x - b) b).
-
-(*
-Fixpoint nH (f : vars) (x:var) (n:nat) : ucom U :=
-    match n with 
-    | 0 => ID (find_pos f (x,0))
-    | S m => (nH f x m) >> (AltGateSet.H (find_pos f (x,m)))
-    end.
-
-Definition trans_h (f : vars) (x:var) : ucom U := nH f x (vsize f x).
-*)
 
 Fixpoint trans_exp' (f : vars) (dim:nat) (exp:exp) (avs: nat -> posi) : (ucom U * vars * (nat -> posi)) :=
     match exp with
@@ -81,12 +68,10 @@ Fixpoint trans_exp' (f : vars) (dim:nat) (exp:exp) (avs: nat -> posi) : (ucom U 
     | Lshift x => (ID (find_pos f (x,0)), trans_lshift f x, lshift_avs dim f avs x)
     | Rshift x => (ID (find_pos f (x,0)), trans_rshift f x, rshift_avs dim f avs x)
     | Rev x => (ID (find_pos f (x,0)), trans_rev f x, rev_avs dim f avs x)
-    (*| HCNOT p1 p2 => (AltGateSet.CX (find_pos f p1) (find_pos f p2), f, avs) *)
     | CU p e1 => match trans_exp' f dim e1 avs with 
                  | (e1', f',avs') => (control (find_pos f p) e1', f, avs) end
     | QFT x b => (trans_qft f x b, f, avs)
     | RQFT x b => (trans_rqft f x b, f, avs)
-    (*| H x => (trans_h f x, f, avs) *)
     | (e1 ; e2)%exp => match trans_exp' f dim e1 avs with 
                  | (e1', f', avs') => 
                         match trans_exp' f' dim e2 avs' with 
@@ -94,10 +79,8 @@ Fixpoint trans_exp' (f : vars) (dim:nat) (exp:exp) (avs: nat -> posi) : (ucom U 
                   end
     end.
 
-(* In the final result, we can throw away the vars and avs. 
-   -> also call decompose_CU1_and_C3X to decompose gates for later optimization *)
-Definition trans_exp f dim exp avs := 
-  decompose_CU1_and_C3X (fst (fst (trans_exp' f dim exp avs))).
+(* In the final result, we can throw away the vars and avs *)
+Definition trans_exp f dim exp avs := fst (fst (trans_exp' f dim exp avs)).
 
 (* z = x + y (TOFF-based) *)
 Definition trans_cl_adder (size:nat) :=
@@ -115,7 +98,6 @@ Definition trans_cl_mul (size:nat) :=
 Definition trans_cl_mul_out_place (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_out_place_m size)
            (4 * size + 1) (CLArith.cl_full_mult_out_place_out size) (OQASMProof.avs_for_arith size).
-
 
 (* z = M + x (QFT-based) *)
 Definition trans_rz_const_adder (size M:nat) :=
@@ -167,20 +149,18 @@ Definition trans_rz_div_mod_app_swaps (size M:nat) :=
   trans_exp (RZArith.vars_for_app_div_mod size) (2 * (S size))
         (RZArith.app_div_mod_aout size M) (RZArith.avs_for_app_div_mod size). 
 
-(* approx circuits. b is a number <= size for the precetion. *)
+(* approx circuits. b is a number <= size for the precision. *)
 Definition trans_appx_adder (size:nat) (b:nat) :=
   trans_exp (RZArith.vars_for_rz_full_add size) 
    (2 * size) (RZArith.appx_full_adder_out size b) (OQASMProof.avs_for_arith size).
-
 
 Definition trans_appx_const_adder (size:nat) (b:nat) (M:nat) :=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_adder_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
 
-Definition trans_appx_const_sub (size:nat) (b:nat)  (M:nat):=
+Definition trans_appx_const_sub (size:nat) (b:nat) (M:nat):=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_sub_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
-
 
 (* z = ((z+x); (z*x)); ((z+y); (z*y));
         ((z+x); (z*x)); ((z+y); (z*y));
@@ -233,20 +213,8 @@ Definition trans_dmq_cl (size:nat) :=
              Some (trans_exp (vars_for_dm_c size) (6*size + 1) p (avs_for_arith size))
         | _ => None
    end.
-    
-(* Also want bc2ucom for comparison's sake *)
-Fixpoint bc2ucom (bc : bccom) : ucom U :=
-  match bc with
-  | bcskip => ID 0
-  | bcx a => AltGateSet.X a
-  | bcswap a b => AltGateSet.SWAP a b
-  | bccont a bc1 => control a (bc2ucom bc1)
-  | bcseq bc1 bc2 => (bc2ucom bc1) >> (bc2ucom bc2)
-  end.
-
 
 (** Proof that these new definitions match the ones in OQASM **)
-
 
 Lemma gen_sr_gate_same : forall dim f x n, 
    to_base_ucom dim (gen_sr_gate f x n) = OQASMProof.gen_sr_gate f dim x n.
@@ -371,7 +339,6 @@ Lemma trans_exp_same : forall f dim exp avs,
 Proof.
   intros.
   unfold trans_exp.
-  rewrite decompose_CU1_and_C3X_preserves_semantics.
   assert (forall u1 u2 f1 f2 avs1 avs2,
           trans_exp' f dim exp avs = (u1, f1, avs1) ->
           OQASMProof.trans_exp f dim exp avs = (u2, f2, avs2) ->
@@ -447,64 +414,3 @@ Proof.
     rewrite H, H0.
     reflexivity. }
 Admitted.
-
-(** Taken from examples/shor/AltShor.v **)
-
-Lemma bc2ucom_WF : forall bc, well_formed (bc2ucom bc).
-Proof.
-  induction bc; repeat constructor; auto.
-  simpl. unfold control. apply control'_WF.
-  assumption.
-Qed.
-
-Lemma bc2ucom_fresh : forall dim q bc,
-  UnitaryOps.is_fresh q (to_base_ucom dim (bc2ucom bc)) <->
-  @UnitaryOps.is_fresh _ dim q (RCIR.bc2ucom bc).
-Proof.
-  intros dim q bc.
-  induction bc; try reflexivity.
-  simpl.
-  destruct bc; try reflexivity.
-  rewrite <- UnitaryOps.fresh_control.
-  unfold control.
-  rewrite <- fresh_control'.
-  rewrite IHbc.
-  reflexivity.
-  lia.
-  apply bc2ucom_WF.
-  rewrite <- UnitaryOps.fresh_control.
-  unfold control.
-  rewrite <- fresh_control'.
-  rewrite IHbc.
-  reflexivity.
-  lia.
-  apply bc2ucom_WF.
-  split; intro H; inversion H; subst; simpl.
-  constructor.
-  apply IHbc1; auto.
-  apply IHbc2; auto.
-  constructor.
-  apply IHbc1; auto.
-  apply IHbc2; auto.
-Qed.
-
-Lemma bc2ucom_correct : forall dim (bc : bccom),
-  uc_eval dim (bc2ucom bc) = UnitarySem.uc_eval (RCIR.bc2ucom bc).
-Proof.
-  intros dim bc.
-  induction bc; try reflexivity.
-  simpl.
-  rewrite control_correct.
-  destruct bc; try reflexivity.
-  apply UnitaryOps.control_ucom_X.
-  apply UnitaryOps.control_cong.
-  apply IHbc.
-  apply bc2ucom_fresh. 
-  apply UnitaryOps.control_cong.
-  apply IHbc.
-  apply bc2ucom_fresh. 
-  apply bc2ucom_WF. 
-  unfold uc_eval in *. simpl.
-  rewrite IHbc1, IHbc2.
-  reflexivity.  
-Qed.

@@ -21,13 +21,9 @@ let rec sqir_to_qasm oc (u : coq_U ucom) k =
   | Coq_uapp (1, U_U2 (r1,r2), [a]) -> (fprintf oc "u2(%f,%f) q[%d];\n" r1 r2 a ; k ())
   | Coq_uapp (1, U_U3 (r1,r2,r3), [a]) -> (fprintf oc "u3(%f,%f,%f) q[%d];\n" r1 r2 r3 a ; k ())
   | Coq_uapp (2, U_CX, [a;b]) -> (fprintf oc "cx q[%d], q[%d];\n" a b ; k ())
-  | Coq_uapp (2, U_SWAP, [a;b]) -> (fprintf oc "swap q[%d], q[%d];\n" a b ; k ())
   | Coq_uapp (3, U_CCX, [a;b;c]) -> (fprintf oc "ccx q[%d], q[%d], q[%d];\n" a b c ; k ())
-  | Coq_uapp (3, U_CSWAP, [a;b;c]) -> (fprintf oc "cswap q[%d], q[%d], q[%d];\n" a b c ; k ())
-  | Coq_uapp (4, U_C3X, [a;b;c;d]) -> (fprintf oc "c3x q[%d], q[%d], q[%d], q[%d];\n" a b c d ; k ())
-  | Coq_uapp (5, U_C4X, [a;b;c;d;e]) -> (fprintf oc "c4x q[%d], q[%d], q[%d], q[%d], q[%d];\n" a b c d e ; k ())
-  (* badly typed case (e.g. App2 of U_H) or unsupported gate *)
-  | _ -> failwith "ERROR: Failed to write qasm file" 
+  (* badly typed case (e.g. App2 of U_H) or unexpected gate *)
+  | _ -> failwith "ERROR: Failed to write qasm file"
 
 (* insert measurements to get simulation results *)
 let rec write_measurements oc dim =
@@ -41,50 +37,69 @@ let write_qasm_file fname (u : coq_U ucom) =
    fprintf oc "qreg q[%d];\n" dim;
    (*fprintf oc "creg c[%d];\n" dim;*)
    fprintf oc "\n";
-   ignore(sqir_to_qasm oc u (fun _ -> ()));
+   ignore(sqir_to_qasm oc (decompose_to_voqc_gates (decompose_to_voqc_gates u)) (fun _ -> ()));
    (*ignore(write_measurements oc dim);*)
    ignore(fprintf oc "\n"); (* ddsim is fussy about having a newline at the end *)
    close_out oc)
 
-(* function to count gates *)
+(* function to count gates 
+  Output order: X, H, U1, CX, CH, CU1, CCX, CCU1, C3X *)
 let rec count_gates_aux (u : coq_U ucom) acc =
-  let (one,two,three,four,five) = acc in
+  let (x,h,u1,cx,ch,cu1,ccx,ccu1,c3x) = acc in
   match u with
   | Coq_useq (u1, u2) -> count_gates_aux u1 (count_gates_aux u2 acc)
-  | Coq_uapp (1, _, _) -> (1 + one, two, three, four, five)
-  | Coq_uapp (2, _, _) -> (one, 1 + two, three, four, five)
-  | Coq_uapp (3, _, _) -> (one, two, 1 + three, four, five)
-  | Coq_uapp (4, _, _) -> (one, two, three, 1 + four, five)
-  | Coq_uapp (5, _, _) -> (one, two, three, four, 1 + five)
+  | Coq_uapp (1, U_X, _) -> (1+x,h,u1,cx,ch,cu1,ccx,ccu1,c3x)
+  | Coq_uapp (1, U_H, _) -> (x,1+h,u1,cx,ch,cu1,ccx,ccu1,c3x)
+  | Coq_uapp (1, U_U1 _, _) -> (x,h,1+u1,cx,ch,cu1,ccx,ccu1,c3x)
+  | Coq_uapp (2, U_CX, _) -> (x,h,u1,1+cx,ch,cu1,ccx,ccu1,c3x)
+  | Coq_uapp (2, U_CH, _) -> (x,h,u1,cx,1+ch,cu1,ccx,ccu1,c3x)
+  | Coq_uapp (2, U_CU1 _, _) -> (x,h,u1,cx,ch,1+cu1,ccx,ccu1,c3x)
+  | Coq_uapp (3, U_CCX, _) -> (x,h,u1,cx,ch,cu1,1+ccx,ccu1,c3x)
+  | Coq_uapp (3, U_CCU1 _, _) -> (x,h,u1,cx,ch,cu1,ccx,1+ccu1,c3x)
+  | Coq_uapp (4, U_C3X, _) -> (x,h,u1,cx,ch,cu1,ccx,ccu1,1+c3x)
+  (* unexpected gate type *)
   | _ -> failwith "ERROR: Failed to count gates"
-let count_gates u = count_gates_aux u (0,0,0,0,0)
+let count_gates u = count_gates_aux u (0,0,0,0,0,0,0,0,0)
 
 let print_and_write_file circ fname =
-  let (c1,c2,c3,c4,c5) = count_gates circ in
-  let _ = printf "\t%d qubits, %d 1-qubit gates, %d 2-qubit gates, %d 3-qubit gates, %d 4-qubit gates, %d 5-qubit gates\n%!" 
-          (get_dim circ) c1 c2 c3 c4 c5 in
-  write_qasm_file fname circ
+  let (x,h,u1,cx,ch,cu1,ccx,ccu1,c3x) = count_gates circ in
+  (printf "\t%d qubits, { " (get_dim circ);
+  if x > 0 then printf "X : %d, " x;
+  if h > 0 then printf "H : %d, " h;
+  if u1 > 0 then printf "U1 : %d, " u1;
+  if cx > 0 then printf "CX : %d, " cx;
+  if ch > 0 then printf "CH : %d, " ch;
+  if cu1 > 0 then printf "CU1 : %d, " cu1;
+  if ccx > 0 then printf "CCX : %d, " ccx;
+  if ccu1 > 0 then printf "CCU1 : %d, " ccu1;
+  if c3x > 0 then printf "C3X : %d, " c3x;
+  printf " }\n%!";
+  write_qasm_file fname circ)
+
+let log2 m = int_of_float (ceil (log10 (float_of_int m) /. log10 2.0))
+
+let log2up m = int_of_float (ceil (log10 (float_of_int (2 * m)) /. log10 2.0))
 
 let run_modmult_experiments c cinv m =
   if (c * cinv) mod m <> 1
   then failwith "Invalid inputs to run_modmult_experiments"
   else 
-    let n = int_of_float (ceil (log10 (float_of_int (2 * m)) /. log10 2.0)) in (* = log2up m *)
-    let fname = string_of_int (int_of_float (ceil (log10 (float_of_int m) /. log10 2.0))) ^ ".qasm" in
-
-    let _ = printf "Generating circuit for ModMult.modmult_rev, inputs c=%d and m=%d...\n%!" c m in
-    let _ = print_and_write_file (decompose_CU1_and_C3X (bc2ucom (ModMult.modmult_rev m c cinv n))) ("sqir-mod-mul-" ^ fname) in
-
-    let _ = printf "Generating circuit for RZArith.rz_modmult_full, inputs c=%d and m=%d...\n%!" c m in
+    let n = log2up m in
+    let fname = string_of_int (log2 m) ^ ".qasm" in
+    
+    let _ = printf "Generating circuit for RZArith.real_rz_modmult_rev, inputs c=%d and m=%d...\n%!" c m in
     let _ = print_and_write_file (trans_rz_modmult_rev m c cinv n) ("rz-mod-mul-" ^ fname) in
+
+    let _ = printf "Generating circuit for RZArith.real_rz_modmult_rev_alt, inputs c=%d and m=%d...\n%!" c m in
+    let _ = print_and_write_file (trans_rz_modmult_rev_alt m c cinv n) ("rz-mod-mul-alt-" ^ fname) in
 
     let _ = printf "Generating circuit for CLArith.modmult_rev, inputs c=%d and m=%d...\n%!" c m in
     let _ = print_and_write_file (trans_modmult_rev m c cinv n) ("cl-mod-mul-" ^ fname) in
-
+    
     ();;
 
 let run_adders size m =
-  let size_of_m = int_of_float (ceil (log10 (float_of_int m) /. log10 2.0)) in
+  let size_of_m = log2 m in
   let fname = (string_of_int size) ^ ".qasm" in
   if size < size_of_m 
   then failwith "Invalid inputs to run_adders"
@@ -101,7 +116,7 @@ let run_adders size m =
     ();;
 
 let run_multipliers size m =
-  let size_of_m = int_of_float (ceil (log10 (float_of_int m) /. log10 2.0)) in
+  let size_of_m = log2 m in
   let fname = (string_of_int size) ^ ".qasm" in
   if size < size_of_m 
   then failwith "Invalid inputs to run_multipliers"
@@ -118,10 +133,13 @@ let run_multipliers size m =
     let _ = printf "Generating circuit for QFT-based multiplier, input size=%d...\n%!" size in
     let _ = print_and_write_file (trans_rz_mul size) ("rz-mul-" ^ fname) in
     
+    let _ = printf "Generating circuit for TOFF-based (Quipper inspired) multiplier, input size=%d...\n%!" size in
+    let _ = print_and_write_file (trans_cl_mul_out_place size) ("cl-mul-quipper-" ^ fname) in
+
     ();;
 
 let run_div_mod size m =
-  let size_of_m = int_of_float (ceil (log10 (float_of_int m) /. log10 2.0)) in
+  let size_of_m = log2 m in
   let fname = (string_of_int size) ^ ".qasm" in
   if size < size_of_m 
   then failwith "Invalid inputs to run_multipliers"
@@ -138,12 +156,29 @@ let run_div_mod size m =
     let _ = printf "Generating circuit for QFT-based constant modder, inputs size=%d M=%d...\n%!" size m in
     let _ = print_and_write_file (trans_rz_mod size m) ("rz-mod-" ^ fname) in
 
-    let _ = printf "Generating circuit for QFT-based constant divider, inputs size=%d M=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_rz_div size m) ("rz-div-" ^ fname) in
+    (*let _ = printf "Generating circuit for QFT-based constant divider, inputs size=%d M=%d...\n%!" size m in
+    let _ = print_and_write_file (trans_rz_div size m) ("rz-div-" ^ fname) in*)
     
     let _ = printf "Generating circuit for QFT-based constant modder/divider, inputs size=%d M=%d...\n%!" size m in
     let _ = print_and_write_file (trans_rz_div_mod size m) ("rz-div-mod-" ^ fname) in
     
+    ();;
+
+let run_approx size m b =
+  let size_of_m = log2 m in
+  let fname = (string_of_int size) ^ ".qasm" in
+  if (size < size_of_m) || (b > size)
+  then failwith "Invalid inputs to run_approx"
+  else
+    let _ = printf "Generating circuit for approximate QFT-based adder, inputs size=%d b=%d...\n%!" size b in
+    let _ = print_and_write_file (trans_appx_adder size b) ("rz-add-appx-" ^ fname) in
+
+    (*let _ = printf "Generating circuit for approximate QFT-based constant adder, inputs size=%d m=%d b=%d...\n%!" size m b in
+    let _ = print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx-" ^ fname) in*)
+
+    (*let _ = printf "Generating circuit for approximate QFT-based constant subtractor, inputs size=%d m=%d b=%d...\n%!" size m b in
+    let _ = print_and_write_file (trans_appx_const_sub size m b) ("rz-const-sub-appx-" ^ fname) in*)
+
     ();;
 
 let run_partial_eval_exp size =
@@ -164,18 +199,17 @@ let run_partial_eval_exp size =
   ();;
 
 (* Experiments for paper: *)
-run_modmult_experiments 139 117 173;;
+(*run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
-run_partial_eval_exp 16;;
+run_approx 16 38168 15;;
+run_partial_eval_exp 16;;*)
 
-(*
-(* New repeated add/mult experiment: *)
-printf "Running trans_rz_add_mul_opt...\n%!";;
-print_and_write_file (trans_rz_add_mul_opt 16) ("trans-rz-add-mul-opt-16.qasm");;
-printf "Running trans_rz_add_mul...\n%!";;
-print_and_write_file (trans_rz_add_mul 16) ("trans-rz-add-mul-16.qasm");;
-printf "Running trans_cl_add_mul...\n%!";;
-print_and_write_file (trans_cl_add_mul 16) ("trans-cl-add-mul-16.qasm");;
-*)
+(* These three calls result in a stack overflow: *)
+let size = 16 in
+let m = 38168 in
+let b = 15 in
+print_and_write_file (trans_rz_div size m) ("rz-div-tmp.qasm");
+print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx.qasm");
+print_and_write_file (trans_appx_const_sub size m b) ("rz-const-sub-appx.qasm")

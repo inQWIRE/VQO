@@ -7,6 +7,7 @@ open Factorial
 open MathSpec
 open Nat0
 open OQASM
+open OQASMProof
 open PeanoNat
 open Prelim
 open RZArith
@@ -191,11 +192,11 @@ module QvarNatType =
   (** val compare : t -> t -> (qvar * int) OrderedType.coq_Compare **)
 
   let compare x y =
-    let (q, n) = x in
-    let (q0, n0) = y in
-    (match q with
+    let (a, b) = x in
+    let (a0, b0) = y in
+    (match a with
      | G v ->
-       (match q0 with
+       (match a0 with
         | G v0 ->
           let h = blt_reflect v v0 in
           (match h with
@@ -204,28 +205,28 @@ module QvarNatType =
              let h0 = beq_reflect v v0 in
              (match h0 with
               | ReflectT ->
-                let h1 = blt_reflect n n0 in
+                let h1 = blt_reflect b b0 in
                 (match h1 with
                  | ReflectT -> OrderedType.LT
                  | ReflectF ->
-                   let h2 = beq_reflect n n0 in
+                   let h2 = beq_reflect b b0 in
                    (match h2 with
                     | ReflectT -> OrderedType.EQ
                     | ReflectF -> OrderedType.GT))
               | ReflectF -> OrderedType.GT))
         | L _ -> OrderedType.GT)
      | L v ->
-       (match q0 with
+       (match a0 with
         | G _ -> OrderedType.LT
         | L v0 ->
           let h = beq_reflect v v0 in
           (match h with
            | ReflectT ->
-             let h0 = blt_reflect n n0 in
+             let h0 = blt_reflect b b0 in
              (match h0 with
               | ReflectT -> OrderedType.LT
               | ReflectF ->
-                let h1 = beq_reflect n n0 in
+                let h1 = beq_reflect b b0 in
                 (match h1 with
                  | ReflectT -> OrderedType.EQ
                  | ReflectF -> OrderedType.GT))
@@ -697,7 +698,7 @@ let compile_cexp size smap vmap bv f r stack temp sn = function
 (** val l_rotate : (int -> bool) -> int -> int -> bool **)
 
 let l_rotate f n i =
-  f (Nat.modulo (sub (add i n) (Pervasives.succ 0)) n)
+  f (Nat.modulo ((-) (add i n) (Pervasives.succ 0)) n)
 
 type fmap =
   ((((((fvar * cfac) * exp) * (qvar -> int)) * ((qvar * int) ->
@@ -1318,7 +1319,7 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                     (Store.add vx'
                       (nat2fb
                         (Nat.modulo
-                          (sub (a_nat2fb t2v' size) (a_nat2fb t3v' size))
+                          ((-) (a_nat2fb t2v' size) (a_nat2fb t3v' size))
                           (Nat.pow (Pervasives.succ (Pervasives.succ 0)) size)))
                       r)), es))
                 | Error -> Some Error)
@@ -1375,7 +1376,7 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                       (fbrev size
                         (nat2fb
                           (Nat.modulo
-                            (sub (a_nat2fb (fbrev size t2v') size)
+                            ((-) (a_nat2fb (fbrev size t2v') size)
                               (a_nat2fb (fbrev size t3v') size))
                             (Nat.pow (Pervasives.succ (Pervasives.succ 0))
                               size)))) r)), es))

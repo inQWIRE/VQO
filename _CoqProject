@@ -12,9 +12,15 @@ externals/SQIR/SQIR/SQIR.v
 externals/SQIR/SQIR/UnitarySem.v
 externals/SQIR/SQIR/VectorStates.v
 externals/SQIR/SQIR/UnitaryOps.v
+externals/SQIR/SQIR/AltGateSet.v
+externals/SQIR/SQIR/DiscreteProb.v
 
 externals/SQIR/examples/QPE.v
 externals/SQIR/examples/Utilities.v
+
+externals/SQIR/examples/shor/extraction/ExtrOcamlList.v
+externals/SQIR/examples/shor/extraction/ExtrOcamlNatZ.v
+externals/SQIR/examples/shor/extraction/ExtrOcamlR.v
 
 BasicUtility.v
 MathSpec.v
@@ -28,11 +34,3 @@ OQIMP.v
 OracleExample.v
 ArithTesting.v
 ExtrOQASM.v
-
-externals/SQIR/examples/shor/RCIR.v
-externals/SQIR/examples/shor/ModMult.v
-
-externals/SQIR/utilities/AltGateSet.v
-externals/SQIR/utilities/ExtrOcamlList.v
-externals/SQIR/utilities/ExtrOcamlR.v
-

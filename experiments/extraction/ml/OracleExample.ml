@@ -3,6 +3,7 @@ open CLArith
 open MathSpec
 open Nat0
 open OQASM
+open OQASMProof
 open OQIMP
 
 (** val test_fun : qexp **)
@@ -132,7 +133,7 @@ let vars_for_dm_c' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_dm_c size x =
-  if (=) x stack_var
+  if eqb x stack_var
   then ((((mul size (Pervasives.succ (Pervasives.succ 0))), (Pervasives.succ
          0)), id_nat), id_nat)
   else vars_for_dm_c' size x
