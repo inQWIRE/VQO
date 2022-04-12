@@ -474,7 +474,7 @@ Definition x12 : qvar := L 12.
 Definition x13 : qvar := L 13.
 Definition x14 : qvar := L 14.
 Definition x15 : qvar := L 15.
-Definition out : qvar := G 16.
+Definition out : qvar := G 18.
 
 Definition getBit (v : word) k :=
   match Fin.of_nat k 32 with
@@ -506,10 +506,44 @@ Definition collision_qexp
   skip) skip) skip) skip) skip) skip) skip) skip.
 
 
-Definition compile_collision (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
+Definition zero_word := Bvect_false 32.
+
+Definition tempVar : var := 16.
+Definition tempVar1 : var := 17.
+Definition stacka : var := 19.
+
+Definition compile_collision : option (@value (option exp * nat * cstore * estore)) :=
     trans_qexp
-    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tmp tmp1 stack 0 nil qr_estore qr_estore
-    (collision_qexp v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15).
+    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
+    (collision_qexp zero_word zero_word zero_word 
+  zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word).
+
+
+Fixpoint gen_collision_vars' (n:nat) (acc:list var):=
+   match n with 0 => acc
+         | S m => gen_collision_vars' m (m::acc)
+   end.
+Definition gen_collision_vars := gen_collision_vars' 18 [].
+
+Definition vars_for_collision' := gen_vars 32 gen_collision_vars.
+
+Definition vars_for_collision (sn:nat) := 
+  fun x => if x =? 19 then (S (32 * 18),S (S sn),id_nat,id_nat) else if x =? 18 then
+             (32 * 18,1,id_nat,id_nat) else vars_for_collision' x.
+
+Definition avs_for_collision (n:nat) :=
+        if n <=? 18*32 then avs_for_arith 32 n else (19,n-18*32).
+
+Definition collision_pexp : exp.
+Proof.
+  destruct (compile_collision) eqn:E1.
+  - destruct v.
+    + destruct x16, p, p, o.
+      * apply e0.
+      * apply (SKIP (tmp, 0)).
+    + apply (SKIP (tmp, 0)).
+  - apply (SKIP (tmp, 0)).
+Defined.
 
 (*
 Definition collision_spec
