@@ -215,7 +215,7 @@ Definition trans_dmq_cl (size:nat) :=
    end.
 
 
-Definition compile_collision_sqir (t:option (@value (option exp * nat * cstore * estore)))  :=
+Definition compile_collision_sqir  :=
     match Collision.compile_collision 
           with None => None
              | Some (Error) => None
