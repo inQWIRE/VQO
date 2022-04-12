@@ -332,6 +332,128 @@ Proof.
   apply nH_WF.
 Qed.
 
+Lemma gen_sr_gate'_WF : forall f x n size, well_formed (gen_sr_gate' f x n size).
+Proof.
+  intros. induction n; simpl. 
+  constructor. reflexivity. 
+  constructor. auto. constructor. reflexivity.
+Qed.
+
+Lemma gen_srr_gate'_WF : forall f x n size, well_formed (gen_srr_gate' f x n size).
+Proof.
+  intros. induction n; simpl. 
+  constructor. reflexivity. 
+  constructor. auto. constructor. reflexivity.
+Qed.
+
+Lemma trans_qft_WF : forall f x b, well_formed (trans_qft f x b).
+Proof. intros. constructor. apply QFT_gen_WF. apply nH_WF. Qed.
+
+Lemma trans_rqft_WF : forall f x b, well_formed (trans_rqft f x b).
+Proof. intros. apply invert_WF. Search invert. constructor. apply QFT_gen_WF. apply nH_WF. Qed.
+
+Lemma transexp'_WF : forall f dim exp avs u v p1,
+  trans_exp' f dim exp avs = (u, v, p1) -> well_formed u.
+Proof.
+  intros.
+  gen dim f avs.
+  gen u v p1.
+  induction exp; intros u v p1 dim f avs H.
+  (* simple cases *)
+  all: try (inversion H; subst; constructor; reflexivity).
+  all: simpl in H; try inversion H; subst.
+  (* CU p exp *)
+  destruct (trans_exp' f dim exp avs) eqn:transexp.
+  destruct p0.
+  eapply IHexp in transexp.
+  inversion H; subst.
+  apply control'_WF. assumption.
+  (* SR q x *)
+  apply gen_sr_gate'_WF.
+  (* SRR q x *)
+  apply gen_srr_gate'_WF.
+  (* QFT x *)
+  apply trans_qft_WF.
+  (* RQFT x *)
+  apply trans_rqft_WF.
+  (* exp1 ; exp2 *)
+  destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
+  destruct p.
+  destruct (trans_exp' v0 dim exp2 p0) eqn:transexp2.
+  destruct p.
+  inversion H; subst.
+  constructor.
+  eapply IHexp1. apply transexp1.
+  eapply IHexp2. apply transexp2.
+Qed.
+
+(*
+  UnitaryOps.is_fresh q (to_base_ucom dim (gen_sr_gate v x q0)) <->
+  UnitaryOps.is_fresh q (OQASMProof.gen_sr_gate v dim x q0)
+
+goal 2 (ID 1089) is:
+ UnitaryOps.is_fresh q (to_base_ucom dim (gen_srr_gate v x q0)) <->
+ UnitaryOps.is_fresh q (OQASMProof.gen_srr_gate v dim x q0)
+goal 3 (ID 1161) is:
+ UnitaryOps.is_fresh q (to_base_ucom dim (trans_qft v x b)) <->
+ UnitaryOps.is_fresh q (OQASMProof.trans_qft v dim x b)
+goal 4 (ID 1179) is:
+ UnitaryOps.is_fresh q (to_base_ucom dim (trans_rqft v x b)) <->
+ UnitaryOps.is_fresh q (OQASMProof.trans_rqft v dim x b)
+*)
+
+Lemma transexp'_is_fresh : forall f dim exp avs u v p1 q,
+  (* likely requires additional preconditions... *)
+  trans_exp' f dim exp avs = (u, v, p1) ->
+  (UnitaryOps.is_fresh q (to_base_ucom dim u) <->
+   UnitaryOps.is_fresh q (fst (fst (OQASMProof.trans_exp f dim exp avs)))).
+Proof.
+  intros.
+gen dim f avs.
+  gen u v p1.
+  induction exp; intros u v p1 dim f avs H; simpl in *.
+
+all: try inversion H; subst; try reflexivity.
+
+  (* CU p exp *)
+
+destruct (trans_exp' f dim exp avs) eqn:transexp'.
+    destruct p0.
+    destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
+    destruct p0.
+    apply IHexp in transexp'.
+    inversion H; subst.
+    rewrite transexp in transexp'.
+    simpl in *.
+rewrite <- UnitaryOps.fresh_control.
+
+admit.
+
+    (* SR q x *)
+    admit.
+    (* SRR q x *)
+    admit.
+    (* QFT x *)
+    admit.
+    (* RQFT x *)
+    admit.
+    (* exp1 ; exp2 *)
+    destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
+    destruct p.
+    destruct (OQASMProof.trans_exp f dim exp1 avs) eqn:transexp2.
+    destruct p.
+    apply IHexp1 in transexp1.
+    destruct (trans_exp' v0 dim exp2 p0) eqn:transexp3.
+    destruct p.
+    destruct (OQASMProof.trans_exp v1 dim exp2 p2) eqn:transexp4.
+    destruct p.
+    eapply IHexp2 in transexp3.
+
+inversion H; subst.
+rewrite transexp2 in *.
+
+
+Admitted.
 
 Lemma trans_exp_same : forall f dim exp avs,
   uc_eval dim (trans_exp f dim exp avs) 
@@ -358,11 +480,18 @@ Proof.
     destruct p0.
     destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
     destruct p0.
-    eapply IHexp in transexp' as [? [? ?]].
+    assert (IH:=transexp').
+    eapply IHexp in IH as [? [? ?]].
     2: apply transexp.
     inversion H1; inversion H2; subst.
-    repeat split; try reflexivity.
-    admit. (* annoying... *)
+    repeat split; auto.
+    rewrite control_correct.
+    apply UnitaryOps.control_cong.
+    apply H.
+    rewrite transexp'_is_fresh.
+    rewrite transexp. reflexivity.
+    apply transexp'.
+    eapply transexp'_WF. apply transexp'.
 
     (* SR q x *)
     simpl in H1, H2.
@@ -407,10 +536,16 @@ Proof.
     eapply IHexp2 in transexp3 as [? [? ?]].
     2: apply transexp4.
     inversion H1; inversion H2; subst.
-
     repeat split; try reflexivity.
     unfold uc_eval in *.
     simpl.
     rewrite H, H0.
     reflexivity. }
-Admitted.
+  destruct (trans_exp' f dim exp avs) eqn:transexp1.
+  destruct p.
+  destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp2.
+  destruct p.
+  eapply H.
+  simpl. reflexivity.
+  simpl. reflexivity.
+Qed.

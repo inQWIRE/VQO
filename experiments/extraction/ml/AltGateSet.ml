@@ -489,11 +489,33 @@ let rec invert = function
                   | [] -> coq_C3X q1 q2 q3 q4
                   | _ :: _ -> coq_SKIP))))))
 
-(** val decompose_to_voqc_gates : coq_U ucom -> coq_U ucom **)
+(** val decompose_to_voqc_gates1 : coq_U ucom -> coq_U ucom **)
 
-let rec decompose_to_voqc_gates u = match u with
+let rec decompose_to_voqc_gates1 u = match u with
 | Coq_useq (u1, u2) ->
-  Coq_useq ((decompose_to_voqc_gates u1), (decompose_to_voqc_gates u2))
+  Coq_useq ((decompose_to_voqc_gates1 u1), (decompose_to_voqc_gates1 u2))
+| Coq_uapp (_, u0, l) ->
+  (match u0 with
+   | U_CCU1 r ->
+     (match l with
+      | [] -> u
+      | q1 :: l0 ->
+        (match l0 with
+         | [] -> u
+         | q2 :: l1 ->
+           (match l1 with
+            | [] -> u
+            | q3 :: l2 ->
+              (match l2 with
+               | [] -> decompose_CCU1 r q1 q2 q3
+               | _ :: _ -> u))))
+   | _ -> u)
+
+(** val decompose_to_voqc_gates2 : coq_U ucom -> coq_U ucom **)
+
+let rec decompose_to_voqc_gates2 u = match u with
+| Coq_useq (u1, u2) ->
+  Coq_useq ((decompose_to_voqc_gates2 u1), (decompose_to_voqc_gates2 u2))
 | Coq_uapp (_, u0, l) ->
   (match u0 with
    | U_CU1 r ->
@@ -515,19 +537,6 @@ let rec decompose_to_voqc_gates u = match u with
          | q2 :: l1 -> (match l1 with
                         | [] -> decompose_CH q1 q2
                         | _ :: _ -> u)))
-   | U_CCU1 r ->
-     (match l with
-      | [] -> u
-      | q1 :: l0 ->
-        (match l0 with
-         | [] -> u
-         | q2 :: l1 ->
-           (match l1 with
-            | [] -> u
-            | q3 :: l2 ->
-              (match l2 with
-               | [] -> decompose_CCU1 r q1 q2 q3
-               | _ :: _ -> u))))
    | U_CSWAP ->
      (match l with
       | [] -> u
@@ -558,3 +567,8 @@ let rec decompose_to_voqc_gates u = match u with
                   | [] -> decompose_C3X q1 q2 q3 q4
                   | _ :: _ -> u)))))
    | _ -> u)
+
+(** val decompose_to_voqc_gates : coq_U ucom -> coq_U ucom **)
+
+let decompose_to_voqc_gates u =
+  decompose_to_voqc_gates2 (decompose_to_voqc_gates1 u)
