@@ -469,11 +469,11 @@ destruct (trans_exp' f dim exp avs) eqn:transexp'.
     apply fresh_control'; try easy. lia.
     split. easy. apply transexp'; easy.
     (* SR q x *)
-    admit.
+    rewrite gen_sr_gate_same. easy.
     (* SRR q x *)
-    admit.
+    rewrite gen_srr_gate_same. easy.
     (* QFT x *)
-    admit.
+    rewrite trans_qft_same. easy.
     (* RQFT x *)
     admit.
     (* exp1 ; exp2 *)
