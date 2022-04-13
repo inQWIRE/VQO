@@ -453,16 +453,21 @@ all: try inversion H; subst; try reflexivity.
 destruct (trans_exp' f dim exp avs) eqn:transexp'.
     destruct p0.
     destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
+    apply transexp'_WF in transexp' as eq1.
     destruct p0.
     apply IHexp in transexp'.
     inversion H; subst.
     rewrite transexp in transexp'.
     simpl in *.
     rewrite <- UnitaryOps.fresh_control.
-    Locate control.
-
-admit.
-
+    split.
+    intros.
+    apply fresh_control' in H0.
+    split. destruct H0. easy. destruct H0. apply transexp'. easy.
+    lia. easy. 
+    intros. destruct H0.
+    apply fresh_control'; try easy. lia.
+    split. easy. apply transexp'; easy.
     (* SR q x *)
     admit.
     (* SRR q x *)
