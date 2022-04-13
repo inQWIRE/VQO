@@ -435,6 +435,150 @@ goal 4 (ID 1179) is:
  UnitaryOps.is_fresh q (OQASMProof.trans_rqft v dim x b)
 *)
 
+Lemma is_fresh_to_base_ucom_invert :
+     forall q dim u,
+           UnitaryOps.is_fresh q (to_base_ucom dim (invert u)) 
+                 <-> UnitaryOps.is_fresh q (to_base_ucom dim u).
+Proof.
+  intros. induction u.
+  simpl.
+  split. intros. inv H. constructor. rewrite <- IHu1. easy.
+  rewrite <- IHu2. easy.
+  intros. inv H. constructor. rewrite IHu2. easy.
+  rewrite IHu1. easy.
+  destruct u. simpl. destruct l. simpl. easy.
+  destruct l. simpl. easy. simpl. easy.
+  destruct l. simpl. easy.
+  simpl.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  simpl.
+  destruct l. simpl.
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl.
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. 
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. 
+  split. intros.
+  inv H. inv H3. inv H2. inv H3.
+  inv H4. inv H6. inv H2.
+  Local Transparent SQIR.Rz.
+  unfold SQIR.Rz in *.
+  inv H6. inv H8.
+  constructor. constructor.
+  constructor. constructor.
+  constructor. constructor. easy.
+  constructor. easy. easy.
+  constructor. easy. easy.
+  constructor. easy.
+  intros.
+  inv H. inv H3. inv H2. inv H3.
+  inv H4. inv H6. inv H2.
+  unfold SQIR.Rz in *.
+  inv H6. inv H8.
+  constructor. constructor.
+  constructor. constructor.
+  constructor. constructor. easy.
+  constructor. easy. easy.
+  constructor. easy. easy.
+  constructor. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl.
+  split. intros.
+  inv H. inv H3. 
+  inv H2. inv H3.
+  inv H2. inv H4.
+  inv H6. inv H3. inv H8.
+  inv H2. inv H9. inv H4. inv H10. inv H6.
+  inv H11. inv H3. inv H12. inv H8. inv H9.
+  inv H10. inv H11. inv H12. inv H17. inv H8.
+  inv H18. inv H9. inv H19. inv H10. inv H20.
+  inv H11. inv H17. inv H18. inv H19. inv H20.
+  inv H25. inv H12. inv H26. inv H17. inv H27. inv H18. inv H28.
+  Local Transparent SQIR.CNOT.
+  inv H15. inv H13.
+  constructor. constructor. constructor. constructor. constructor.
+  constructor. constructor. constructor. constructor. constructor.
+  constructor. easy. constructor. easy. easy. constructor. easy.
+  easy. constructor. easy. constructor.
+  constructor. constructor. constructor. constructor.
+  constructor. easy. constructor. easy.
+  easy. constructor. easy. easy.
+  constructor. easy. constructor. constructor.
+  repeat constructor.
+  Local Transparent SQIR.H SQIR.T.
+  constructor. easy. 1-18:easy.
+  constructor. easy. constructor;easy.
+  repeat constructor; try easy.
+  constructor.
+  repeat constructor; try easy.
+  constructor;easy.
+  repeat constructor; try easy.
+  intros.
+  inv H. inv H3. 
+  inv H2. inv H3.
+  inv H2. inv H4.
+  inv H6. inv H3. inv H8.
+  inv H2. inv H9. inv H4. inv H10. inv H6.
+  inv H11. inv H3. inv H12. inv H8. inv H9.
+  inv H10. inv H11. inv H12. inv H17. inv H8.
+  inv H18. inv H9. inv H19. inv H10. inv H20.
+  inv H11. inv H17. inv H18. inv H19. inv H20.
+  inv H25. inv H12. inv H26. inv H17. inv H27. inv H18. inv H28.
+  repeat constructor; try easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  Local Opaque SQIR.Rz SQIR.CNOT SQIR.H SQIR.T.
+Qed.
+
 Lemma transexp'_is_fresh : forall f dim exp avs u v p1 q,
   (* likely requires additional preconditions... *)
   trans_exp' f dim exp avs = (u, v, p1) ->
@@ -475,7 +619,26 @@ destruct (trans_exp' f dim exp avs) eqn:transexp'.
     (* QFT x *)
     rewrite trans_qft_same. easy.
     (* RQFT x *)
-    admit.
+    split. intros.
+    assert (OQASMProof.trans_rqft v dim x b
+       = UnitaryOps.invert (OQASMProof.trans_qft v dim x b)) by easy.
+    rewrite H1.
+    rewrite <- is_fresh_invert.
+    rewrite <- trans_qft_same.
+    assert (to_base_ucom dim (trans_rqft v x b) 
+       = to_base_ucom dim (invert (trans_qft v x b))) by easy.
+    rewrite H2 in H0.
+    rewrite is_fresh_to_base_ucom_invert in H0. easy.
+    intros.
+    assert (OQASMProof.trans_rqft v dim x b
+       = UnitaryOps.invert (OQASMProof.trans_qft v dim x b)) by easy.
+    rewrite H1 in *.
+    assert (to_base_ucom dim (trans_rqft v x b) 
+       = to_base_ucom dim (invert (trans_qft v x b))) by easy.
+    rewrite H2.
+    rewrite <- is_fresh_invert in H0.
+    apply is_fresh_to_base_ucom_invert.
+    rewrite trans_qft_same. easy.
     (* exp1 ; exp2 *)
     specialize (vs_same_trans exp1 f dim avs) as X1. destruct X1.
     destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
@@ -500,7 +663,7 @@ destruct (trans_exp' f dim exp avs) eqn:transexp'.
     intros. inv H0.
     constructor. apply eq1. easy.
     apply eq2 ; easy.
-Admitted.
+Qed.
 
 Lemma trans_exp_same : forall f dim exp avs,
   uc_eval dim (trans_exp f dim exp avs) 
