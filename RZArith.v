@@ -4579,13 +4579,13 @@ Definition appx_full_adder_out (size:nat) (b:nat) := appx_full_adder_form x_var 
 
 (* approximate x = (x % M, x / M)  circuit. *)
 
-Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (M: nat -> bool) :=
+Fixpoint appx_adder' (x:var) (n:nat) (b:nat) (M: nat -> bool) acc :=
   match n with 
-  | 0 => SKIP (x,0)
-  | S m => appx_adder' x m b M ;
-           if n <=? b then (if M (m) then SR (b - n) x else SKIP (x,m)) else SKIP (x,m)
+  | 0 => acc
+  | S m => appx_adder' x m b M 
+           ((if (n <=? b) && M (m) then SR (b - n) x else SKIP (x,m)); acc)
   end.
-Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b M.
+Definition appx_adder (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_adder' x n b M (SKIP (x,0)).
 
 Definition appx_adder_form (x:var) (n:nat) (b:nat) (M:nat -> bool) :=
    (Rev x); QFT x b; appx_adder x n b M ;
@@ -4593,14 +4593,13 @@ Definition appx_adder_form (x:var) (n:nat) (b:nat) (M:nat -> bool) :=
 
 Definition appx_adder_out (size:nat) (b:nat) (M:nat-> bool) := appx_adder_form x_var size b M.
 
-Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (M: nat -> bool) :=
+Fixpoint appx_sub' (x:var) (n:nat) (b:nat) (M: nat -> bool) acc :=
   match n with 
-  | 0 => SKIP (x,0)
-  | S m => appx_sub' x m b M;
-             (if n <=? b then (if M (m) then SRR (b - n) x else SKIP (x,m)) else SKIP (x,m))
+  | 0 => acc
+  | S m => appx_sub' x m b M ((if (n <=? b) && M (m) then SRR (b - n) x  else SKIP (x,m)) ; acc)
   end.
 
-Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b M.
+Definition appx_sub (x:var) (n:nat) (b:nat) (M:nat -> bool) := appx_sub' x n b M (SKIP (x,0)).
 
 Definition appx_sub_form (x:var) (n:nat) (b:nat) (M:nat -> bool) :=
    (Rev x); QFT x b; appx_sub x n b M ;

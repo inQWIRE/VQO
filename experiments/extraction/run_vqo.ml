@@ -37,7 +37,7 @@ let write_qasm_file fname (u : coq_U ucom) =
    fprintf oc "qreg q[%d];\n" dim;
    (*fprintf oc "creg c[%d];\n" dim;*)
    fprintf oc "\n";
-   ignore(sqir_to_qasm oc (decompose_to_voqc_gates (decompose_to_voqc_gates u)) (fun _ -> ()));
+   ignore(sqir_to_qasm oc (decompose_to_voqc_gates u) (fun _ -> ()));
    (*ignore(write_measurements oc dim);*)
    ignore(fprintf oc "\n"); (* ddsim is fussy about having a newline at the end *)
    close_out oc)
@@ -199,12 +199,12 @@ let run_partial_eval_exp size =
   ();;
 
 (* Experiments for paper: *)
-(*run_modmult_experiments 139 117 173;;
+run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_approx 16 38168 15;;
-run_partial_eval_exp 16;;*)
+(*run_partial_eval_exp 16;;*)
 
 (* These three calls result in a stack overflow: *)
 let size = 16 in
