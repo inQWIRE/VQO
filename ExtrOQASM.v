@@ -362,6 +362,27 @@ Proof.
   eapply IHexp2. apply transexp2.
 Qed.
 
+Lemma vs_same_trans: forall e f dim avs, 
+            snd (fst (trans_exp' f dim e avs)) = snd (fst (OQASMProof.trans_exp f dim e avs))
+          /\ snd ( (trans_exp' f dim e avs)) = snd ( (OQASMProof.trans_exp f dim e avs)).
+Proof.
+  induction e; intros; simpl in *; eauto.
+  destruct (trans_exp' f dim e avs) eqn:eq1.
+  destruct p0. simpl in *.
+  destruct (OQASMProof.trans_exp f dim e avs ) eqn:eq2.
+  destruct p0. simpl in *. easy.
+  specialize (IHe1 f dim avs).
+  destruct (trans_exp' f dim e1 avs) eqn:eq1. destruct p.
+  destruct (OQASMProof.trans_exp f dim e1 avs) eqn:eq3.
+  destruct p.
+  simpl in *. destruct IHe1. subst.
+  specialize (IHe2 v0 dim p1).
+  destruct (trans_exp' v0 dim e2 p1) eqn:eq2. destruct p.
+  destruct (OQASMProof.trans_exp v0 dim e2 p1) eqn:eq4.
+  destruct p.
+  simpl in *. easy.
+Qed.
+
 (*
   UnitaryOps.is_fresh q (to_base_ucom dim (gen_sr_gate v x q0)) <->
   UnitaryOps.is_fresh q (OQASMProof.gen_sr_gate v dim x q0)
@@ -395,39 +416,53 @@ all: try inversion H; subst; try reflexivity.
 destruct (trans_exp' f dim exp avs) eqn:transexp'.
     destruct p0.
     destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
+    apply transexp'_WF in transexp' as eq1.
     destruct p0.
     apply IHexp in transexp'.
     inversion H; subst.
     rewrite transexp in transexp'.
     simpl in *.
-rewrite <- UnitaryOps.fresh_control.
-
-admit.
-
+    rewrite <- UnitaryOps.fresh_control.
+    split.
+    intros.
+    apply fresh_control' in H0.
+    split. destruct H0. easy. destruct H0. apply transexp'. easy.
+    lia. easy. 
+    intros. destruct H0.
+    apply fresh_control'; try easy. lia.
+    split. easy. apply transexp'; easy.
     (* SR q x *)
-    admit.
+    rewrite gen_sr_gate_same. easy.
     (* SRR q x *)
-    admit.
+    rewrite gen_srr_gate_same. easy.
     (* QFT x *)
-    admit.
+    rewrite trans_qft_same. easy.
     (* RQFT x *)
     admit.
     (* exp1 ; exp2 *)
+    specialize (vs_same_trans exp1 f dim avs) as X1. destruct X1.
     destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
     destruct p.
     destruct (OQASMProof.trans_exp f dim exp1 avs) eqn:transexp2.
     destruct p.
-    apply IHexp1 in transexp1.
-    destruct (trans_exp' v0 dim exp2 p0) eqn:transexp3.
+    apply IHexp1 in transexp1 as eq1.
+    simpl in *. subst.
+    specialize (vs_same_trans exp2 v1 dim p2) as X1. destruct X1.
+    destruct (trans_exp' v1 dim exp2 p2) eqn:transexp3.
     destruct p.
     destruct (OQASMProof.trans_exp v1 dim exp2 p2) eqn:transexp4.
     destruct p.
-    eapply IHexp2 in transexp3.
-
-inversion H; subst.
-rewrite transexp2 in *.
-
-
+    eapply IHexp2 in transexp3 as eq2.
+    simpl in *. subst.
+    inversion H; subst.
+    rewrite transexp2 in *.
+    rewrite transexp4 in *. simpl in *.
+    split. intros. inv H0. constructor.
+    apply eq1. easy.
+    apply eq2. easy.
+    intros. inv H0.
+    constructor. apply eq1. easy.
+    apply eq2 ; easy.
 Admitted.
 
 Lemma trans_exp_same : forall f dim exp avs,
