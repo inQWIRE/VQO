@@ -25,33 +25,32 @@ Extract Inlined Constant N.of_nat => "(fun x -> x)". (* id *)
 
 (* Perform extraction *)
 Separate Extraction
-    (* VQO classical modular multiplier *)
+    (* OQASM Toffoli-based modular multiplier *)
     ExtrOQASM.trans_modmult_rev
     
-    (* VQO QFT-based modular multiplier *)
+    (* OQASM QFT-based modular multiplier *)
     ExtrOQASM.trans_rz_modmult_rev
     ExtrOQASM.trans_rz_modmult_rev_alt (* What is this?? *)
     
-    (* VQO classical adders/multipliers *)
+    (* OQASM Toffoli-based adders/multipliers *)
     ExtrOQASM.trans_cl_adder
     ExtrOQASM.trans_cl_const_mul
     ExtrOQASM.trans_cl_mul
     ExtrOQASM.trans_cl_mul_out_place (* Quipper's implementation *)
     
-    (* VQO QFT-based adders/multipliers *)
+    (* OQASM QFT-based adders/multipliers *)
     ExtrOQASM.trans_rz_const_adder
     ExtrOQASM.trans_rz_adder
     ExtrOQASM.trans_rz_const_mul
     ExtrOQASM.trans_rz_mul
+    ExtrOQASM.trans_appx_adder       (* uses AQFT *)
+    ExtrOQASM.trans_appx_const_adder (* uses AQFT *)
+    ExtrOQASM.trans_appx_const_sub   (* uses AQFT *)
     
-    (* VQO TOFF-based divmod *)
-    ExtrOQASM.trans_cl_mod
-    ExtrOQASM.trans_cl_div
+    (* OQASM Toffoli-based divmod *)
     ExtrOQASM.trans_cl_div_mod
     
-    (* VQO QFT-based divmod *)
-    ExtrOQASM.trans_rz_mod
-    ExtrOQASM.trans_rz_div
+    (* OQASM QFT-based divmod *)
     ExtrOQASM.trans_rz_div_mod
     ExtrOQASM.trans_rz_div_mod_app_shift (* approx w/ OQASM shift *)
     ExtrOQASM.trans_rz_div_mod_app_swaps (* approx w/ SQIR SWAPs *)
@@ -61,16 +60,7 @@ Separate Extraction
     ExtrOQASM.trans_dmc_cl
     ExtrOQASM.trans_dmq_qft
     ExtrOQASM.trans_dmq_cl
+    ExtrOQASM.compile_collision_sqir 
     
-    (* decomposition pass *)
-    AltGateSet.decompose_to_voqc_gates
-
-    (* repeated add/mult experiments *)
-    ExtrOQASM.trans_rz_add_mul_opt
-    ExtrOQASM.trans_rz_add_mul
-    ExtrOQASM.trans_cl_add_mul
-
-    (* approximate arithmetic, b arg should be <= size *)
-    ExtrOQASM.trans_appx_adder
-    ExtrOQASM.trans_appx_const_adder
-    ExtrOQASM.trans_appx_const_sub.
+    (* gate decomposition pass *)
+    AltGateSet.decompose_to_voqc_gates.

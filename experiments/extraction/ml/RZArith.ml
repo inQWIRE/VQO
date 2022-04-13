@@ -529,21 +529,21 @@ let appx_full_adder_form x n b y =
 let appx_full_adder_out size b =
   appx_full_adder_form x_var size b y_var
 
-(** val appx_adder' : var -> int -> int -> (int -> bool) -> exp **)
+(** val appx_adder' : var -> int -> int -> (int -> bool) -> exp -> exp **)
 
-let rec appx_adder' x n b m =
+let rec appx_adder' x n b m acc =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
-    (fun _ -> SKIP (x, 0))
-    (fun m0 -> Seq ((appx_adder' x m0 b m),
-    (if (<=) n b
-     then if m m0 then SR (((-) b n), x) else SKIP (x, m0)
-     else SKIP (x, m0))))
+    (fun _ -> acc)
+    (fun m0 ->
+    appx_adder' x m0 b m (Seq
+      ((if (&&) ((<=) n b) (m m0) then SR (((-) b n), x) else SKIP (x, m0)),
+      acc)))
     n
 
 (** val appx_adder : var -> int -> int -> (int -> bool) -> exp **)
 
-let appx_adder =
-  appx_adder'
+let appx_adder x n b m =
+  appx_adder' x n b m (SKIP (x, 0))
 
 (** val appx_adder_form : var -> int -> int -> (int -> bool) -> exp **)
 
@@ -556,21 +556,21 @@ let appx_adder_form x n b m =
 let appx_adder_out size b m =
   appx_adder_form x_var size b m
 
-(** val appx_sub' : var -> int -> int -> (int -> bool) -> exp **)
+(** val appx_sub' : var -> int -> int -> (int -> bool) -> exp -> exp **)
 
-let rec appx_sub' x n b m =
+let rec appx_sub' x n b m acc =
   (fun fO fS n -> if n=0 then fO () else fS (n-1))
-    (fun _ -> SKIP (x, 0))
-    (fun m0 -> Seq ((appx_sub' x m0 b m),
-    (if (<=) n b
-     then if m m0 then SRR (((-) b n), x) else SKIP (x, m0)
-     else SKIP (x, m0))))
+    (fun _ -> acc)
+    (fun m0 ->
+    appx_sub' x m0 b m (Seq
+      ((if (&&) ((<=) n b) (m m0) then SRR (((-) b n), x) else SKIP (x, m0)),
+      acc)))
     n
 
 (** val appx_sub : var -> int -> int -> (int -> bool) -> exp **)
 
-let appx_sub =
-  appx_sub'
+let appx_sub x n b m =
+  appx_sub' x n b m (SKIP (x, 0))
 
 (** val appx_sub_form : var -> int -> int -> (int -> bool) -> exp **)
 

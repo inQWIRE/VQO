@@ -199,17 +199,17 @@ let run_partial_eval_exp size =
   ();;
 
 (* Experiments for paper: *)
-run_modmult_experiments 139 117 173;;
+(*run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
-run_approx 16 38168 15;;
+run_approx 16 38168 15;;*)
 (*run_partial_eval_exp 16;;*)
 
 (* These three calls result in a stack overflow: *)
 let size = 16 in
 let m = 38168 in
 let b = 15 in
-print_and_write_file (trans_rz_div size m) ("rz-div-tmp.qasm");
-print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx.qasm");
+(*print_and_write_file (trans_rz_div size m) ("rz-div-tmp.qasm");*)
+(*print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx.qasm");*)
 print_and_write_file (trans_appx_const_sub size m b) ("rz-const-sub-appx.qasm")
