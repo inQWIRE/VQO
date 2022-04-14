@@ -215,14 +215,14 @@ Definition trans_dmq_cl (size:nat) :=
    end.
 
 
-Definition compile_collision_sqir  :=
-    match Collision.compile_collision 
+Definition compile_chacha_sqir  :=
+    match compile_chacha 
           with None => None
              | Some (Error) => None
              | Some (Value a) => match a with (None,b,c,d) => None
                         | (Some e,sn,c,d) => 
-                    Some (trans_exp (Collision.vars_for_collision sn)
-                 (32*18 + S (S (S sn)))%nat e Collision.avs_for_collision)
+                    Some (trans_exp (OracleExample.vars_for_collision sn)
+                 (32*18 + (S (S sn)))%nat e avs_for_collision)
                                  end
     end.
 
