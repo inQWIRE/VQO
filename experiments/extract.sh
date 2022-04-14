@@ -19,9 +19,8 @@ rm -f Bin* ClassicalDedekindReals.ml ConstructiveCauchyReals.ml Nat0.ml \
 # Move the remaining extracted files to the 'ml' subdirectory.
 echo "Moving generated files to ml/..."
 mv AltGateSet.ml BasicUtility.ml Bool.ml CLArith.ml Datatypes.ml \
-   ExtrOQASM.ml FMapList.ml Factorial.ml MathSpec.ml \
+   ExtrOQASM.ml FMapList.ml Factorial.ml List0.ml MathSpec.ml \
    OracleExample.ml Order* OQASM* OQIMP.ml PeanoNat.ml Prelim.ml RZArith.ml \
-   Bvector.ml Fin.ml List0.ml Vector.ml VectorDef.ml \
    ml
 
 # Build extracted code.

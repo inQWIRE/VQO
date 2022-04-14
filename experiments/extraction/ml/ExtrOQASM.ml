@@ -326,10 +326,10 @@ let trans_dmq_cl size =
      | Error -> None)
   | None -> None
 
-(** val compile_collision_sqir : coq_U ucom option **)
+(** val compile_chacha_sqir : unit -> coq_U ucom option **)
 
-let compile_collision_sqir =
-  match compile_collision with
+let compile_chacha_sqir _ =
+  match compile_chacha () with
   | Some v ->
     (match v with
      | Value a ->
@@ -339,7 +339,7 @@ let compile_collision_sqir =
        (match o with
         | Some e ->
           Some
-            (trans_exp (vars_for_collision sn)
+            (trans_exp (vars_for_chacha sn)
               ((+)
                 (( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ
                   (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
@@ -347,8 +347,7 @@ let compile_collision_sqir =
                   (succ (succ (succ 0)))))))))))))))))))))))))))))))) (succ
                   (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
                   (succ (succ (succ (succ (succ (succ (succ
-                  0))))))))))))))))))) (succ (succ (succ sn)))) e
-              avs_for_collision)
+                  0))))))))))))))))))) (succ (succ sn))) e avs_for_chacha)
         | None -> None)
      | Error -> None)
   | None -> None

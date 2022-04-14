@@ -178,8 +178,8 @@ Definition trans_dmq_cl (size:nat) :=
         | _ => None
    end.
 
-Definition compile_chacha_sqir  :=
-    match compile_chacha 
+Definition compile_chacha_sqir (_:unit) := (* arg. delays evaluation in extracted code *)
+    match compile_chacha ()
           with None => None
              | Some (Error) => None
              | Some (Value a) => match a with (None,b,c,d) => None

@@ -22,6 +22,7 @@ Extract Inductive nat => int [ "0" "succ" ] (* fix to bug in current lib *)
   "(fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))".
 Extract Inlined Constant Init.Nat.eqb => "(=)".
 Extract Inlined Constant Init.Nat.leb => "(<=)".
+Extract Inlined Constant Init.Nat.ltb => "(<)".
 Extract Inlined Constant Init.Nat.mul => "( * )".
 Extract Inlined Constant Init.Nat.add => "(+)".
 Extract Inlined Constant Init.Nat.sub => "(fun x y -> max 0 (x-y))".
@@ -69,7 +70,7 @@ Separate Extraction
     ExtrOQASM.trans_dmc_cl
     ExtrOQASM.trans_dmq_qft
     ExtrOQASM.trans_dmq_cl
-    ExtrOQASM.compile_collision_sqir 
+    ExtrOQASM.compile_chacha_sqir 
     
     (* gate decomposition pass *)
     AltGateSet.decompose_to_voqc_gates.

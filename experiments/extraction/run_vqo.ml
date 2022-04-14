@@ -191,9 +191,6 @@ let run_approx size m b =
     let _ = printf "Generating circuit for approximate QFT-based constant adder, inputs size=%d m=%d b=%d...\n%!" size m b in
     let _ = print_and_write_file (trans_appx_const_adder size b m) ("rz-appr-const-adder-" ^ fname) in
 
-    let _ = printf "Generating circuit for approximate QFT-based constant subtractor, inputs size=%d m=%d b=%d...\n%!" size m b in
-    let _ = print_and_write_file (trans_appx_const_sub size b m) ("rz-appr-const-sub-" ^ fname) in
-
     let _ = printf "Generating circuit for approximate QFT-based div-mod (w/out SWAPs), inputs size=%d m=%d...\n%!" size m in
     let _ = print_and_write_file (trans_rz_div_mod_app_shift size m) ("rz-appr-div-mod-" ^ fname) in
 
@@ -226,3 +223,8 @@ run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_approx 16 38168 15;;
 run_partial_eval 16;;
+
+printf "Running compile_chacha_sqir...\n%!";
+match compile_chacha_sqir () with 
+| None -> printf "ERROR: compile_chacha_sqir returned None\n%!"
+| Some c -> print_and_write_file c "chacha-oracle.qasm";

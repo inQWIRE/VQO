@@ -1,13 +1,10 @@
 open BasicUtility
-open Bvector
 open CLArith
-open Fin
 open List0
 open MathSpec
 open OQASM
 open OQASMProof
 open OQIMP
-open Vector
 
 (** val rotate_left_n : qvar -> int -> qexp **)
 
@@ -56,8 +53,6 @@ let qr_qexp a b c d =
         (succ (succ (succ 0)))))))))))))))))))))))))))))))) (succ (succ (succ
         (succ (succ (succ (succ 0))))))))))
 
-type word = coq_Bvector
-
 (** val qr_estore : estore **)
 
 let qr_estore =
@@ -70,24 +65,23 @@ let qr_estore =
     qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar ->
     qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qexp **)
 
-let dr_qexp x2 x3 x4 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 =
+let dr_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 =
   Coq_qseq ((Coq_qseq ((Coq_qseq ((Coq_qseq ((Coq_qseq ((Coq_qseq ((Coq_qseq
-    ((qr_qexp x2 x17 x21 x25), (qr_qexp x3 x18 x22 x26))),
-    (qr_qexp x4 x19 x23 x27))), (qr_qexp x16 x20 x24 x28))),
-    (qr_qexp x2 x18 x23 x28))), (qr_qexp x3 x19 x24 x25))),
-    (qr_qexp x4 x20 x21 x26))), (qr_qexp x16 x17 x22 x27))
+    ((qr_qexp x0 x4 x8 x12), (qr_qexp x1 x5 x9 x13))),
+    (qr_qexp x2 x6 x10 x14))), (qr_qexp x3 x7 x11 x15))),
+    (qr_qexp x0 x5 x10 x15))), (qr_qexp x1 x6 x11 x12))),
+    (qr_qexp x2 x7 x8 x13))), (qr_qexp x3 x4 x9 x14))
 
 (** val chacha_qexp' :
     int -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar ->
     qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qvar -> qexp **)
 
-let rec chacha_qexp' n x2 x3 x4 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 =
+let rec chacha_qexp' n x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 =
   (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> Coq_skip)
     (fun n' -> Coq_qseq
-    ((dr_qexp x2 x3 x4 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28),
-    (chacha_qexp' n' x2 x3 x4 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27
-      x28)))
+    ((dr_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15),
+    (chacha_qexp' n' x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15)))
     n
 
 (** val chacha_qexp :
@@ -105,156 +99,90 @@ let chacha_vmap = function
              | G x' -> x'
              | L x' -> x')
 
-(** val chacha_benv : benv **)
+(** val xa : qvar **)
 
-let chacha_benv =
-  match gen_genv
-          (List.map (fun x -> ((TNor (Q, Nat)), x))
-            (seq 0 (succ (succ (succ (succ (succ (succ (succ (succ (succ
-              (succ (succ (succ (succ (succ (succ (succ 0)))))))))))))))))) with
-  | Some bv -> bv
-  | None -> empty_benv
+let xa =
+  G 0
 
-(** val x0 : qvar **)
+(** val xb : qvar **)
 
-let x0 =
-  L 0
+let xb =
+  G (succ 0)
 
-(** val x1 : qvar **)
+(** val xc : qvar **)
 
-let x1 =
-  L (succ 0)
+let xc =
+  G (succ (succ 0))
 
-(** val x2' : qvar **)
+(** val xd : qvar **)
 
-let x2' =
-  L (succ (succ 0))
+let xd =
+  G (succ (succ (succ 0)))
 
-(** val x3' : qvar **)
+(** val xe : qvar **)
 
-let x3' =
-  L (succ (succ (succ 0)))
+let xe =
+  G (succ (succ (succ (succ 0))))
 
-(** val x4' : qvar **)
+(** val xf : qvar **)
 
-let x4' =
-  L (succ (succ (succ (succ 0))))
+let xf =
+  G (succ (succ (succ (succ (succ 0)))))
 
-(** val x5 : qvar **)
+(** val xg : qvar **)
 
-let x5 =
-  L (succ (succ (succ (succ (succ 0)))))
+let xg =
+  G (succ (succ (succ (succ (succ (succ 0))))))
 
-(** val x6 : qvar **)
+(** val xh : qvar **)
 
-let x6 =
-  L (succ (succ (succ (succ (succ (succ 0))))))
+let xh =
+  G (succ (succ (succ (succ (succ (succ (succ 0)))))))
 
-(** val x7 : qvar **)
+(** val xi : qvar **)
 
-let x7 =
-  L (succ (succ (succ (succ (succ (succ (succ 0)))))))
+let xi =
+  G (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))
 
-(** val x8 : qvar **)
+(** val xj : qvar **)
 
-let x8 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))
+let xj =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ 0)))))))))
 
-(** val x9 : qvar **)
+(** val xk : qvar **)
 
-let x9 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ 0)))))))))
+let xk =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))))
 
-(** val x10 : qvar **)
+(** val xl : qvar **)
 
-let x10 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))))
-
-(** val x11 : qvar **)
-
-let x11 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+let xl =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     0)))))))))))
 
-(** val x12 : qvar **)
+(** val xm : qvar **)
 
-let x12 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+let xm =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     0))))))))))))
 
-(** val x13 : qvar **)
+(** val xn : qvar **)
 
-let x13 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+let xn =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ 0)))))))))))))
 
-(** val x14 : qvar **)
+(** val xo : qvar **)
 
-let x14 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+let xo =
+  G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ 0))))))))))))))
 
-(** val x15 : qvar **)
+(** val xp : qvar **)
 
-let x15 =
-  L (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    (succ (succ (succ 0)))))))))))))))
-
-(** val out : qvar **)
-
-let out =
+let xp =
   G (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    (succ (succ (succ (succ (succ (succ 0))))))))))))))))))
-
-(** val getBit : word -> int -> bool **)
-
-let getBit v k =
-  match of_nat k (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-          (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-          (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-          0)))))))))))))))))))))))))))))))) with
-  | Some f ->
-    nth (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-      (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-      (succ (succ (succ (succ (succ (succ (succ (succ (succ
-      0)))))))))))))))))))))))))))))))) v f
-  | None -> false
-
-(** val collision_qexp :
-    word -> word -> word -> word -> word -> word -> word -> word -> word ->
-    word -> word -> word -> word -> word -> word -> word -> qexp **)
-
-let collision_qexp v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 =
-  Coq_qseq
-    ((chacha_qexp x0 x1 x2' x3' x4' x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15),
-    (Coq_qif ((Coq_ceq ((Nor (Var x0)), (Nor (Num (Nat, (getBit v0)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x1)), (Nor (Num (Nat, (getBit v1)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x2')), (Nor (Num (Nat, (getBit v2)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x3')), (Nor (Num (Nat, (getBit v3)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x4')), (Nor (Num (Nat, (getBit v4)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x5)), (Nor (Num (Nat, (getBit v5)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x6)), (Nor (Num (Nat, (getBit v6)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x7)), (Nor (Num (Nat, (getBit v7)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x8)), (Nor (Num (Nat, (getBit v8)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x9)), (Nor (Num (Nat, (getBit v9)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x10)), (Nor (Num (Nat, (getBit v10)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x11)), (Nor (Num (Nat, (getBit v11)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x12)), (Nor (Num (Nat, (getBit v12)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x13)), (Nor (Num (Nat, (getBit v13)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x14)), (Nor (Num (Nat, (getBit v14)))))),
-    (Coq_qif ((Coq_ceq ((Nor (Var x15)), (Nor (Num (Nat, (getBit v15)))))),
-    (Coq_init ((Nor (Var out)), (Nor (Num (Nat, (fun _ -> true)))))),
-    Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)),
-    Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)),
-    Coq_skip)), Coq_skip)), Coq_skip)), Coq_skip)))
-
-(** val zero_word : bool t **)
-
-let zero_word =
-  coq_Bvect_false (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    0))))))))))))))))))))))))))))))))
+    (succ (succ (succ 0)))))))))))))))
 
 (** val tempVar : var **)
 
@@ -272,76 +200,72 @@ let tempVar1 =
 
 let stacka =
   succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    (succ (succ (succ (succ (succ (succ (succ 0))))))))))))))))))
+    (succ (succ (succ (succ (succ (succ 0)))))))))))))))))
 
-(** val compile_collision :
-    (((exp option * int) * cstore) * estore) value option **)
+(** val chacha_benv : benv **)
 
-let compile_collision =
+let chacha_benv =
+  match gen_genv
+          (List.map (fun x -> ((TNor (Q, Nat)), x))
+            (seq 0 (succ (succ (succ (succ (succ (succ (succ (succ (succ
+              (succ (succ (succ (succ (succ (succ (succ 0)))))))))))))))))) with
+  | Some bv -> bv
+  | None -> empty_benv
+
+(** val compile_chacha :
+    unit -> (((exp option * int) * cstore) * estore) value option **)
+
+let compile_chacha _ =
   trans_qexp (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     0)))))))))))))))))))))))))))))))) (fun _ -> succ 0) chacha_vmap
     chacha_benv QFTA empty_cstore tempVar tempVar1 stacka 0 [] qr_estore
-    qr_estore
-    (collision_qexp zero_word zero_word zero_word zero_word zero_word
-      zero_word zero_word zero_word zero_word zero_word zero_word zero_word
-      zero_word zero_word zero_word zero_word)
+    qr_estore (chacha_qexp xa xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp)
 
-(** val gen_collision_vars' : int -> var list -> var list **)
+(** val gen_chacha_vars' : int -> var list -> var list **)
 
-let rec gen_collision_vars' n acc =
+let rec gen_chacha_vars' n acc =
   (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> acc)
-    (fun m -> gen_collision_vars' m (m :: acc))
+    (fun m -> gen_chacha_vars' m (m :: acc))
     n
 
-(** val gen_collision_vars : var list **)
+(** val gen_chacha_vars : var list **)
 
-let gen_collision_vars =
-  gen_collision_vars' (succ (succ (succ (succ (succ (succ (succ (succ (succ
+let gen_chacha_vars =
+  gen_chacha_vars' (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))))))))))))
     []
 
-(** val vars_for_collision' :
+(** val vars_for_chacha' :
     int -> ((int * int) * (int -> int)) * (int -> int) **)
 
-let vars_for_collision' =
+let vars_for_chacha' =
   gen_vars (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
     (succ (succ (succ (succ (succ (succ (succ (succ (succ
-    0)))))))))))))))))))))))))))))))) gen_collision_vars
+    0)))))))))))))))))))))))))))))))) gen_chacha_vars
 
-(** val vars_for_collision :
+(** val vars_for_chacha :
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
-let vars_for_collision sn x =
+let vars_for_chacha sn x =
   if (=) x (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-       (succ (succ (succ (succ (succ (succ (succ (succ 0)))))))))))))))))))
-  then ((((succ
-         (( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-           (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-           (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-           0)))))))))))))))))))))))))))))))) (succ (succ (succ (succ (succ
-           (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-           (succ (succ 0)))))))))))))))))))), (succ (succ sn))), id_nat),
+       (succ (succ (succ (succ (succ (succ (succ 0))))))))))))))))))
+  then ((((( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+            (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+            (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+            0)))))))))))))))))))))))))))))))) (succ (succ (succ (succ (succ
+            (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
+            (succ (succ 0))))))))))))))))))), (succ (succ sn))), id_nat),
          id_nat)
-  else if (=) x (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-            (succ (succ (succ (succ (succ (succ (succ (succ
-            0))))))))))))))))))
-       then ((((( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ
-                 (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-                 (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-                 (succ (succ (succ 0)))))))))))))))))))))))))))))))) (succ
-                 (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-                 (succ (succ (succ (succ (succ (succ (succ
-                 0))))))))))))))))))), (succ 0)), id_nat), id_nat)
-       else vars_for_collision' x
+  else vars_for_chacha' x
 
-(** val avs_for_collision : int -> int * int **)
+(** val avs_for_chacha : int -> int * int **)
 
-let avs_for_collision n =
-  if (<=) n
+let avs_for_chacha n =
+  if (<) n
        (( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
          (succ (succ (succ (succ (succ (succ (succ (succ 0))))))))))))))))))
          (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
@@ -353,8 +277,7 @@ let avs_for_collision n =
          (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
          (succ 0)))))))))))))))))))))))))))))))) n
   else ((succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-         (succ (succ (succ (succ (succ (succ (succ (succ
-         0))))))))))))))))))),
+         (succ (succ (succ (succ (succ (succ (succ 0)))))))))))))))))),
          ((fun x y -> max 0 (x-y)) n
            (( * ) (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
              (succ (succ (succ (succ (succ (succ (succ (succ
@@ -413,12 +336,12 @@ let rec dmc_vmap' l n =
       (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
       (succ (succ (succ (succ (succ (succ
       0))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-  | p :: xl ->
+  | p :: xl0 ->
     let (t0, x) = p in
     if is_q t0
     then (fun i ->
-           if qdty_eq i ((L x), 0) then n else dmc_vmap' xl (succ n) i)
-    else dmc_vmap' xl (succ n)
+           if qdty_eq i ((L x), 0) then n else dmc_vmap' xl0 (succ n) i)
+    else dmc_vmap' xl0 (succ n)
 
 (** val dmc_vmap : (qvar * int) -> int **)
 

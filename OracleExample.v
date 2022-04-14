@@ -415,13 +415,13 @@ Definition tempVar1 : var := 17.
 Definition stacka : var := 18.
 
 
-  Definition chacha_benv := 
-   match gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
+Definition chacha_benv := 
+  match gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
 
-  Definition compile_chacha :=
-    trans_qexp
-    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
-    (chacha_qexp xa xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp).
+Definition compile_chacha (_:unit) := (* arg. delays evaluation in extracted code *)
+  trans_qexp
+  32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
+  (chacha_qexp xa xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp).
 
 Fixpoint gen_chacha_vars' (n:nat) (acc:list var):=
    match n with 0 => acc
@@ -439,7 +439,7 @@ Definition avs_for_chacha (n:nat) :=
 
   Definition chacha_pexp : exp.
   Proof.
-    destruct (compile_chacha) eqn:E1.
+    destruct (compile_chacha ()) eqn:E1.
     - destruct v.
       + destruct x0,p,p,o.
         * apply e0.
