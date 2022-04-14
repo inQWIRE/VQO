@@ -186,19 +186,19 @@ let run_approx size m b =
   then failwith "Invalid inputs to run_approx"
   else
     let _ = printf "Generating circuit for approximate QFT-based adder, inputs size=%d b=%d...\n%!" size b in
-    let _ = print_and_write_file (trans_appx_adder size b) ("rz-add-appx-" ^ fname) in
+    let _ = print_and_write_file (trans_appx_adder size b) ("rz-appr-adder-" ^ fname) in
 
     let _ = printf "Generating circuit for approximate QFT-based constant adder, inputs size=%d m=%d b=%d...\n%!" size m b in
-    let _ = print_and_write_file (trans_appx_const_adder size b m) ("rz-const-add-appx-" ^ fname) in
+    let _ = print_and_write_file (trans_appx_const_adder size b m) ("rz-appr-const-adder-" ^ fname) in
 
     let _ = printf "Generating circuit for approximate QFT-based constant subtractor, inputs size=%d m=%d b=%d...\n%!" size m b in
-    let _ = print_and_write_file (trans_appx_const_sub size b m) ("rz-const-sub-appx-" ^ fname) in
+    let _ = print_and_write_file (trans_appx_const_sub size b m) ("rz-appr-const-sub-" ^ fname) in
 
     let _ = printf "Generating circuit for approximate QFT-based div-mod (w/out SWAPs), inputs size=%d m=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_rz_div_mod_app_shift size m) ("rz-div-mod-appx-" ^ fname) in
+    let _ = print_and_write_file (trans_rz_div_mod_app_shift size m) ("rz-appr-div-mod-" ^ fname) in
 
     let _ = printf "Generating circuit for approximate QFT-based div-mod (with SWAPs), inputs size=%d m=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_rz_div_mod_app_swaps size m) ("rz-div-mod-appx-swaps-" ^ fname) in
+    let _ = print_and_write_file (trans_rz_div_mod_app_swaps size m) ("rz-appr-div-mod-swaps-" ^ fname) in
 
     ();;
 
