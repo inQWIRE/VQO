@@ -5,7 +5,6 @@ open Datatypes
 open FMapList
 open Factorial
 open MathSpec
-open Nat0
 open OQASM
 open OQASMProof
 open PeanoNat
@@ -322,8 +321,7 @@ let type_factor bv = function
 (** val a_nat2fb : (int -> bool) -> int -> int **)
 
 let a_nat2fb f n =
-  natsum n (fun i ->
-    mul (Nat.b2n (f i)) (Nat.pow (Pervasives.succ (Pervasives.succ 0)) i))
+  natsum n (fun i -> ( * ) (Nat.b2n (f i)) (Nat.pow (succ (succ 0)) i))
 
 (** val is_q : typ -> bool **)
 
@@ -360,13 +358,13 @@ type 'a value =
 (** val get_size : int -> btype -> int **)
 
 let get_size size t0 =
-  if bty_eq t0 Bl then Pervasives.succ 0 else size
+  if bty_eq t0 Bl then succ 0 else size
 
 (** val get_type_num : typ -> int **)
 
 let get_type_num = function
 | TArray (_, _, n) -> n
-| TNor (_, _) -> Pervasives.succ 0
+| TNor (_, _) -> succ 0
 
 (** val no_zero : typ -> bool **)
 
@@ -384,6 +382,15 @@ let rec gen_env l bv =
     bind (gen_env xl bv) (fun new_env ->
       if no_zero t0 then Some (BEnv.add (L x) t0 new_env) else None)
 
+(** val gen_genv : (typ * var) list -> benv option **)
+
+let rec gen_genv = function
+| [] -> Some empty_benv
+| p :: xl ->
+  let (t0, x) = p in
+  bind (gen_genv xl) (fun new_env ->
+    if no_zero t0 then Some (BEnv.add (G x) t0 new_env) else None)
+
 type cstore = (int -> bool) Store.t
 
 (** val empty_cstore : (int -> bool) Store.t **)
@@ -399,7 +406,7 @@ let make_value size b c =
     match b with
     | Nat -> Some (cut_n cv size)
     | FixedP -> Some (fbrev size (cut_n cv size))
-    | Bl -> Some (cut_n cv (Pervasives.succ 0)))
+    | Bl -> Some (cut_n cv (succ 0)))
 
 (** val par_eval_fc :
     benv -> int -> cstore -> factor -> (int -> bool) option **)
@@ -473,8 +480,8 @@ let qvar_eq smap bv size r x y =
     (qvar * int) -> var -> int -> exp **)
 
 let clt_circuit_two size _ b vmap x y stack sn =
-  comparator01 (get_size size b) (vmap y) (vmap x) (stack, (Pervasives.succ
-    sn)) (stack, sn)
+  comparator01 (get_size size b) (vmap y) (vmap x) (stack, (succ sn)) (stack,
+    sn)
 
 (** val clt_circuit_left :
     int -> flag -> btype -> ((qvar * int) -> var) -> (qvar * int) -> (int ->
@@ -482,8 +489,8 @@ let clt_circuit_two size _ b vmap x y stack sn =
 
 let clt_circuit_left size _ b vmap x y stack temp sn =
   Seq ((Seq ((init_v (get_size size b) temp y),
-    (comparator01 (get_size size b) temp (vmap x) (stack, (Pervasives.succ
-      sn)) (stack, sn)))), (inv_exp (init_v (get_size size b) temp y)))
+    (comparator01 (get_size size b) temp (vmap x) (stack, (succ sn)) (stack,
+      sn)))), (inv_exp (init_v (get_size size b) temp y)))
 
 (** val clt_circuit_right :
     int -> flag -> btype -> ((qvar * int) -> var) -> (int -> bool) ->
@@ -491,8 +498,8 @@ let clt_circuit_left size _ b vmap x y stack temp sn =
 
 let clt_circuit_right size _ b vmap x y stack temp sn =
   Seq ((Seq ((init_v (get_size size b) temp x),
-    (comparator01 (get_size size b) (vmap y) temp (stack, (Pervasives.succ
-      sn)) (stack, sn)))), (inv_exp (init_v (get_size size b) temp x)))
+    (comparator01 (get_size size b) (vmap y) temp (stack, (succ sn)) (stack,
+      sn)))), (inv_exp (init_v (get_size size b) temp x)))
 
 (** val gen_clt_c :
     (qvar -> int) -> ((qvar * int) -> var) -> benv -> int -> flag -> cstore
@@ -512,7 +519,7 @@ let gen_clt_c smap vmap bv size f r stack temp sn x y =
                    | Value t2v' ->
                      Some (Value (((Some
                        (clt_circuit_left size f (snd t1) vmap vx t2v' stack
-                         temp sn)), (Pervasives.succ sn)), None))
+                         temp sn)), (succ sn)), None))
                    | Error -> Some Error)
                | Error -> Some Error)
             | None -> None)
@@ -525,7 +532,7 @@ let gen_clt_c smap vmap bv size f r stack temp sn x y =
                        | Value vy ->
                          Some (Value (((Some
                            (clt_circuit_two size f (snd t1) vmap vx vy stack
-                             sn)), (Pervasives.succ sn)), None))
+                             sn)), (succ sn)), None))
                        | Error -> Some Error)
                     | Error -> Some Error))
            else if (&&) (aty_eq (fst t1) C) (aty_eq (fst t2) Q)
@@ -539,8 +546,7 @@ let gen_clt_c smap vmap bv size f r stack temp sn x y =
                              | Value t1v' ->
                                Some (Value (((Some
                                  (clt_circuit_right size f (snd t1) vmap t1v'
-                                   vy stack temp sn)), (Pervasives.succ sn)),
-                                 None))
+                                   vy stack temp sn)), (succ sn)), None))
                              | Error -> Some Error)
                          | Error -> Some Error)
                       | None -> None)
@@ -564,10 +570,10 @@ let gen_clt_c smap vmap bv size f r stack temp sn x y =
 
 let ceq_circuit_two size _ b vmap x y stack sn =
   Seq ((Seq
-    ((comparator01 (get_size size b) (vmap y) (vmap x) (stack,
-       (Pervasives.succ sn)) (stack, sn)),
-    (comparator01 (get_size size b) (vmap x) (vmap y) (stack,
-      (Pervasives.succ sn)) (stack, sn)))), (X (stack, sn)))
+    ((comparator01 (get_size size b) (vmap y) (vmap x) (stack, (succ sn))
+       (stack, sn)),
+    (comparator01 (get_size size b) (vmap x) (vmap y) (stack, (succ sn))
+      (stack, sn)))), (X (stack, sn)))
 
 (** val ceq_circuit_left :
     int -> flag -> btype -> ((qvar * int) -> var) -> (qvar * int) -> (int ->
@@ -575,11 +581,10 @@ let ceq_circuit_two size _ b vmap x y stack sn =
 
 let ceq_circuit_left size _ b vmap x y stack temp sn =
   Seq ((Seq ((Seq ((Seq ((init_v (get_size size b) temp y),
-    (comparator01 (get_size size b) (vmap x) temp (stack, (Pervasives.succ
-      sn)) (stack, sn)))),
-    (comparator01 (get_size size b) temp (vmap x) (stack, (Pervasives.succ
-      sn)) (stack, sn)))), (X (stack, sn)))),
-    (inv_exp (init_v (get_size size b) temp y)))
+    (comparator01 (get_size size b) (vmap x) temp (stack, (succ sn)) (stack,
+      sn)))),
+    (comparator01 (get_size size b) temp (vmap x) (stack, (succ sn)) (stack,
+      sn)))), (X (stack, sn)))), (inv_exp (init_v (get_size size b) temp y)))
 
 (** val ceq_circuit_right :
     int -> flag -> btype -> ((qvar * int) -> var) -> (int -> bool) ->
@@ -587,11 +592,10 @@ let ceq_circuit_left size _ b vmap x y stack temp sn =
 
 let ceq_circuit_right size _ b vmap x y stack temp sn =
   Seq ((Seq ((Seq ((Seq ((init_v (get_size size b) temp x),
-    (comparator01 (get_size size b) temp (vmap y) (stack, (Pervasives.succ
-      sn)) (stack, sn)))),
-    (comparator01 (get_size size b) (vmap y) temp (stack, (Pervasives.succ
-      sn)) (stack, sn)))), (X (stack, sn)))),
-    (inv_exp (init_v (get_size size b) temp x)))
+    (comparator01 (get_size size b) temp (vmap y) (stack, (succ sn)) (stack,
+      sn)))),
+    (comparator01 (get_size size b) (vmap y) temp (stack, (succ sn)) (stack,
+      sn)))), (X (stack, sn)))), (inv_exp (init_v (get_size size b) temp x)))
 
 (** val gen_ceq_c :
     (qvar -> int) -> ((qvar * int) -> var) -> benv -> int -> flag -> cstore
@@ -611,7 +615,7 @@ let gen_ceq_c smap vmap bv size f r stack temp sn x y =
                    | Value t2v' ->
                      Some (Value (((Some
                        (ceq_circuit_left size f (snd t1) vmap vx t2v' stack
-                         temp sn)), (Pervasives.succ sn)), None))
+                         temp sn)), (succ sn)), None))
                    | Error -> Some Error)
                | Error -> Some Error)
             | None -> None)
@@ -624,7 +628,7 @@ let gen_ceq_c smap vmap bv size f r stack temp sn x y =
                        | Value vy ->
                          Some (Value (((Some
                            (ceq_circuit_two size f (snd t1) vmap vx vy stack
-                             sn)), (Pervasives.succ sn)), None))
+                             sn)), (succ sn)), None))
                        | Error -> Some Error)
                     | Error -> Some Error))
            else if (&&) (aty_eq (fst t1) C) (aty_eq (fst t2) Q)
@@ -638,8 +642,7 @@ let gen_ceq_c smap vmap bv size f r stack temp sn x y =
                              | Value t1v' ->
                                Some (Value (((Some
                                  (ceq_circuit_right size f (snd t1) vmap t1v'
-                                   vy stack temp sn)), (Pervasives.succ sn)),
-                                 None))
+                                   vy stack temp sn)), (succ sn)), None))
                              | Error -> Some Error)
                          | Error -> Some Error)
                       | None -> None)
@@ -690,15 +693,13 @@ let compile_cexp size smap vmap bv f r stack temp sn = function
            match t2v with
            | Value t2v' ->
              Some (Value ((None, sn), (Some
-               ((=)
-                 (Nat.modulo (a_nat2fb t2v' size) (Pervasives.succ
-                   (Pervasives.succ 0))) 0))))
+               ((=) (Nat.modulo (a_nat2fb t2v' size) (succ (succ 0))) 0))))
            | Error -> Some Error))
 
 (** val l_rotate : (int -> bool) -> int -> int -> bool **)
 
 let l_rotate f n i =
-  f (Nat.modulo ((-) (add i n) (Pervasives.succ 0)) n)
+  f (Nat.modulo ((fun x y -> max 0 (x-y)) ((+) i n) (succ 0)) n)
 
 type fmap =
   ((((((fvar * cfac) * exp) * (qvar -> int)) * ((qvar * int) ->
@@ -840,19 +841,17 @@ let nqmul_c size smap vmap bv f r _ stack sn es x y z =
                                     (init_v size (vmap vx)
                                       (nat2fb
                                         (Nat.modulo
-                                          (mul (a_nat2fb tyv size)
+                                          (( * ) (a_nat2fb tyv size)
                                             (a_nat2fb tzv size))
-                                          (Nat.pow (Pervasives.succ
-                                            (Pervasives.succ 0)) size))))),
+                                          (Nat.pow (succ (succ 0)) size))))),
                                     sn), r),
                                     (Store.add vx
                                       ((init_v size (vmap vx)
                                          (nat2fb
                                            (Nat.modulo
-                                             (mul (a_nat2fb tyv size)
+                                             (( * ) (a_nat2fb tyv size)
                                                (a_nat2fb tzv size))
-                                             (Nat.pow (Pervasives.succ
-                                               (Pervasives.succ 0)) size)))) :: exps)
+                                             (Nat.pow (succ (succ 0)) size)))) :: exps)
                                       es))))
                                 | Error -> Some Error)
                              | Error -> Some Error))))))
@@ -955,19 +954,17 @@ let fmul_c size smap vmap bv f r temp stack sn es x y z =
                                     (init_v size (vmap vx)
                                       (nat2fb
                                         (Nat.modulo
-                                          (mul (a_nat2fb tyv size)
+                                          (( * ) (a_nat2fb tyv size)
                                             (a_nat2fb tzv size))
-                                          (Nat.pow (Pervasives.succ
-                                            (Pervasives.succ 0)) size))))),
+                                          (Nat.pow (succ (succ 0)) size))))),
                                     sn), r),
                                     (Store.add vx
                                       ((init_v size (vmap vx)
                                          (nat2fb
                                            (Nat.modulo
-                                             (mul (a_nat2fb tyv size)
+                                             (( * ) (a_nat2fb tyv size)
                                                (a_nat2fb tzv size))
-                                             (Nat.pow (Pervasives.succ
-                                               (Pervasives.succ 0)) size)))) :: exps)
+                                             (Nat.pow (succ (succ 0)) size)))) :: exps)
                                       es))))
                                 | Error -> Some Error)
                              | Error -> Some Error))))))
@@ -975,7 +972,7 @@ let fmul_c size smap vmap bv f r temp stack sn es x y z =
 (** val bin_xor_q : int -> var -> var -> exp **)
 
 let rec bin_xor_q n x y =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> SKIP (x, 0))
     (fun m -> Seq ((coq_CNOT (x, m) (y, m)), (bin_xor_q m x y)))
     n
@@ -1227,8 +1224,7 @@ let unary_c_value op t0 size xv yv =
   | Coq_nfac ->
     Some
       (nat2fb
-        (Nat.modulo (fact (a_nat2fb yv size))
-          (Nat.pow (Pervasives.succ (Pervasives.succ 0)) size)))
+        (Nat.modulo (fact (a_nat2fb yv size)) (Nat.pow (succ (succ 0)) size)))
   | Coq_fdiv -> Some (nat2fb (Nat.div (a_nat2fb xv size) (a_nat2fb yv size)))
   | _ -> None
 
@@ -1299,9 +1295,8 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                     (Store.add vx'
                       (nat2fb
                         (Nat.modulo
-                          (add (a_nat2fb t2v' size) (a_nat2fb t3v' size))
-                          (Nat.pow (Pervasives.succ (Pervasives.succ 0)) size)))
-                      r)), es))
+                          ((+) (a_nat2fb t2v' size) (a_nat2fb t3v' size))
+                          (Nat.pow (succ (succ 0)) size))) r)), es))
                 | Error -> Some Error)
              | Error -> Some Error)
           | Error -> Some Error)))
@@ -1319,9 +1314,9 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                     (Store.add vx'
                       (nat2fb
                         (Nat.modulo
-                          ((-) (a_nat2fb t2v' size) (a_nat2fb t3v' size))
-                          (Nat.pow (Pervasives.succ (Pervasives.succ 0)) size)))
-                      r)), es))
+                          ((fun x y -> max 0 (x-y)) (a_nat2fb t2v' size)
+                            (a_nat2fb t3v' size))
+                          (Nat.pow (succ (succ 0)) size))) r)), es))
                 | Error -> Some Error)
              | Error -> Some Error)
           | Error -> Some Error)))
@@ -1354,10 +1349,9 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                       (fbrev size
                         (nat2fb
                           (Nat.modulo
-                            (add (a_nat2fb (fbrev size t2v') size)
+                            ((+) (a_nat2fb (fbrev size t2v') size)
                               (a_nat2fb (fbrev size t3v') size))
-                            (Nat.pow (Pervasives.succ (Pervasives.succ 0))
-                              size)))) r)), es))
+                            (Nat.pow (succ (succ 0)) size)))) r)), es))
                 | Error -> Some Error)
              | Error -> Some Error)
           | Error -> Some Error)))
@@ -1376,10 +1370,10 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                       (fbrev size
                         (nat2fb
                           (Nat.modulo
-                            ((-) (a_nat2fb (fbrev size t2v') size)
+                            ((fun x y -> max 0 (x-y))
+                              (a_nat2fb (fbrev size t2v') size)
                               (a_nat2fb (fbrev size t3v') size))
-                            (Nat.pow (Pervasives.succ (Pervasives.succ 0))
-                              size)))) r)), es))
+                            (Nat.pow (succ (succ 0)) size)))) r)), es))
                 | Error -> Some Error)
              | Error -> Some Error)
           | Error -> Some Error)))
@@ -1437,11 +1431,10 @@ let com_bin op size smap vmap bv f r temp temp1 stack sn es x y z =
                         (nat2fb
                           (Nat.modulo
                             (Nat.div
-                              (mul (a_nat2fb t2v' size)
-                                (Nat.pow (Pervasives.succ (Pervasives.succ
-                                  0)) size)) (a_nat2fb t3v' size))
-                            (Nat.pow (Pervasives.succ (Pervasives.succ 0))
-                              size)))) r)), es))
+                              (( * ) (a_nat2fb t2v' size)
+                                (Nat.pow (succ (succ 0)) size))
+                              (a_nat2fb t3v' size))
+                            (Nat.pow (succ (succ 0)) size)))) r)), es))
                 | Error -> Some Error)
              | Error -> Some Error)
           | Error -> Some Error)))
@@ -1554,7 +1547,7 @@ let rec trans_qexp size smap vmap bv fl r temp temp1 stack sn fv es bases = func
     match t2v' with
     | Value t2v ->
       let rec trans_while r0 sn0 i =
-        (fun fO fS n -> if n=0 then fO () else fS (n-1))
+        (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
           (fun _ -> Some (Value (((None, sn0), r0), es)))
           (fun m ->
           bind
@@ -1615,7 +1608,7 @@ let rec trans_qexp size smap vmap bv fl r temp temp1 stack sn fv es bases = func
 (** val init_cstore_n : cstore -> qvar -> int -> cstore **)
 
 let rec init_cstore_n r x n =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> r)
     (fun m -> Store.add (x, m) (nat2fb 0) (init_cstore_n r x m))
     n
@@ -1630,7 +1623,7 @@ let rec init_cstore r = function
 (** val init_estore_n : estore -> qvar -> int -> estore **)
 
 let rec init_estore_n es x n =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> es)
     (fun m -> Store.add (x, m) [] (init_estore_n es x m))
     n
@@ -1641,3 +1634,10 @@ let rec init_estore r = function
 | [] -> r
 | p :: xl ->
   let (t0, x) = p in init_estore (init_estore_n r (L x) (get_type_num t0)) xl
+
+(** val init_estore_g : (typ * var) list -> estore **)
+
+let rec init_estore_g = function
+| [] -> empty_estore
+| p :: xl ->
+  let (t0, x) = p in init_estore_n (init_estore_g xl) (G x) (get_type_num t0)

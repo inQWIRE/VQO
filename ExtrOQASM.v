@@ -94,7 +94,7 @@ Definition trans_cl_const_mul (size M:nat) :=
 Definition trans_cl_mul (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASMProof.avs_for_arith size).
 
-(* z = x * y (TOFF-based): Quipper Out Place *)
+(* z = x * y (TOFF-based, Quipper inspired) *)
 Definition trans_cl_mul_out_place (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_out_place_m size)
            (4 * size + 1) (CLArith.cl_full_mult_out_place_out size) (OQASMProof.avs_for_arith size).
@@ -115,25 +115,9 @@ Definition trans_rz_const_mul (size M:nat) :=
 Definition trans_rz_mul (size:nat) :=
   trans_exp (RZArith.vars_for_rz_nat_full_m size) (3 * size) (RZArith.nat_full_mult_out size) (OQASMProof.avs_for_arith size). 
 
-(* z = x mod y (TOFF-based) *)
-Definition trans_cl_mod (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_moder size) (4 * size + 1) (CLArith.cl_moder_out size M) (OQASMProof.avs_for_arith size). 
-
-(* z = x / y (TOFF-based) *)
-Definition trans_cl_div (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_div size) (4 * size + 1) (CLArith.cl_div_out size M) (OQASMProof.avs_for_arith size). 
-
 (* z = x mod y,x/y (TOFF-based) *)
 Definition trans_cl_div_mod (size M:nat) :=
   trans_exp (CLArith.vars_for_cl_div_mod size) (3 * size + 1) (CLArith.cl_div_mod_out size M) (OQASMProof.avs_for_arith size). 
-
-(* z = x mod y (QFT-based) *)
-Definition trans_rz_mod (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_moder size) (3 * (S size) ) (RZArith.rz_moder_out size M) (RZArith.avs_for_rz_moder size). 
-
-(* z = x / y (QFT-based) *)
-Definition trans_rz_div (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_div size) (3 * (S size)) (RZArith.rz_div_out size M) (RZArith.avs_for_rz_div size). 
 
 (* z = x mod y, x / y (QFT-based) *)
 Definition trans_rz_div_mod (size M:nat) :=
@@ -153,34 +137,14 @@ Definition trans_rz_div_mod_app_swaps (size M:nat) :=
 Definition trans_appx_adder (size:nat) (b:nat) :=
   trans_exp (RZArith.vars_for_rz_full_add size) 
    (2 * size) (RZArith.appx_full_adder_out size b) (OQASMProof.avs_for_arith size).
-
 Definition trans_appx_const_adder (size:nat) (b:nat) (M:nat) :=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_adder_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
-
 Definition trans_appx_const_sub (size:nat) (b:nat) (M:nat):=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_sub_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
 
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based) *)
-Definition trans_rz_add_mul_opt (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_con_add_mult_out size) (3 * size) (RZArith.nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based-Not-Optimized) *)
-Definition trans_rz_add_mul (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_old_con_add_mult_out size) (3 * size) (RZArith.nat_old_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (TOFF-based) *)
-Definition trans_cl_add_mul (size:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size + 1) (CLArith.cl_nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* Redefine funcs in RZArith and CLArith to use the new trans_exp *)
+(* Modular multipliers *)
 Definition trans_rz_modmult_rev (M C Cinv size:nat) :=
         trans_exp (vars_for_rz size) (2*size+1) (real_rz_modmult_rev M C Cinv size) (avs_for_arith size).
 Definition trans_rz_modmult_rev_alt (M C Cinv size:nat) :=
@@ -189,7 +153,7 @@ Definition trans_modmult_rev (M C Cinv size:nat) :=
         trans_exp (vars_for_cl (S (size))) (4*(S (size))+1)
               (real_modmult_rev M C Cinv (S (size))) (avs_for_arith (S (size))).
 
-(* Trans OQIMP examples. *)
+(* OQIMP examples *)
 Definition trans_dmc_qft (size:nat) :=
    match compile_dm_qft size with Some (Value (Some p,n,a,b)) => 
              Some (trans_exp (vars_for_dm_c size) (2*size + 1) p (avs_for_arith size))
@@ -214,17 +178,17 @@ Definition trans_dmq_cl (size:nat) :=
         | _ => None
    end.
 
-
 Definition compile_chacha_sqir  :=
     match compile_chacha 
           with None => None
              | Some (Error) => None
              | Some (Value a) => match a with (None,b,c,d) => None
                         | (Some e,sn,c,d) => 
-                    Some (trans_exp (OracleExample.vars_for_collision sn)
-                 (32*18 + (S (S sn)))%nat e avs_for_collision)
+                    Some (trans_exp (OracleExample.vars_for_chacha sn)
+                 (32*18 + (S (S sn)))%nat e avs_for_chacha)
                                  end
     end.
+
 
 (** Proof that these new definitions match the ones in OQASM **)
 
@@ -419,21 +383,6 @@ Proof.
   destruct p.
   simpl in *. easy.
 Qed.
-
-(*
-  UnitaryOps.is_fresh q (to_base_ucom dim (gen_sr_gate v x q0)) <->
-  UnitaryOps.is_fresh q (OQASMProof.gen_sr_gate v dim x q0)
-
-goal 2 (ID 1089) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (gen_srr_gate v x q0)) <->
- UnitaryOps.is_fresh q (OQASMProof.gen_srr_gate v dim x q0)
-goal 3 (ID 1161) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_qft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_qft v dim x b)
-goal 4 (ID 1179) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_rqft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_rqft v dim x b)
-*)
 
 Lemma is_fresh_to_base_ucom_invert :
      forall q dim u,

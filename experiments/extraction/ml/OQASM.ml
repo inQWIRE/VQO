@@ -33,7 +33,7 @@ let rec inv_exp = function
 (** val init_v : int -> var -> (int -> bool) -> exp **)
 
 let rec init_v n x m =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> SKIP (x, 0))
     (fun m0 ->
     if m m0 then Seq ((init_v m0 x m), (X (x, m0))) else init_v m0 x m)

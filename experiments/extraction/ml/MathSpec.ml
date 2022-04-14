@@ -1,5 +1,4 @@
 open Datatypes
-open Nat0
 open PeanoNat
 
 (** val allfalse : int -> bool **)
@@ -10,7 +9,7 @@ let allfalse _ =
 (** val fb_push : bool -> (int -> bool) -> int -> bool **)
 
 let fb_push b f x =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> b)
     (fun n -> f n)
     x
@@ -41,7 +40,7 @@ let nat2fb n =
 (** val carry : bool -> int -> (int -> bool) -> (int -> bool) -> bool **)
 
 let rec carry b n f g =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> b)
     (fun n' ->
     let c = carry b n' f g in
@@ -67,17 +66,19 @@ let cut_n f n i =
 (** val fbrev : int -> (int -> 'a1) -> int -> 'a1 **)
 
 let fbrev n f x =
-  if Nat.ltb x n then f ((-) ((-) n (Pervasives.succ 0)) x) else f x
+  if Nat.ltb x n
+  then f ((fun x y -> max 0 (x-y)) ((fun x y -> max 0 (x-y)) n (succ 0)) x)
+  else f x
 
 (** val times_two_spec : (int -> bool) -> int -> bool **)
 
 let times_two_spec f i =
-  if (=) i 0 then false else f ((-) i (Pervasives.succ 0))
+  if (=) i 0 then false else f ((fun x y -> max 0 (x-y)) i (succ 0))
 
 (** val natsum : int -> (int -> int) -> int **)
 
 let rec natsum n f =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> 0)
-    (fun n' -> add (f n') (natsum n' f))
+    (fun n' -> (+) (f n') (natsum n' f))
     n

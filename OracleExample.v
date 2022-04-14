@@ -423,18 +423,18 @@ Definition stacka : var := 18.
     32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
     (chacha_qexp xa xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp).
 
-Fixpoint gen_collision_vars' (n:nat) (acc:list var):=
+Fixpoint gen_chacha_vars' (n:nat) (acc:list var):=
    match n with 0 => acc
-         | S m => gen_collision_vars' m (m::acc)
+         | S m => gen_chacha_vars' m (m::acc)
    end.
-Definition gen_collision_vars := gen_collision_vars' 18 [].
+Definition gen_chacha_vars := gen_chacha_vars' 18 [].
 
-Definition vars_for_collision' := gen_vars 32 gen_collision_vars.
+Definition vars_for_chacha' := gen_vars 32 gen_chacha_vars.
 
-Definition vars_for_collision (sn:nat) := 
-  fun x => if x =? 18 then ((32 * 18),S (S sn),id_nat,id_nat) else vars_for_collision' x.
+Definition vars_for_chacha (sn:nat) := 
+  fun x => if x =? 18 then ((32 * 18),S (S sn),id_nat,id_nat) else vars_for_chacha' x.
 
-Definition avs_for_collision (n:nat) :=
+Definition avs_for_chacha (n:nat) :=
         if n <? 18*32 then avs_for_arith 32 n else (18,n-18*32).
 
   Definition chacha_pexp : exp.
@@ -490,13 +490,13 @@ Definition avs_for_collision (n:nat) :=
 QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
    *)
 
-Module Collision.
+Section Collision.
 
 Definition x0 : qvar := L 0.
 Definition x1 : qvar := L 1.
-Definition x2 : qvar := L 2.
-Definition x3 : qvar := L 3.
-Definition x4 : qvar := L 4.
+Definition x2' : qvar := L 2.
+Definition x3' : qvar := L 3.
+Definition x4' : qvar := L 4.
 Definition x5 : qvar := L 5.
 Definition x6 : qvar := L 6.
 Definition x7 : qvar := L 7.
@@ -518,12 +518,12 @@ Definition getBit (v : word) k :=
 
 Definition collision_qexp
   (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
-  chacha_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
+  chacha_qexp x0 x1 x2' x3' x4' x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
   qif (ceq (Nor (Var x0)) (Nor (Num Nat (getBit v0))))
   (qif (ceq (Nor (Var x1)) (Nor (Num Nat (getBit v1))))
-  (qif (ceq (Nor (Var x2)) (Nor (Num Nat (getBit v2))))
-  (qif (ceq (Nor (Var x3)) (Nor (Num Nat (getBit v3))))
-  (qif (ceq (Nor (Var x4)) (Nor (Num Nat (getBit v4))))
+  (qif (ceq (Nor (Var x2')) (Nor (Num Nat (getBit v2))))
+  (qif (ceq (Nor (Var x3')) (Nor (Num Nat (getBit v3))))
+  (qif (ceq (Nor (Var x4')) (Nor (Num Nat (getBit v4))))
   (qif (ceq (Nor (Var x5)) (Nor (Num Nat (getBit v5))))
   (qif (ceq (Nor (Var x6)) (Nor (Num Nat (getBit v6))))
   (qif (ceq (Nor (Var x7)) (Nor (Num Nat (getBit v7))))
@@ -542,13 +542,13 @@ Definition collision_qexp
 
 Definition zero_word := Bvect_false 32.
 
-Definition tempVar : var := 16.
-Definition tempVar1 : var := 17.
-Definition stacka : var := 19.
+Definition tempVara : var := 16.
+Definition tempVarb : var := 17.
+Definition stackc : var := 19.
 
 Definition compile_collision : option (@value (option exp * nat * cstore * estore)) :=
     trans_qexp
-    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
+    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVara tempVarb stackc 0 nil qr_estore qr_estore
     (collision_qexp zero_word zero_word zero_word 
   zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word).
 
@@ -559,7 +559,7 @@ Fixpoint gen_collision_vars' (n:nat) (acc:list var):=
    end.
 Definition gen_collision_vars := gen_collision_vars' 18 [].
 
-Definition vars_for_collision' := gen_vars 32 gen_collision_vars.
+Definition vars_for_collision' : (nat -> ((nat * nat) * (nat -> nat)) * (nat -> nat)) := gen_vars 32 gen_collision_vars.
 
 Definition vars_for_collision (sn:nat) := 
   fun x => if x =? 19 then (S (32 * 18),S (S sn),id_nat,id_nat) else if x =? 18 then
@@ -572,7 +572,7 @@ Definition collision_pexp : exp.
 Proof.
   destruct (compile_collision) eqn:E1.
   - destruct v.
-    + destruct x16, p, p, o.
+    + destruct x2, p, p, o.
       * apply e0.
       * apply (SKIP (tmp, 0)).
     + apply (SKIP (tmp, 0)).
