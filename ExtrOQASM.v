@@ -384,21 +384,6 @@ Proof.
   simpl in *. easy.
 Qed.
 
-(*
-  UnitaryOps.is_fresh q (to_base_ucom dim (gen_sr_gate v x q0)) <->
-  UnitaryOps.is_fresh q (OQASMProof.gen_sr_gate v dim x q0)
-
-goal 2 (ID 1089) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (gen_srr_gate v x q0)) <->
- UnitaryOps.is_fresh q (OQASMProof.gen_srr_gate v dim x q0)
-goal 3 (ID 1161) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_qft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_qft v dim x b)
-goal 4 (ID 1179) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_rqft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_rqft v dim x b)
-*)
-
 Lemma is_fresh_to_base_ucom_invert :
      forall q dim u,
            UnitaryOps.is_fresh q (to_base_ucom dim (invert u)) 
