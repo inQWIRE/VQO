@@ -220,13 +220,9 @@ let run_partial_eval size =
   ();;
 
 (* Experiments for paper: *)
-(*run_modmult_experiments 139 117 173;;
+run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_approx 16 38168 15;;
-run_partial_eval 16;;*)r
-
-match compile_collision_sqir with
-| None -> printf "ERROR: compile_collision_sqir returned None\n"
-| Some c -> print_and_write_file c "chacha-oracle.qasm"
+run_partial_eval 16;;
