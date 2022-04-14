@@ -1,7 +1,6 @@
 open BasicUtility
 open Datatypes
 open MathSpec
-open Nat0
 open OQASM
 open PeanoNat
 
@@ -30,22 +29,24 @@ let avmap vs x =
 (** val find_pos : vars -> posi -> int **)
 
 let find_pos f = function
-| (a, b) -> add (start f a) (vmap f a b)
+| (a, b) -> (+) (start f a) (vmap f a b)
 
 (** val shift_fun : (int -> int) -> int -> int -> int -> int **)
 
 let shift_fun f offset size i =
-  if Nat.ltb i size then f (Nat.modulo (add i offset) size) else f i
+  if Nat.ltb i size then f (Nat.modulo ((+) i offset) size) else f i
 
 (** val ashift_fun : (int -> int) -> int -> int -> int -> int **)
 
 let ashift_fun f offset size i =
-  if Nat.ltb i size then Nat.modulo (add (f i) offset) size else f i
+  if Nat.ltb i size then Nat.modulo ((+) (f i) offset) size else f i
 
 (** val afbrev : (int -> int) -> int -> int -> int **)
 
 let afbrev f size x =
-  if Nat.ltb x size then (-) ((-) size (Pervasives.succ 0)) (f x) else f x
+  if Nat.ltb x size
+  then (fun x y -> max 0 (x-y)) ((fun x y -> max 0 (x-y)) size (succ 0)) (f x)
+  else f x
 
 (** val trans_lshift :
     vars -> var -> int -> ((int * int) * (int -> int)) * (int -> int) **)
@@ -55,8 +56,9 @@ let trans_lshift f x i =
   let (p0, g) = p in
   let (start0, size) = p0 in
   if (=) i x
-  then (((start0, size), (shift_fun g ((-) size (Pervasives.succ 0)) size)),
-         (ashift_fun ag (Pervasives.succ 0) size))
+  then (((start0, size),
+         (shift_fun g ((fun x y -> max 0 (x-y)) size (succ 0)) size)),
+         (ashift_fun ag (succ 0) size))
   else f i
 
 (** val trans_rshift :
@@ -67,8 +69,8 @@ let trans_rshift f x i =
   let (p0, g) = p in
   let (start0, size) = p0 in
   if (=) i x
-  then (((start0, size), (shift_fun g (Pervasives.succ 0) size)),
-         (ashift_fun ag ((-) size (Pervasives.succ 0)) size))
+  then (((start0, size), (shift_fun g (succ 0) size)),
+         (ashift_fun ag ((fun x y -> max 0 (x-y)) size (succ 0)) size))
   else f i
 
 (** val lshift_avs :
@@ -76,8 +78,9 @@ let trans_rshift f x i =
 
 let lshift_avs dim f avs x i =
   if (&&) ((&&) (Nat.ltb i dim) ((<=) (start f x) i))
-       (Nat.ltb ((-) i (start f x)) (vsize f x))
-  then (x, (avmap (trans_lshift f x) x ((-) i (start f x))))
+       (Nat.ltb ((fun x y -> max 0 (x-y)) i (start f x)) (vsize f x))
+  then (x,
+         (avmap (trans_lshift f x) x ((fun x y -> max 0 (x-y)) i (start f x))))
   else avs i
 
 (** val rshift_avs :
@@ -85,8 +88,9 @@ let lshift_avs dim f avs x i =
 
 let rshift_avs dim f avs x i =
   if (&&) ((&&) (Nat.ltb i dim) ((<=) (start f x) i))
-       (Nat.ltb ((-) i (start f x)) (vsize f x))
-  then (x, (avmap (trans_rshift f x) x ((-) i (start f x))))
+       (Nat.ltb ((fun x y -> max 0 (x-y)) i (start f x)) (vsize f x))
+  then (x,
+         (avmap (trans_rshift f x) x ((fun x y -> max 0 (x-y)) i (start f x))))
   else avs i
 
 (** val trans_rev :
@@ -104,8 +108,8 @@ let trans_rev f x i =
 
 let rev_avs dim f avs x i =
   if (&&) ((&&) (Nat.ltb i dim) ((<=) (start f x) i))
-       (Nat.ltb ((-) i (start f x)) (vsize f x))
-  then (x, (avmap (trans_rev f x) x ((-) i (start f x))))
+       (Nat.ltb ((fun x y -> max 0 (x-y)) i (start f x)) (vsize f x))
+  then (x, (avmap (trans_rev f x) x ((fun x y -> max 0 (x-y)) i (start f x))))
   else avs i
 
 (** val coq_CNOT : posi -> posi -> exp **)
@@ -127,8 +131,7 @@ let coq_CCX x y z =
 
 (** val id_nat : int -> int **)
 
-let id_nat i =
-  i
+let id_nat = fun x : int -> x
 
 (** val avs_for_arith : int -> int -> int * int **)
 
@@ -145,7 +148,7 @@ let rec gen_vars' size l start0 x =
   | x0 :: xl ->
     if (=) x0 x
     then (((start0, size), id_nat), id_nat)
-    else gen_vars' size xl (add start0 size) x
+    else gen_vars' size xl ((+) start0 size) x
 
 (** val gen_vars :
     int -> var list -> int -> ((int * int) * (int -> int)) * (int -> int) **)
@@ -156,7 +159,7 @@ let gen_vars size l =
 (** val copyto : var -> var -> int -> exp **)
 
 let rec copyto x y size =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> SKIP (x, 0))
     (fun m -> Seq ((copyto x y m), (coq_CNOT (x, m) (y, m))))
     size
@@ -169,23 +172,21 @@ let bin_xor f1 f2 size =
 (** val findnum' : int -> int -> int -> int -> int **)
 
 let rec findnum' size x y i =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
+  (fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))
     (fun _ -> i)
     (fun n ->
     if (<=) y x
     then i
-    else findnum' n (mul (Pervasives.succ (Pervasives.succ 0)) x) y
-           (add i (Pervasives.succ 0)))
+    else findnum' n (( * ) (succ (succ 0)) x) y ((+) i (succ 0)))
     size
 
 (** val findnum : int -> int -> int **)
 
 let findnum x n =
   findnum' n x
-    (Nat.pow (Pervasives.succ (Pervasives.succ 0))
-      ((-) n (Pervasives.succ 0))) 0
+    (Nat.pow (succ (succ 0)) ((fun x y -> max 0 (x-y)) n (succ 0))) 0
 
 (** val div_two_spec : (int -> bool) -> int -> bool **)
 
 let div_two_spec f i =
-  f (add i (Pervasives.succ 0))
+  f ((+) i (succ 0))

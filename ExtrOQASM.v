@@ -94,7 +94,7 @@ Definition trans_cl_const_mul (size M:nat) :=
 Definition trans_cl_mul (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASMProof.avs_for_arith size).
 
-(* z = x * y (TOFF-based): Quipper Out Place *)
+(* z = x * y (TOFF-based, Quipper inspired) *)
 Definition trans_cl_mul_out_place (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_out_place_m size)
            (4 * size + 1) (CLArith.cl_full_mult_out_place_out size) (OQASMProof.avs_for_arith size).
@@ -179,15 +179,16 @@ Definition trans_dmq_cl (size:nat) :=
    end.
 
 Definition compile_collision_sqir :=
-    match Collision.compile_collision 
-          with None => None
-             | Some (Error) => None
-             | Some (Value a) => match a with (None,b,c,d) => None
-                        | (Some e,sn,c,d) => 
-                    Some (trans_exp (Collision.vars_for_collision sn)
-                 (32*18 + S (S (S sn)))%nat e Collision.avs_for_collision)
-                                 end
-    end.
+  match compile_collision with 
+  | None => None
+  | Some (Error) => None
+  | Some (Value a) => 
+    match a with 
+    | (None,b,c,d) => None
+    | (Some e,sn,c,d) => Some (trans_exp (vars_for_collision sn)
+                          (32*18 + S (S (S sn)))%nat e avs_for_collision)
+    end
+  end.
 
 (** Proof that these new definitions match the ones in OQASM **)
 

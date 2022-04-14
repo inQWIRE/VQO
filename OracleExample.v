@@ -456,13 +456,13 @@ Definition chacha_spec := chacha_spec' 10.
 QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
    *)
 
-Module Collision.
+Section Collision.
 
 Definition x0 : qvar := L 0.
 Definition x1 : qvar := L 1.
-Definition x2 : qvar := L 2.
-Definition x3 : qvar := L 3.
-Definition x4 : qvar := L 4.
+Definition x2' : qvar := L 2.
+Definition x3' : qvar := L 3.
+Definition x4' : qvar := L 4.
 Definition x5 : qvar := L 5.
 Definition x6 : qvar := L 6.
 Definition x7 : qvar := L 7.
@@ -484,12 +484,12 @@ Definition getBit (v : word) k :=
 
 Definition collision_qexp
   (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
-  chacha_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
+  chacha_qexp x0 x1 x2' x3' x4' x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
   qif (ceq (Nor (Var x0)) (Nor (Num Nat (getBit v0))))
   (qif (ceq (Nor (Var x1)) (Nor (Num Nat (getBit v1))))
-  (qif (ceq (Nor (Var x2)) (Nor (Num Nat (getBit v2))))
-  (qif (ceq (Nor (Var x3)) (Nor (Num Nat (getBit v3))))
-  (qif (ceq (Nor (Var x4)) (Nor (Num Nat (getBit v4))))
+  (qif (ceq (Nor (Var x2')) (Nor (Num Nat (getBit v2))))
+  (qif (ceq (Nor (Var x3')) (Nor (Num Nat (getBit v3))))
+  (qif (ceq (Nor (Var x4')) (Nor (Num Nat (getBit v4))))
   (qif (ceq (Nor (Var x5)) (Nor (Num Nat (getBit v5))))
   (qif (ceq (Nor (Var x6)) (Nor (Num Nat (getBit v6))))
   (qif (ceq (Nor (Var x7)) (Nor (Num Nat (getBit v7))))
@@ -525,7 +525,7 @@ Fixpoint gen_collision_vars' (n:nat) (acc:list var):=
    end.
 Definition gen_collision_vars := gen_collision_vars' 18 [].
 
-Definition vars_for_collision' := gen_vars 32 gen_collision_vars.
+Definition vars_for_collision' : (nat -> ((nat * nat) * (nat -> nat)) * (nat -> nat)) := gen_vars 32 gen_collision_vars.
 
 Definition vars_for_collision (sn:nat) := 
   fun x => if x =? 19 then (S (32 * 18),S (S sn),id_nat,id_nat) else if x =? 18 then
@@ -538,7 +538,7 @@ Definition collision_pexp : exp.
 Proof.
   destruct (compile_collision) eqn:E1.
   - destruct v.
-    + destruct x16, p, p, o.
+    + destruct x2, p, p, o.
       * apply e0.
       * apply (SKIP (tmp, 0)).
     + apply (SKIP (tmp, 0)).

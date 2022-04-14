@@ -1,9 +1,10 @@
 Require Coq.extraction.Extraction.
 Require Import Reals.
 Require Import AltGateSet.
-Require Import ExtrOQASM.
+Require Import OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
+Require Import ExtrOQASM.
 
 (* Standard utilities for bools, options, etc. *)
 Require Coq.extraction.ExtrOcamlBasic.
@@ -17,11 +18,19 @@ Extract Inlined Constant R8 => "8.0".
 
 (* Standard extraction from nat -> OCaml int. *)
 Require Coq.extraction.ExtrOcamlNatInt.
-Extract Inlined Constant Nat.eqb => "(=)".
-Extract Inlined Constant Init.Nat.sub => "(-)".
+Extract Inductive nat => int [ "0" "succ" ] (* fix to bug in current lib *)
+  "(fun fO fS n -> if n=0 then fO () else fS (max 0 (n-1)))".
+Extract Inlined Constant Init.Nat.eqb => "(=)".
+Extract Inlined Constant Init.Nat.leb => "(<=)".
+Extract Inlined Constant Init.Nat.mul => "( * )".
+Extract Inlined Constant Init.Nat.add => "(+)".
+Extract Inlined Constant Init.Nat.sub => "(fun x y -> max 0 (x-y))".
 Extract Inlined Constant IZR => "float_of_int".
 Extract Inlined Constant Coq.Reals.Rpow_def.pow => "(fun r n -> r ** (float_of_int n))".
+
 Extract Inlined Constant N.of_nat => "(fun x -> x)". (* id *)
+
+Extract Constant id_nat => "fun x : int -> x". (* add type annotation *) 
 
 (* Perform extraction *)
 Separate Extraction
