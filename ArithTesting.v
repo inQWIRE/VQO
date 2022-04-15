@@ -62,21 +62,15 @@ Definition nth_or_false {n} (v : Bvector n) (i : nat) :=
 
 Module TofAdd.
 
-  Definition x : var := 0.
-  Definition y : var := 1.
-  Definition c : posi := (2, 0).
-
-  Definition tof_add_circ n := adder01 n x y c.
-
   Definition tof_add_env n : f_env := fun _ => n.
 
-  Definition tof_add_prec n : nat := get_prec (tof_add_env n) (tof_add_circ n).
+  Definition tof_add_prec n : nat := get_prec (tof_add_env n) (adder01_out n).
 
   Conjecture tof_add_spec :
     forall (n : nat) (vx vy : Bvector n),
-    st_equivb (get_vars (tof_add_circ n)) (tof_add_env n)
-      (exp_sem (fun _ => n) n (tof_add_circ n) (x |=> vx, y |=> vy))
-          (x |=> vx, y |=> vx [+] vy) = true.
+    st_equivb (get_vars (adder01_out n)) (tof_add_env n)
+      (exp_sem (fun _ => n) n (adder01_out n) (x_var |=> vx, y_var |=> vy))
+          (x_var |=> vx, y_var |=> vx [+] vy) = true.
 
 End TofAdd.
 
@@ -86,26 +80,15 @@ QuickChick (TofAdd.tof_add_spec 60).
 
 Module RzAdd.
 
-  Definition x := 0.
-  Definition y := 1.
-  Definition ex := 2.
-
-  Definition rz_add_circ n :=
-    Rev x;
-    QFT x n;
-    rz_full_adder x n y;
-    RQFT x n;
-    Rev x.
-
   Definition rz_add_env n : f_env := fun _ => n.
 
-  Definition rz_add_prec n : nat := get_prec (rz_add_env n) (rz_add_circ n).
+  Definition rz_add_prec n : nat := get_prec (rz_add_env n) (rz_full_adder_out n).
 
   Conjecture rz_add_spec :
     forall (n : nat) (vx vy : Bvector n),
-    st_equivb (get_vars (rz_add_circ n)) (rz_add_env n)
-      (exp_sem (fun _ => n) n (rz_add_circ n) (x |=> vx, y |=> vy))
-          (x |=> vx [+] vy, y |=> vy) = true.
+    st_equivb (get_vars (rz_full_adder_out n)) (rz_add_env n)
+      (exp_sem (fun _ => n) n (rz_full_adder_out n) (x_var |=> vx, y_var |=> vy))
+          (x_var |=> vx [+] vy, y_var |=> vy) = true.
 
 End RzAdd.
 
@@ -115,25 +98,19 @@ QuickChick (RzAdd.rz_add_spec 60).
 
 Module AddParam.
 
-  Definition x := 0.
-  Definition re := 1.
-
-  Definition add_param_circ n (vm : Bvector n) :=
-    Rev x; QFT x n; rz_adder x n (nth_or_false vm); RQFT x n; Rev x.
-
-  Definition add_param_vars n := get_vars (add_param_circ n (Bvect_false n)).
+  Definition add_param_vars n := get_vars (rz_adder_out n (fun _ => false)).
 
   Definition add_param_env n : f_env := fun _ => n.
 
   Definition add_param_prec n : nat :=
-    get_prec (add_param_env n) (add_param_circ n (Bvect_false n)).
+    get_prec (add_param_env n) (rz_adder_out n (fun _ => false)).
 
   Conjecture add_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
     st_equivb (add_param_vars n) (add_param_env n)
-      (exp_sem (add_param_env n) n (add_param_circ n vm)
-        (x |=> vx))
-      (x |=> vx [+] vm) = true.
+      (exp_sem (add_param_env n) n (rz_adder_out n (nth_or_false vm))
+        (x_var |=> vx))
+      (x_var |=> vx [+] vm) = true.
 
 End AddParam.
 
@@ -143,24 +120,18 @@ QuickChick (AddParam.add_param_spec 60).
 
 Module RzMul.
 
-  Definition x := 0.
-  Definition y := 1.
-  Definition re := 2.
-
-  Definition rz_mul_circ n := nat_full_mult n x y re.
-
-  Definition rz_mul_vars n := get_vars (rz_mul_circ n).
+  Definition rz_mul_vars n := get_vars (nat_full_mult_out n).
 
   Definition rz_mul_env n : f_env := fun _ => n.
 
-  Definition rz_mul_prec n : nat := get_prec (rz_mul_env n) (rz_mul_circ n).
+  Definition rz_mul_prec n : nat := get_prec (rz_mul_env n) (nat_full_mult_out n).
 
   Conjecture rz_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
     st_equivb (rz_mul_vars n) (rz_mul_env n)
-      (exp_sem (rz_mul_env n) n (rz_mul_circ n)
-        (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy) = true.
+      (exp_sem (rz_mul_env n) n (nat_full_mult_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> vre [+] vx [*] vy) = true.
 
 End RzMul.
 
@@ -170,25 +141,19 @@ QuickChick (RzMul.rz_mul_spec 60).
 
 Module MulParam.
 
-  Definition x := 0.
-  Definition re := 1.
-
-  Definition mul_param_circ n (vm : Bvector n) :=
-    nat_mult n x re (nth_or_false vm).
-
-  Definition mul_param_vars n := get_vars (mul_param_circ n (Bvect_false n)).
+  Definition mul_param_vars n := get_vars (nat_mult_out n (fun _ => false)).
 
   Definition mul_param_env n : f_env := fun _ => n.
 
   Definition mul_param_prec n : nat :=
-    get_prec (mul_param_env n) (mul_param_circ n (Bvect_false n)).
+    get_prec (mul_param_env n) (nat_mult_out n (fun _ => false)).
 
   Conjecture mul_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
     st_equivb (mul_param_vars n) (mul_param_env n)
-      (exp_sem (mul_param_env n) n (mul_param_circ n vm)
-        (x |=> vx, re |=> vre))
-      (x |=> vx, re |=> vre [+] vx [*] vm) = true.
+      (exp_sem (mul_param_env n) n (nat_mult_out n (nth_or_false vm))
+        (x_var |=> vx, y_var |=> vre))
+      (x_var |=> vx, y_var |=> vre [+] vx [*] vm) = true.
 
 End MulParam.
 
@@ -198,25 +163,18 @@ QuickChick (MulParam.mul_param_spec 60).
 
 Module TofMul.
 
-  Definition x  : var := 0.
-  Definition y  : var := 1.
-  Definition re : var := 2.
-  Definition c : posi := (3, 0).
-
-  Definition tof_mul_circ n := cl_full_mult n x y re c.
-
-  Definition tof_mul_vars n := get_vars (tof_mul_circ n).
+  Definition tof_mul_vars n := get_vars (cl_full_mult_out n).
 
   Definition tof_mul_env n : f_env := fun _ => n.
 
-  Definition tof_mul_prec n : nat := get_prec (tof_mul_env n) (tof_mul_circ n).
+  Definition tof_mul_prec n : nat := get_prec (tof_mul_env n) (cl_full_mult_out n).
 
   Conjecture tof_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
     st_equivb (tof_mul_vars n) (tof_mul_env n)
-      (exp_sem (tof_mul_env n) n (tof_mul_circ n)
-        (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> vre [+] vx [*] vy) = true.
+      (exp_sem (tof_mul_env n) n (cl_full_mult_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> vre [+] vx [*] vy) = true.
 
 End TofMul.
 
@@ -224,28 +182,42 @@ End TofMul.
 QuickChick (TofMul.tof_mul_spec 60).
  *)
 
+Module QuipperTofMul.
+
+  Definition tof_mul_vars n := get_vars (cl_full_mult_out_place_out n).
+
+  Definition tof_mul_env n : f_env := fun _ => n.
+
+  Definition tof_mul_prec n : nat := get_prec (tof_mul_env n) (cl_full_mult_out_place_out n).
+
+  Conjecture tof_mul_spec :
+    forall (n : nat) (vx vy vre : Bvector n),
+    st_equivb (tof_mul_vars n) (tof_mul_env n)
+      (exp_sem (tof_mul_env n) n (cl_full_mult_out_place_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> vre [+] vx [*] vy) = true.
+
+End QuipperTofMul.
+
+(*
+QuickChick (QuipperTofMul.tof_mul_spec 60).
+ *)
+
 Module TofMulParam.
 
-  Definition x  : var := 0.
-  Definition re : var := 2.
-  Definition c : posi := (3, 0).
-
-  Definition tof_mul_param_circ n (vm : Bvector n) :=
-    cl_nat_mult n x re c (nth_or_false vm).
-
-  Definition tof_mul_param_vars n := get_vars (tof_mul_param_circ n (Bvect_false n)).
+  Definition tof_mul_param_vars n := get_vars (cl_nat_mult_out n (fun _ => false)).
 
   Definition tof_mul_param_env n : f_env := fun _ => n.
 
   Definition tof_mul_param_prec n : nat :=
-    get_prec (tof_mul_param_env n) (tof_mul_param_circ n (Bvect_false n)).
+    get_prec (tof_mul_param_env n) (cl_nat_mult_out n (fun _ => false)).
 
   Conjecture tof_mul_param_spec :
     forall (n : nat) (vm vx vre : Bvector n),
     st_equivb (tof_mul_param_vars n) (tof_mul_param_env n)
-      (exp_sem (tof_mul_param_env n) n (tof_mul_param_circ n vm)
-        (x |=> vx, re |=> vre))
-      (x |=> vx, re |=> vre [+] vx [*] vm) = true.
+      (exp_sem (tof_mul_param_env n) n (cl_nat_mult_out n (nth_or_false vm))
+        (x_var |=> vx, y_var |=> vre))
+      (x_var |=> vx, y_var |=> vre [+] vx [*] vm) = true.
 
 End TofMulParam.
 
@@ -255,18 +227,12 @@ QuickChick (TofMulParam.tof_mul_param_spec 60).
 
 Module DivMod.
 
-  Definition x  : var := 0.
-  Definition ex : var := 1.
-
-  Definition div_mod_circ n m :=
-    rz_div_mod (S n) x ex m.
-
-  Definition div_mod_vars n := get_vars (div_mod_circ n 1).
+  Definition div_mod_vars n := get_vars (rz_div_mod_out n 1).
 
   Definition div_mod_env n : f_env := fun _ => S n.
 
   Definition div_mod_prec n : nat :=
-    get_prec (div_mod_env n) (div_mod_circ n 1).
+    get_prec (div_mod_env n) (rz_div_mod_out n 1).
 
   Definition div_mod_spec : Checker :=
     forAll (choose (60, 60)) (fun n =>
@@ -274,9 +240,9 @@ Module DivMod.
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
     (st_equivb (div_mod_vars n) (div_mod_env n)
-      (exp_sem (div_mod_env n) (S n) (div_mod_circ n m)
-        (x |=> vx))
-      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
+      (exp_sem (div_mod_env n) (S n) (rz_div_mod_out n m)
+        (x_var |=> vx))
+      (x_var |=> vx [%] m, y_var |=> vx [/] m) = true)))).
 
 End DivMod.
 
@@ -286,18 +252,12 @@ QuickChick DivMod.div_mod_spec.
 
 Module AppDivMod.
 
-  Definition x  : var := 0.
-  Definition ex : var := 1.
-
-  Definition div_mod_circ n m :=
-    appx_div_mod_a (S n) x ex m.
-
-  Definition div_mod_vars n := get_vars (div_mod_circ n 1).
+  Definition div_mod_vars n := get_vars (app_div_mod_aout n 1).
 
   Definition div_mod_env n : f_env := fun _ => S n.
 
   Definition div_mod_prec n : nat :=
-    get_prec (div_mod_env n) (div_mod_circ n 1).
+    get_prec (div_mod_env n) (app_div_mod_aout n 1).
 
   Definition div_mod_spec : Checker :=
     forAll (choose (60, 60)) (fun n =>
@@ -305,9 +265,9 @@ Module AppDivMod.
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
     (st_equivb (div_mod_vars n) (div_mod_env n)
-      (exp_sem (div_mod_env n) (S n) (div_mod_circ n m)
-        (x |=> vx))
-      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
+      (exp_sem (div_mod_env n) (S n) (app_div_mod_aout n m)
+        (x_var |=> vx))
+      (x_var |=> vx [%] m, y_var |=> vx [/] m) = true)))).
 
 End AppDivMod.
 
@@ -317,30 +277,22 @@ QuickChick AppDivMod.div_mod_spec.
 
 Module TofDivMod.
 
-  Definition x  : var := 0.
-  Definition y  : var := 1.
-  Definition ex : var := 2.
-  Definition c1 : posi := (3, 0).
-
-  Definition tof_div_mod_circ n m :=
-    cl_div_mod n x y ex c1 m.
-
-  Definition tof_div_mod_vars n := get_vars (tof_div_mod_circ n 1).
+  Definition tof_div_mod_vars n := get_vars (cl_div_mod_out n 1).
 
   Definition tof_div_mod_env n : f_env := fun _ => S n.
 
   Definition tof_div_mod_prec n : nat :=
-    get_prec (tof_div_mod_env n) (tof_div_mod_circ n 1).
+    get_prec (tof_div_mod_env n) (cl_div_mod_out n 1).
 
   Definition tof_div_mod_spec : Checker :=
-    forAll (choose (60, 60)) (fun n =>
+    forAll (choose (6, 6)) (fun n =>
     forAll (choose (1, 2 ^ (min n 30) - 1)) (fun m =>
     forAllShrink arbitrary shrink (fun vx : Bvector n =>
     dec2checker
     (st_equivb (tof_div_mod_vars n) (tof_div_mod_env n)
-      (exp_sem (tof_div_mod_env n) n (tof_div_mod_circ n m)
-        (x |=> vx))
-      (x |=> vx [%] m, ex |=> vx [/] m) = true)))).
+      (exp_sem (tof_div_mod_env n) n (cl_div_mod_out n m)
+        (x_var |=> vx))
+      (x_var |=> vx [%] m, z_var |=> vx [/] m) = true)))).
 
 End TofDivMod.
 
@@ -350,13 +302,7 @@ QuickChick TofDivMod.tof_div_mod_spec.
 
 Module AddMul.
 
-  Definition x : var := 0.
-  Definition y : var := 1.
-  Definition re : var := 2.
-
-  Definition add_mul_circ n := nat_con_add_mult n x y re.
-
-  Definition add_mul_vars n := get_vars (add_mul_circ n).
+  Definition add_mul_vars n := get_vars (nat_con_add_mult_out n).
 
   Definition add_mul_env n : f_env := fun _ => n.
 
@@ -378,9 +324,9 @@ Module AddMul.
   Conjecture add_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
     st_equivb (add_mul_vars n) (add_mul_env n)
-      (exp_sem (add_mul_env n) n (add_mul_circ n)
-        (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+      (exp_sem (add_mul_env n) n (nat_con_add_mult_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> compute_new_re vx vy vre) = true.
 
 End AddMul.
 
@@ -390,13 +336,7 @@ QuickChickWith (updMaxSuccess stdArgs 100) (AddMul.add_mul_spec 60).
 
 Module AddMulOld.
 
-  Definition x : var := 0.
-  Definition y : var := 1.
-  Definition re : var := 2.
-
-  Definition add_mul_circ n := nat_old_con_add_mult n x y re.
-
-  Definition add_mul_vars n := get_vars (add_mul_circ n).
+  Definition add_mul_vars n := get_vars (nat_old_con_add_mult_out n).
 
   Definition add_mul_env n : f_env := fun _ => n.
 
@@ -418,9 +358,9 @@ Module AddMulOld.
   Conjecture add_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
     st_equivb (add_mul_vars n) (add_mul_env n)
-      (exp_sem (add_mul_env n) n (add_mul_circ n)
-        (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+      (exp_sem (add_mul_env n) n (nat_old_con_add_mult_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> compute_new_re vx vy vre) = true.
 
 End AddMulOld.
 
@@ -430,14 +370,7 @@ QuickChickWith (updMaxSuccess stdArgs 100) (AddMulOld.add_mul_spec 60).
 
 Module AddMulToff.
 
-  Definition x : var := 0.
-  Definition y : var := 1.
-  Definition re : var := 2.
-  Definition c : posi := (3, 0).
-
-  Definition add_mul_circ n := cl_nat_con_add_mult n x y re c.
-
-  Definition add_mul_vars n := get_vars (add_mul_circ n).
+  Definition add_mul_vars n := get_vars (cl_nat_con_add_mult_out n).
 
   Definition add_mul_env n : f_env := fun _ => n.
 
@@ -459,9 +392,9 @@ Module AddMulToff.
   Conjecture add_mul_spec :
     forall (n : nat) (vx vy vre : Bvector n),
     st_equivb (add_mul_vars n) (add_mul_env n)
-      (exp_sem (add_mul_env n) n (add_mul_circ n)
-        (x |=> vx, y |=> vy, re |=> vre))
-            (x |=> vx, y |=> vy, re |=> compute_new_re vx vy vre) = true.
+      (exp_sem (add_mul_env n) n (cl_nat_con_add_mult_out n)
+        (x_var |=> vx, y_var |=> vy, z_var |=> vre))
+            (x_var |=> vx, y_var |=> vy, z_var |=> compute_new_re vx vy vre) = true.
 
 End AddMulToff.
 
@@ -471,18 +404,12 @@ QuickChickWith (updMaxSuccess stdArgs 100) (AddMulToff.add_mul_spec 60).
 
 Module ModMul8.
 
-  Definition x : var := 0.
-  Definition y : var := 1.
-  Definition z : var := 2.
-  Definition s : var := 3.
-  Definition c : posi := (4, 0).
-
   Definition n := 8.
   Definition M := 127.
   Definition A := 113.
   Definition Ainv := 9.
 
-  Definition mod_mul_8_circ := modmult (MathSpec.nat2fb M) A Ainv n x y z s c.
+  Definition mod_mul_8_circ := real_modmult_rev M A Ainv n.
 
   Definition mod_mul_8_vars := get_vars mod_mul_8_circ.
 
@@ -493,8 +420,8 @@ Module ModMul8.
     let xn := N.of_nat xv in
     checker
     (st_equivb mod_mul_8_vars mod_mul_8_env
-      (exp_sem mod_mul_8_env 9 mod_mul_8_circ (x |=> n2bvector 8 xn))
-      (y |=> n2bvector 8 (xn * 113 mod 127)))).
+      (exp_sem mod_mul_8_env 9 mod_mul_8_circ (x_var |=> n2bvector 8 xn))
+      (y_var |=> n2bvector 8 (xn * 113 mod 127)))).
 
 End ModMul8.
 
@@ -535,11 +462,7 @@ QuickChick ModMul8Rz.mod_mul_8_spec.
 
 Module AppxAdd.
 
-  Definition x := 0.
-  Definition y := 1.
-  Definition ex := 2.
-
-  Definition appx_add_circ n b := appx_full_adder_form x n (n-b) y.
+  Definition appx_add_circ n b := appx_full_adder_out n (n-b).
 
   Definition bv_dist {n} (v v' : Bvector n) :=
     let z := Z.of_N (bvector2n v) in
@@ -547,7 +470,7 @@ Module AppxAdd.
     Z.abs_N (Z.min (Z.modulo (z - z') (Z.of_N (exp2 n))) (BinInt.Z.modulo (z' - z) (Z.of_N (exp2 n)))).
 
   Definition st_dist n (st1 st2 : state) :=
-    match get_statevector n x st1, get_statevector n x st2 with
+    match get_statevector n x_var st1, get_statevector n x_var st2 with
     | Some v1, Some v2 => bv_dist v1 v2
     | _, _ => exp2 n
     end.
@@ -559,8 +482,8 @@ Module AppxAdd.
           (map
             (fun '(vx, vy) =>
              st_dist n
-               (exp_sem (fun _ => n) n (appx_add_circ n b) (x |=> vx, y |=> vy))
-               (x |=> vx [+] vy, y |=> vy))
+               (exp_sem (fun _ => n) n (appx_add_circ n b) (x_var |=> vx, y_var |=> vy))
+               (x_var |=> vx [+] vy, y_var |=> vy))
             l)
           0%N)
       (vectorOf m (genPair (@gen_bvector' n) (@gen_bvector' n))).
@@ -568,8 +491,8 @@ Module AppxAdd.
   Conjecture appx_add_spec :
     forall (n : nat) b (vx vy : Bvector n),
     (st_dist n
-      (exp_sem (fun _ => n) n (appx_add_circ n b) (x |=> vx, y |=> vy))
-      (x |=> vx [+] vy, y |=> vy) <=? exp2 b)%N = true.
+      (exp_sem (fun _ => n) n (appx_add_circ n b) (x_var |=> vx, y_var |=> vy))
+      (x_var |=> vx [+] vy, y_var |=> vy) <? exp2 b)%N = true.
 
 End AppxAdd.
 
