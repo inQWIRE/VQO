@@ -219,12 +219,15 @@ let run_partial_eval size =
 (* Experiments for paper: *)
 run_modmult_experiments 139 117 173;;
 run_adders 16 38168;;
+run_adders 32 1456796224;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_approx 16 38168 15;;
 run_partial_eval 16;;
 
+(*
 printf "Running compile_chacha_sqir...\n%!";
 match compile_chacha_sqir () with 
 | None -> printf "ERROR: compile_chacha_sqir returned None\n%!"
 | Some c -> print_and_write_file c "chacha-oracle.qasm";
+*)

@@ -766,7 +766,7 @@ Definition dmc_vmap := dmc_vmap' var_list 0.
 
 Definition dmc_estore := init_estore empty_estore var_list.
 
-Definition dmc_cstore := Store.add (L z_var,0) (nat2fb 5) (Store.add (L y_var,0) (nat2fb 10) (init_cstore empty_cstore var_list)).
+Definition dmc_cstore := Store.add (L z_var,0) (nat2fb 5) (Store.add (L y_var,0) (nat2fb 38168) (init_cstore empty_cstore var_list)).
 
 Definition compile_dm_qft (size:nat) := 
   trans_qexp
