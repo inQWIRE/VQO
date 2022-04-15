@@ -394,20 +394,54 @@ Definition chacha_spec := chacha_spec' 10.
     | G x' => x'
     end.
 
-  Definition chacha_benv := 
-   match gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
+Definition xa : qvar := G 0.
+Definition xb : qvar := G 1.
+Definition xc : qvar := G 2.
+Definition xd : qvar := G 3.
+Definition xe : qvar := G 4.
+Definition xf : qvar := G 5.
+Definition xg : qvar := G 6.
+Definition xh : qvar := G 7.
+Definition xi : qvar := G 8.
+Definition xj : qvar := G 9.
+Definition xk : qvar := G 10.
+Definition xl : qvar := G 11.
+Definition xm : qvar := G 12.
+Definition xn : qvar := G 13.
+Definition xo : qvar := G 14.
+Definition xp : qvar := G 15.
+Definition tempVar : var := 16.
+Definition tempVar1 : var := 17.
+Definition stacka : var := 18.
 
-  Definition compile_chacha :=
-    trans_qexp
-    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tmp tmp1 stack 0 nil qr_estore qr_estore
-    (chacha_qexp (G 0) (G 1) (G 2) (G 3) (G 4) (G 5) (G 6) (G 7)
-             (G 8) (G 9) (G 10) (G 11) (G 12) (G 13) (G 14) (G 15)).
+
+Definition chacha_benv := 
+  match gen_genv (map (fun x => (TNor Q Nat, x)) (seq 0 16)) with None => empty_benv | Some bv => bv end.
+
+Definition compile_chacha (_:unit) := (* arg. delays evaluation in extracted code *)
+  trans_qexp
+  32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
+  (chacha_qexp xa xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp).
+
+Fixpoint gen_chacha_vars' (n:nat) (acc:list var):=
+   match n with 0 => acc
+         | S m => gen_chacha_vars' m (m::acc)
+   end.
+Definition gen_chacha_vars := gen_chacha_vars' 18 [].
+
+Definition vars_for_chacha' := gen_vars 32 gen_chacha_vars.
+
+Definition vars_for_chacha (sn:nat) := 
+  fun x => if x =? 18 then ((32 * 18),S (S sn),id_nat,id_nat) else vars_for_chacha' x.
+
+Definition avs_for_chacha (n:nat) :=
+        if n <? 18*32 then avs_for_arith 32 n else (18,n-18*32).
 
   Definition chacha_pexp : exp.
   Proof.
-    destruct (compile_chacha) eqn:E1.
+    destruct (compile_chacha ()) eqn:E1.
     - destruct v.
-      + destruct x0, p, p, o.
+      + destruct x0,p,p,o.
         * apply e0.
         * apply (SKIP (tmp, 0)).
       + apply (SKIP (tmp, 0)).
@@ -456,13 +490,13 @@ Definition chacha_spec := chacha_spec' 10.
 QuickChickWith (updMaxSuccess stdArgs 1000) chacha_oracle_spec.
    *)
 
-Module Collision.
+Section Collision.
 
 Definition x0 : qvar := L 0.
 Definition x1 : qvar := L 1.
-Definition x2 : qvar := L 2.
-Definition x3 : qvar := L 3.
-Definition x4 : qvar := L 4.
+Definition x2' : qvar := L 2.
+Definition x3' : qvar := L 3.
+Definition x4' : qvar := L 4.
 Definition x5 : qvar := L 5.
 Definition x6 : qvar := L 6.
 Definition x7 : qvar := L 7.
@@ -484,12 +518,12 @@ Definition getBit (v : word) k :=
 
 Definition collision_qexp
   (v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 : word) :=
-  chacha_qexp x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
+  chacha_qexp x0 x1 x2' x3' x4' x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15;;
   qif (ceq (Nor (Var x0)) (Nor (Num Nat (getBit v0))))
   (qif (ceq (Nor (Var x1)) (Nor (Num Nat (getBit v1))))
-  (qif (ceq (Nor (Var x2)) (Nor (Num Nat (getBit v2))))
-  (qif (ceq (Nor (Var x3)) (Nor (Num Nat (getBit v3))))
-  (qif (ceq (Nor (Var x4)) (Nor (Num Nat (getBit v4))))
+  (qif (ceq (Nor (Var x2')) (Nor (Num Nat (getBit v2))))
+  (qif (ceq (Nor (Var x3')) (Nor (Num Nat (getBit v3))))
+  (qif (ceq (Nor (Var x4')) (Nor (Num Nat (getBit v4))))
   (qif (ceq (Nor (Var x5)) (Nor (Num Nat (getBit v5))))
   (qif (ceq (Nor (Var x6)) (Nor (Num Nat (getBit v6))))
   (qif (ceq (Nor (Var x7)) (Nor (Num Nat (getBit v7))))
@@ -508,13 +542,13 @@ Definition collision_qexp
 
 Definition zero_word := Bvect_false 32.
 
-Definition tempVar : var := 16.
-Definition tempVar1 : var := 17.
-Definition stacka : var := 19.
+Definition tempVara : var := 16.
+Definition tempVarb : var := 17.
+Definition stackc : var := 19.
 
 Definition compile_collision : option (@value (option exp * nat * cstore * estore)) :=
     trans_qexp
-    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVar tempVar1 stacka 0 nil qr_estore qr_estore
+    32 (fun _ => 1) chacha_vmap chacha_benv QFTA (empty_cstore) tempVara tempVarb stackc 0 nil qr_estore qr_estore
     (collision_qexp zero_word zero_word zero_word 
   zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word zero_word).
 
@@ -525,7 +559,7 @@ Fixpoint gen_collision_vars' (n:nat) (acc:list var):=
    end.
 Definition gen_collision_vars := gen_collision_vars' 18 [].
 
-Definition vars_for_collision' := gen_vars 32 gen_collision_vars.
+Definition vars_for_collision' : (nat -> ((nat * nat) * (nat -> nat)) * (nat -> nat)) := gen_vars 32 gen_collision_vars.
 
 Definition vars_for_collision (sn:nat) := 
   fun x => if x =? 19 then (S (32 * 18),S (S sn),id_nat,id_nat) else if x =? 18 then
@@ -538,7 +572,7 @@ Definition collision_pexp : exp.
 Proof.
   destruct (compile_collision) eqn:E1.
   - destruct v.
-    + destruct x16, p, p, o.
+    + destruct x2, p, p, o.
       * apply e0.
       * apply (SKIP (tmp, 0)).
     + apply (SKIP (tmp, 0)).
@@ -591,7 +625,7 @@ Definition e : var := 15.
 Definition rc : var := 11. 
 Definition re : var := 14. 
 Definition fac : var := 12. 
-Definition xc : var := 13. 
+Definition xcc : var := 13. 
 Definition f1 :var := 16.
 Definition n1 : var := 17. 
 
@@ -627,7 +661,7 @@ Definition x_n (size:nat): func :=
 
 Definition taylor_sin : func := 
      (f, ([]), ((TNor C Nat, m)::(TArray Q FixedP 5,x3)::(TNor Q FixedP,x2)::(TNor Q FixedP,e)::
-              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xc)::(TNor C Nat,fac)
+              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xcc)::(TNor C Nat,fac)
                ::(TNor C FixedP,rc)::(TNor Q FixedP,re)::[]),
                          init (Nor (Var (L re))) (Nor (Var (G x)));;
                          binapp (Nor (Var (L x2))) fmul (Nor (Var (G x))) (Nor (Var (L re)));;
@@ -637,20 +671,20 @@ Definition taylor_sin : func :=
                          binapp (Index (L x3) (Num Nat (nat2fb 3))) fmul (Index (L x3) (Num Nat (nat2fb 2))) (Nor (Var (L x2)));;
                          binapp (Index (L x3) (Num Nat (nat2fb 4))) fmul (Index (L x3) (Num Nat (nat2fb 3))) (Nor (Var (L x2)));;
                          binapp (Nor (Var (L n))) nadd (Nor (Num Nat (nat2fb 1))) (Nor (Var (L n)));;
-                         binapp (Nor (Var  (L xc))) nadd (Nor (Num Nat (nat2fb 1))) (Nor (Var  (L xc)));;
+                         binapp (Nor (Var  (L xcc))) nadd (Nor (Num Nat (nat2fb 1))) (Nor (Var  (L xcc)));;
          qfor g (Nor ((Var (L m)))) 
              (qif (iseven (Nor (Var (L g)))) 
                       (binapp (Nor (Var ((L n)))) nadd (Nor (Var ((L n)))) (Nor (Num Nat (nat2fb 2)));;
                        unary (Nor (Var (L fac))) nfac (Nor (Var (L n)));;
-                       binapp (Nor (Var (L xc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xc)));;
-                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xc))) (Nor (Var (L fac)));;
+                       binapp (Nor (Var (L xcc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xcc)));;
+                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xcc))) (Nor (Var (L fac)));;
                        binapp (Nor (Var (L e))) fmul (Nor (Var (L rc))) (Index (L x3) (Var (L g)));;
                        unary (Nor (Var (L re))) fsub (Nor (Var (L e)));;
                        qinv ((Nor (Var (L e)))))
                       (binapp (Nor (Var ((L n)))) nadd (Nor (Num Nat (nat2fb 2))) (Nor (Var ((L n))));;
                        unary (Nor (Var (L fac))) nfac (Nor (Var (L n)));;
-                       binapp (Nor (Var (L xc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xc)));;
-                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xc))) (Nor (Var (L fac)));;
+                       binapp (Nor (Var (L xcc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xcc)));;
+                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xcc))) (Nor (Var (L fac)));;
                        binapp (Nor (Var (L e))) fmul (Nor (Var (L rc))) (Index (L x3) (Var (L g)));;
                        unary (Nor (Var (L re))) fadd (Nor (Var (L e)));;
                        qinv ((Nor (Var (L e))))))
@@ -664,7 +698,7 @@ Definition smapa := fun i => if i =? x3 then 5 else 1.
 Definition vmapa := 
    match (gen_vmap_g ((TNor Q FixedP, x)::[(TNor Q FixedP,result)])) with (vmapg,i) =>
           gen_vmap_l ((TArray Q FixedP 5,x3)::(TNor Q FixedP,x2)::(TNor Q FixedP,e)::
-              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xc)::(TNor C Nat,fac)
+              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xcc)::(TNor C Nat,fac)
                ::(TNor C FixedP,rc)::(TNor Q FixedP,re)::[]) vmapg i
    end.
 
@@ -673,7 +707,7 @@ Parameter Pi_4 : nat -> bool. (*a binary representation of PI/4 *)
 
 Definition taylor_cos : func := 
      (f, ([]),((TArray Q FixedP 5,x3)::(TNor Q FixedP,x2)::(TNor Q FixedP,e)::
-              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xc)::(TNor C Nat,fac)
+              (TNor C Nat,g)::(TNor C Nat,n)::(TNor C Nat, xcc)::(TNor C Nat,fac)
                 ::(TNor C FixedP,rc)::(TNor Q FixedP,re)::[]),
                          unary (Nor (Var (G x))) fsub (Nor (Num FixedP Pi_4)) ;;
                          init (Nor (Var (L re))) (Nor (Var (G x)));;
@@ -684,20 +718,20 @@ Definition taylor_cos : func :=
                          binapp (Index (L x3) (Num Nat (nat2fb 3))) fmul (Nor (Var (L x2))) (Index (L x3) (Num Nat (nat2fb 2)));;
                          binapp (Index (L x3) (Num Nat (nat2fb 4))) fmul (Nor (Var (L x2))) (Index (L x3) (Num Nat (nat2fb 3)));;
                          binapp (Nor (Var (L n))) nadd (Nor (Var (L n))) (Nor (Num Nat (nat2fb 1))) ;;
-                         binapp (Nor (Var  (L xc))) nadd (Nor (Var  (L xc))) (Nor (Num Nat (nat2fb 1))) ;;
+                         binapp (Nor (Var  (L xcc))) nadd (Nor (Var  (L xcc))) (Nor (Num Nat (nat2fb 1))) ;;
          qfor g (Nor (Num Nat (nat2fb 5))) 
              (qif (iseven (Nor (Var (L g)))) 
                       (binapp (Nor (Var ((L n)))) nadd (Nor (Var ((L n)))) (Nor (Num Nat (nat2fb 2)));;
                        unary (Nor (Var (L fac))) nfac (Nor (Var (L n)));;
-                       binapp (Nor (Var (L xc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xc)));;
-                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xc))) (Nor (Var (L fac)));;
+                       binapp (Nor (Var (L xcc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xcc)));;
+                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xcc))) (Nor (Var (L fac)));;
                        binapp (Nor (Var (L e))) fmul (Nor (Var (L rc))) (Index (L x3) (Var (L g)));;
                        unary (Nor (Var (L re))) fsub (Nor (Var (L e)));;
                        qinv ((Nor (Var (L e)))))
                       (binapp (Nor (Var ((L n)))) nadd (Nor (Num Nat (nat2fb 2))) (Nor (Var ((L n))));;
                        unary (Nor (Var (L fac))) nfac (Nor (Var (L n)));;
-                       binapp (Nor (Var (L xc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xc)));;
-                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xc))) (Nor (Var (L fac)));;
+                       binapp (Nor (Var (L xcc))) nmul (Nor (Num Nat (nat2fb 4))) (Nor (Var (L xcc)));;
+                       binapp (Nor (Var (L rc))) fndiv (Nor (Var (L xcc))) (Nor (Var (L fac)));;
                        binapp (Nor (Var (L e))) fmul (Nor (Var (L rc))) (Index (L x3) (Var (L g)));;
                        unary (Nor (Var (L re))) fadd (Nor (Var (L e)));;
                        qinv ((Nor (Var (L e))))))

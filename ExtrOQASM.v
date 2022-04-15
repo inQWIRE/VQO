@@ -94,7 +94,7 @@ Definition trans_cl_const_mul (size M:nat) :=
 Definition trans_cl_mul (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_m size) (3 * size + 1) (CLArith.cl_full_mult_out size) (OQASMProof.avs_for_arith size).
 
-(* z = x * y (TOFF-based): Quipper Out Place *)
+(* z = x * y (TOFF-based, Quipper inspired) *)
 Definition trans_cl_mul_out_place (size:nat) :=
   trans_exp (CLArith.vars_for_cl_nat_full_out_place_m size)
            (4 * size + 1) (CLArith.cl_full_mult_out_place_out size) (OQASMProof.avs_for_arith size).
@@ -115,25 +115,9 @@ Definition trans_rz_const_mul (size M:nat) :=
 Definition trans_rz_mul (size:nat) :=
   trans_exp (RZArith.vars_for_rz_nat_full_m size) (3 * size) (RZArith.nat_full_mult_out size) (OQASMProof.avs_for_arith size). 
 
-(* z = x mod y (TOFF-based) *)
-Definition trans_cl_mod (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_moder size) (4 * size + 1) (CLArith.cl_moder_out size M) (OQASMProof.avs_for_arith size). 
-
-(* z = x / y (TOFF-based) *)
-Definition trans_cl_div (size M:nat) :=
-  trans_exp (CLArith.vars_for_cl_div size) (4 * size + 1) (CLArith.cl_div_out size M) (OQASMProof.avs_for_arith size). 
-
 (* z = x mod y,x/y (TOFF-based) *)
 Definition trans_cl_div_mod (size M:nat) :=
   trans_exp (CLArith.vars_for_cl_div_mod size) (3 * size + 1) (CLArith.cl_div_mod_out size M) (OQASMProof.avs_for_arith size). 
-
-(* z = x mod y (QFT-based) *)
-Definition trans_rz_mod (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_moder size) (3 * (S size) ) (RZArith.rz_moder_out size M) (RZArith.avs_for_rz_moder size). 
-
-(* z = x / y (QFT-based) *)
-Definition trans_rz_div (size M:nat) :=
-  trans_exp (RZArith.vars_for_rz_div size) (3 * (S size)) (RZArith.rz_div_out size M) (RZArith.avs_for_rz_div size). 
 
 (* z = x mod y, x / y (QFT-based) *)
 Definition trans_rz_div_mod (size M:nat) :=
@@ -153,34 +137,14 @@ Definition trans_rz_div_mod_app_swaps (size M:nat) :=
 Definition trans_appx_adder (size:nat) (b:nat) :=
   trans_exp (RZArith.vars_for_rz_full_add size) 
    (2 * size) (RZArith.appx_full_adder_out size b) (OQASMProof.avs_for_arith size).
-
 Definition trans_appx_const_adder (size:nat) (b:nat) (M:nat) :=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_adder_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
-
 Definition trans_appx_const_sub (size:nat) (b:nat) (M:nat):=
   trans_exp (RZArith.vars_for_rz_adder size) 
    (2 * size) (RZArith.appx_sub_out size b (nat2fb M)) (OQASMProof.avs_for_arith size).
 
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based) *)
-Definition trans_rz_add_mul_opt (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_con_add_mult_out size) (3 * size) (RZArith.nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (QFT-based-Not-Optimized) *)
-Definition trans_rz_add_mul (size:nat) :=
-  trans_exp (RZArith.vars_for_nat_old_con_add_mult_out size) (3 * size) (RZArith.nat_old_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* z = ((z+x); (z*x)); ((z+y); (z*y));
-        ((z+x); (z*x)); ((z+y); (z*y));
-       ((z+x); (z*x)); ((z+y); (z*y)); (TOFF-based) *)
-Definition trans_cl_add_mul (size:nat) :=
-  trans_exp (CLArith.vars_for_cl_nat_con_add_mult_out size) (3 * size + 1) (CLArith.cl_nat_con_add_mult_out size) (OQASMProof.avs_for_arith size). 
-
-(* Redefine funcs in RZArith and CLArith to use the new trans_exp *)
+(* Modular multipliers *)
 Definition trans_rz_modmult_rev (M C Cinv size:nat) :=
         trans_exp (vars_for_rz size) (2*size+1) (real_rz_modmult_rev M C Cinv size) (avs_for_arith size).
 Definition trans_rz_modmult_rev_alt (M C Cinv size:nat) :=
@@ -189,7 +153,7 @@ Definition trans_modmult_rev (M C Cinv size:nat) :=
         trans_exp (vars_for_cl (S (size))) (4*(S (size))+1)
               (real_modmult_rev M C Cinv (S (size))) (avs_for_arith (S (size))).
 
-(* Trans OQIMP examples. *)
+(* OQIMP examples *)
 Definition trans_dmc_qft (size:nat) :=
    match compile_dm_qft size with Some (Value (Some p,n,a,b)) => 
              Some (trans_exp (vars_for_dm_c size) (2*size + 1) p (avs_for_arith size))
@@ -214,17 +178,17 @@ Definition trans_dmq_cl (size:nat) :=
         | _ => None
    end.
 
-
-Definition compile_collision_sqir  :=
-    match Collision.compile_collision 
+Definition compile_chacha_sqir (_:unit) := (* arg. delays evaluation in extracted code *)
+    match compile_chacha ()
           with None => None
              | Some (Error) => None
              | Some (Value a) => match a with (None,b,c,d) => None
                         | (Some e,sn,c,d) => 
-                    Some (trans_exp (Collision.vars_for_collision sn)
-                 (32*18 + S (S (S sn)))%nat e Collision.avs_for_collision)
+                    Some (trans_exp (OracleExample.vars_for_chacha sn)
+                 (32*18 + (S (S sn)))%nat e avs_for_chacha)
                                  end
     end.
+
 
 (** Proof that these new definitions match the ones in OQASM **)
 
@@ -399,20 +363,170 @@ Proof.
   eapply IHexp2. apply transexp2.
 Qed.
 
-(*
-  UnitaryOps.is_fresh q (to_base_ucom dim (gen_sr_gate v x q0)) <->
-  UnitaryOps.is_fresh q (OQASMProof.gen_sr_gate v dim x q0)
+Lemma vs_same_trans: forall e f dim avs, 
+            snd (fst (trans_exp' f dim e avs)) = snd (fst (OQASMProof.trans_exp f dim e avs))
+          /\ snd ( (trans_exp' f dim e avs)) = snd ( (OQASMProof.trans_exp f dim e avs)).
+Proof.
+  induction e; intros; simpl in *; eauto.
+  destruct (trans_exp' f dim e avs) eqn:eq1.
+  destruct p0. simpl in *.
+  destruct (OQASMProof.trans_exp f dim e avs ) eqn:eq2.
+  destruct p0. simpl in *. easy.
+  specialize (IHe1 f dim avs).
+  destruct (trans_exp' f dim e1 avs) eqn:eq1. destruct p.
+  destruct (OQASMProof.trans_exp f dim e1 avs) eqn:eq3.
+  destruct p.
+  simpl in *. destruct IHe1. subst.
+  specialize (IHe2 v0 dim p1).
+  destruct (trans_exp' v0 dim e2 p1) eqn:eq2. destruct p.
+  destruct (OQASMProof.trans_exp v0 dim e2 p1) eqn:eq4.
+  destruct p.
+  simpl in *. easy.
+Qed.
 
-goal 2 (ID 1089) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (gen_srr_gate v x q0)) <->
- UnitaryOps.is_fresh q (OQASMProof.gen_srr_gate v dim x q0)
-goal 3 (ID 1161) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_qft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_qft v dim x b)
-goal 4 (ID 1179) is:
- UnitaryOps.is_fresh q (to_base_ucom dim (trans_rqft v x b)) <->
- UnitaryOps.is_fresh q (OQASMProof.trans_rqft v dim x b)
-*)
+Lemma is_fresh_to_base_ucom_invert :
+     forall q dim u,
+           UnitaryOps.is_fresh q (to_base_ucom dim (invert u)) 
+                 <-> UnitaryOps.is_fresh q (to_base_ucom dim u).
+Proof.
+  intros. induction u.
+  simpl.
+  split. intros. inv H. constructor. rewrite <- IHu1. easy.
+  rewrite <- IHu2. easy.
+  intros. inv H. constructor. rewrite IHu2. easy.
+  rewrite IHu1. easy.
+  destruct u. simpl. destruct l. simpl. easy.
+  destruct l. simpl. easy. simpl. easy.
+  destruct l. simpl. easy.
+  simpl.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  simpl.
+  destruct l. simpl.
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl.
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. 
+  split. intros. constructor. inv H. easy.
+  intros. constructor. inv H. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. 
+  split. intros.
+  inv H. inv H3. inv H2. inv H3.
+  inv H4. inv H6. inv H2.
+  Local Transparent SQIR.Rz.
+  unfold SQIR.Rz in *.
+  inv H6. inv H8.
+  constructor. constructor.
+  constructor. constructor.
+  constructor. constructor. easy.
+  constructor. easy. easy.
+  constructor. easy. easy.
+  constructor. easy.
+  intros.
+  inv H. inv H3. inv H2. inv H3.
+  inv H4. inv H6. inv H2.
+  unfold SQIR.Rz in *.
+  inv H6. inv H8.
+  constructor. constructor.
+  constructor. constructor.
+  constructor. constructor. easy.
+  constructor. easy. easy.
+  constructor. easy. easy.
+  constructor. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl.
+  split. intros.
+  inv H. inv H3. 
+  inv H2. inv H3.
+  inv H2. inv H4.
+  inv H6. inv H3. inv H8.
+  inv H2. inv H9. inv H4. inv H10. inv H6.
+  inv H11. inv H3. inv H12. inv H8. inv H9.
+  inv H10. inv H11. inv H12. inv H17. inv H8.
+  inv H18. inv H9. inv H19. inv H10. inv H20.
+  inv H11. inv H17. inv H18. inv H19. inv H20.
+  inv H25. inv H12. inv H26. inv H17. inv H27. inv H18. inv H28.
+  Local Transparent SQIR.CNOT.
+  inv H15. inv H13.
+  constructor. constructor. constructor. constructor. constructor.
+  constructor. constructor. constructor. constructor. constructor.
+  constructor. easy. constructor. easy. easy. constructor. easy.
+  easy. constructor. easy. constructor.
+  constructor. constructor. constructor. constructor.
+  constructor. easy. constructor. easy.
+  easy. constructor. easy. easy.
+  constructor. easy. constructor. constructor.
+  repeat constructor.
+  Local Transparent SQIR.H SQIR.T.
+  constructor. easy. 1-18:easy.
+  constructor. easy. constructor;easy.
+  repeat constructor; try easy.
+  constructor.
+  repeat constructor; try easy.
+  constructor;easy.
+  repeat constructor; try easy.
+  intros.
+  inv H. inv H3. 
+  inv H2. inv H3.
+  inv H2. inv H4.
+  inv H6. inv H3. inv H8.
+  inv H2. inv H9. inv H4. inv H10. inv H6.
+  inv H11. inv H3. inv H12. inv H8. inv H9.
+  inv H10. inv H11. inv H12. inv H17. inv H8.
+  inv H18. inv H9. inv H19. inv H10. inv H20.
+  inv H11. inv H17. inv H18. inv H19. inv H20.
+  inv H25. inv H12. inv H26. inv H17. inv H27. inv H18. inv H28.
+  repeat constructor; try easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  destruct l. simpl. easy.
+  simpl. easy.
+  Local Opaque SQIR.Rz SQIR.CNOT SQIR.H SQIR.T.
+Qed.
 
 Lemma transexp'_is_fresh : forall f dim exp avs u v p1 q,
   (* likely requires additional preconditions... *)
@@ -432,40 +546,73 @@ all: try inversion H; subst; try reflexivity.
 destruct (trans_exp' f dim exp avs) eqn:transexp'.
     destruct p0.
     destruct (OQASMProof.trans_exp f dim exp avs) eqn:transexp.
+    apply transexp'_WF in transexp' as eq1.
     destruct p0.
     apply IHexp in transexp'.
     inversion H; subst.
     rewrite transexp in transexp'.
     simpl in *.
-rewrite <- UnitaryOps.fresh_control.
-
-admit.
-
+    rewrite <- UnitaryOps.fresh_control.
+    split.
+    intros.
+    apply fresh_control' in H0.
+    split. destruct H0. easy. destruct H0. apply transexp'. easy.
+    lia. easy. 
+    intros. destruct H0.
+    apply fresh_control'; try easy. lia.
+    split. easy. apply transexp'; easy.
     (* SR q x *)
-    admit.
+    rewrite gen_sr_gate_same. easy.
     (* SRR q x *)
-    admit.
+    rewrite gen_srr_gate_same. easy.
     (* QFT x *)
-    admit.
+    rewrite trans_qft_same. easy.
     (* RQFT x *)
-    admit.
+    split. intros.
+    assert (OQASMProof.trans_rqft v dim x b
+       = UnitaryOps.invert (OQASMProof.trans_qft v dim x b)) by easy.
+    rewrite H1.
+    rewrite <- is_fresh_invert.
+    rewrite <- trans_qft_same.
+    assert (to_base_ucom dim (trans_rqft v x b) 
+       = to_base_ucom dim (invert (trans_qft v x b))) by easy.
+    rewrite H2 in H0.
+    rewrite is_fresh_to_base_ucom_invert in H0. easy.
+    intros.
+    assert (OQASMProof.trans_rqft v dim x b
+       = UnitaryOps.invert (OQASMProof.trans_qft v dim x b)) by easy.
+    rewrite H1 in *.
+    assert (to_base_ucom dim (trans_rqft v x b) 
+       = to_base_ucom dim (invert (trans_qft v x b))) by easy.
+    rewrite H2.
+    rewrite <- is_fresh_invert in H0.
+    apply is_fresh_to_base_ucom_invert.
+    rewrite trans_qft_same. easy.
     (* exp1 ; exp2 *)
+    specialize (vs_same_trans exp1 f dim avs) as X1. destruct X1.
     destruct (trans_exp' f dim exp1 avs) eqn:transexp1.
     destruct p.
     destruct (OQASMProof.trans_exp f dim exp1 avs) eqn:transexp2.
     destruct p.
-    apply IHexp1 in transexp1.
-    destruct (trans_exp' v0 dim exp2 p0) eqn:transexp3.
+    apply IHexp1 in transexp1 as eq1.
+    simpl in *. subst.
+    specialize (vs_same_trans exp2 v1 dim p2) as X1. destruct X1.
+    destruct (trans_exp' v1 dim exp2 p2) eqn:transexp3.
     destruct p.
     destruct (OQASMProof.trans_exp v1 dim exp2 p2) eqn:transexp4.
     destruct p.
-    eapply IHexp2 in transexp3.
-
-inversion H; subst.
-rewrite transexp2 in *.
-
-
-Admitted.
+    eapply IHexp2 in transexp3 as eq2.
+    simpl in *. subst.
+    inversion H; subst.
+    rewrite transexp2 in *.
+    rewrite transexp4 in *. simpl in *.
+    split. intros. inv H0. constructor.
+    apply eq1. easy.
+    apply eq2. easy.
+    intros. inv H0.
+    constructor. apply eq1. easy.
+    apply eq2 ; easy.
+Qed.
 
 Lemma trans_exp_same : forall f dim exp avs,
   uc_eval dim (trans_exp f dim exp avs) 

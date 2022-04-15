@@ -2,7 +2,28 @@ open Printf
 
 open AltGateSet
 open ExtrOQASM
+open OQASM
 (*open OracleExample*)
+
+(* print an OQASM program (for debugging) *)
+let rec print_exp' (e:exp) indent =
+  let tabs = String.make indent '\t' in
+  match e with
+  | SKIP (x,i) -> printf "%sSKIP (%d,%d)\n" tabs x i
+  | X (x,i) -> printf "%sX (%d,%d)\n" tabs x i
+  | CU ((x,i),e) -> (printf "%sCU (%d,%d)\n" tabs x i ; print_exp' e (indent + 1))
+  | RZ (n,(x,i)) -> printf "%sRZ %d (%d,%d)\n" tabs n x i
+  | RRZ (n,(x,i)) -> printf "%sRRZ %d (%d,%d)\n" tabs n x i
+  | SR (n,x) -> printf "%sSR %d %d\n" tabs n x
+  | SRR (n,x) -> printf "%sSRR %d %d\n" tabs n x
+  | Lshift x -> printf "%sLSHIFT %d\n" tabs x
+  | Rshift x -> printf "%sRSHIFT %d\n" tabs x
+  | Rev x -> printf "%sREV %d\n" tabs x
+  | QFT (x,n) -> printf "%sQFT %d %d\n" tabs n x
+  | RQFT (x,n) -> printf "%sRQFT %d %d\n" tabs n x
+  | Seq (e1,e2) -> (print_exp' e1 indent ; print_exp' e2 indent)
+
+let print_exp e = print_exp' e 0
 
 (* find max qubit value used (hacky) *)
 let rec get_dim_aux (u : coq_U ucom) acc =
@@ -21,8 +42,14 @@ let rec sqir_to_qasm oc (u : coq_U ucom) k =
   | Coq_uapp (1, U_U2 (r1,r2), [a]) -> (fprintf oc "u2(%f,%f) q[%d];\n" r1 r2 a ; k ())
   | Coq_uapp (1, U_U3 (r1,r2,r3), [a]) -> (fprintf oc "u3(%f,%f,%f) q[%d];\n" r1 r2 r3 a ; k ())
   | Coq_uapp (2, U_CX, [a;b]) -> (fprintf oc "cx q[%d], q[%d];\n" a b ; k ())
+  | Coq_uapp (2, U_CU1 (r), [a;b]) -> (fprintf oc "cu1(%f) q[%d], q[%d];\n" r a b ; k ())
+  | Coq_uapp (2, U_CH, [a;b]) -> (fprintf oc "ch q[%d], q[%d];\n" a b ; k ())
+  | Coq_uapp (2, U_SWAP, [a;b]) -> (fprintf oc "swap q[%d], q[%d];\n" a b ; k ())
   | Coq_uapp (3, U_CCX, [a;b;c]) -> (fprintf oc "ccx q[%d], q[%d], q[%d];\n" a b c ; k ())
-  (* badly typed case (e.g. App2 of U_H) or unexpected gate *)
+  | Coq_uapp (3, U_CCU1 (r), [a;b;c]) -> (fprintf oc "ccu1(%f) q[%d], q[%d], q[%d];\n" r a b c ; k ())
+  | Coq_uapp (3, U_CSWAP, [a;b;c]) -> (fprintf oc "cswap q[%d], q[%d], q[%d];\n" a b c ; k ())
+  | Coq_uapp (4, U_C3X, [a;b;c;d]) -> (fprintf oc "c3x q[%d], q[%d], q[%d], q[%d];\n" a b c d ; k ())
+  (* badly typed case (e.g. App2 of U_H) *)
   | _ -> failwith "ERROR: Failed to write qasm file"
 
 (* insert measurements to get simulation results *)
@@ -144,20 +171,8 @@ let run_div_mod size m =
   if size < size_of_m 
   then failwith "Invalid inputs to run_multipliers"
   else
-    let _ = printf "Generating circuit for TOFF-based constant modder, inputs size=%d M=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_cl_mod size m) ("cl-mod-" ^ fname) in
-
-    let _ = printf "Generating circuit for TOFF-based constant divider, inputs size=%d M=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_cl_div size m) ("cl-div-" ^ fname) in
-    
     let _ = printf "Generating circuit for TOFF-based constant modder/divider, inputs size=%d M=%d...\n%!" size m in
     let _ = print_and_write_file (trans_cl_div_mod size m) ("cl-div-mod-" ^ fname) in
-    
-    let _ = printf "Generating circuit for QFT-based constant modder, inputs size=%d M=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_rz_mod size m) ("rz-mod-" ^ fname) in
-
-    (*let _ = printf "Generating circuit for QFT-based constant divider, inputs size=%d M=%d...\n%!" size m in
-    let _ = print_and_write_file (trans_rz_div size m) ("rz-div-" ^ fname) in*)
     
     let _ = printf "Generating circuit for QFT-based constant modder/divider, inputs size=%d M=%d...\n%!" size m in
     let _ = print_and_write_file (trans_rz_div_mod size m) ("rz-div-mod-" ^ fname) in
@@ -171,17 +186,20 @@ let run_approx size m b =
   then failwith "Invalid inputs to run_approx"
   else
     let _ = printf "Generating circuit for approximate QFT-based adder, inputs size=%d b=%d...\n%!" size b in
-    let _ = print_and_write_file (trans_appx_adder size b) ("rz-add-appx-" ^ fname) in
+    let _ = print_and_write_file (trans_appx_adder size b) ("rz-appr-adder-" ^ fname) in
 
-    (*let _ = printf "Generating circuit for approximate QFT-based constant adder, inputs size=%d m=%d b=%d...\n%!" size m b in
-    let _ = print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx-" ^ fname) in*)
+    let _ = printf "Generating circuit for approximate QFT-based constant adder, inputs size=%d m=%d b=%d...\n%!" size m b in
+    let _ = print_and_write_file (trans_appx_const_adder size b m) ("rz-appr-const-adder-" ^ fname) in
 
-    (*let _ = printf "Generating circuit for approximate QFT-based constant subtractor, inputs size=%d m=%d b=%d...\n%!" size m b in
-    let _ = print_and_write_file (trans_appx_const_sub size m b) ("rz-const-sub-appx-" ^ fname) in*)
+    let _ = printf "Generating circuit for approximate QFT-based div-mod (w/out SWAPs), inputs size=%d m=%d...\n%!" size m in
+    let _ = print_and_write_file (trans_rz_div_mod_app_shift size m) ("rz-appr-div-mod-" ^ fname) in
+
+    let _ = printf "Generating circuit for approximate QFT-based div-mod (with SWAPs), inputs size=%d m=%d...\n%!" size m in
+    let _ = print_and_write_file (trans_rz_div_mod_app_swaps size m) ("rz-appr-div-mod-swaps-" ^ fname) in
 
     ();;
 
-let run_partial_eval_exp size =
+let run_partial_eval size =
   let fname = (string_of_int size) ^ ".qasm" in
   let _ = printf "Generating circuits for partial eval experiments, input size=%d...\n%!" size in
   match trans_dmc_qft size with 
@@ -204,12 +222,9 @@ run_adders 16 38168;;
 run_multipliers 16 38168;;
 run_div_mod 16 38168;;
 run_approx 16 38168 15;;
-(*run_partial_eval_exp 16;;*)
+run_partial_eval 16;;
 
-(* These three calls result in a stack overflow: *)
-let size = 16 in
-let m = 38168 in
-let b = 15 in
-print_and_write_file (trans_rz_div size m) ("rz-div-tmp.qasm");
-print_and_write_file (trans_appx_const_adder size m b) ("rz-const-add-appx.qasm");
-print_and_write_file (trans_appx_const_sub size m b) ("rz-const-sub-appx.qasm")
+printf "Running compile_chacha_sqir...\n%!";
+match compile_chacha_sqir () with 
+| None -> printf "ERROR: compile_chacha_sqir returned None\n%!"
+| Some c -> print_and_write_file c "chacha-oracle.qasm";
