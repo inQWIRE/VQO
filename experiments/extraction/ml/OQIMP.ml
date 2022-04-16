@@ -39,16 +39,16 @@ type qvar =
 let qty_eq t1 t2 =
   match t1 with
   | G x -> (match t2 with
-            | G y -> Nat.eqb x y
+            | G y -> (=) x y
             | L _ -> false)
   | L x -> (match t2 with
             | G _ -> false
-            | L y -> Nat.eqb x y)
+            | L y -> (=) x y)
 
 (** val qdty_eq : (qvar * int) -> (qvar * int) -> bool **)
 
 let qdty_eq t1 t2 =
-  (&&) (qty_eq (fst t1) (fst t2)) (Nat.eqb (snd t1) (snd t2))
+  (&&) (qty_eq (fst t1) (fst t2)) ((=) (snd t1) (snd t2))
 
 type btype =
 | Nat
@@ -191,11 +191,11 @@ module QvarNatType =
   (** val compare : t -> t -> (qvar * int) OrderedType.coq_Compare **)
 
   let compare x y =
-    let (q, n) = x in
-    let (q0, n0) = y in
-    (match q with
+    let (a, b) = x in
+    let (a0, b0) = y in
+    (match a with
      | G v ->
-       (match q0 with
+       (match a0 with
         | G v0 ->
           let h = blt_reflect v v0 in
           (match h with
@@ -204,28 +204,28 @@ module QvarNatType =
              let h0 = beq_reflect v v0 in
              (match h0 with
               | ReflectT ->
-                let h1 = blt_reflect n n0 in
+                let h1 = blt_reflect b b0 in
                 (match h1 with
                  | ReflectT -> OrderedType.LT
                  | ReflectF ->
-                   let h2 = beq_reflect n n0 in
+                   let h2 = beq_reflect b b0 in
                    (match h2 with
                     | ReflectT -> OrderedType.EQ
                     | ReflectF -> OrderedType.GT))
               | ReflectF -> OrderedType.GT))
         | L _ -> OrderedType.GT)
      | L v ->
-       (match q0 with
+       (match a0 with
         | G _ -> OrderedType.LT
         | L v0 ->
           let h = beq_reflect v v0 in
           (match h with
            | ReflectT ->
-             let h0 = blt_reflect n n0 in
+             let h0 = blt_reflect b b0 in
              (match h0 with
               | ReflectT -> OrderedType.LT
               | ReflectF ->
-                let h1 = beq_reflect n n0 in
+                let h1 = beq_reflect b b0 in
                 (match h1 with
                  | ReflectT -> OrderedType.EQ
                  | ReflectF -> OrderedType.GT))
@@ -369,7 +369,7 @@ let get_type_num = function
 (** val no_zero : typ -> bool **)
 
 let no_zero = function
-| TArray (_, _, n) -> if Nat.eqb n 0 then false else true
+| TArray (_, _, n) -> if (=) n 0 then false else true
 | TNor (_, _) -> true
 
 (** val gen_env : (typ * var) list -> benv -> benv option **)
@@ -654,8 +654,7 @@ let gen_ceq_c smap vmap bv size f r stack temp sn x y =
                            (match t2v with
                             | Value t2v' ->
                               Some (Value ((None, sn), (Some
-                                (Nat.eqb
-                                  (a_nat2fb t1v' (get_size size (snd t1)))
+                                ((=) (a_nat2fb t1v' (get_size size (snd t1)))
                                   (a_nat2fb t2v' (get_size size (snd t1)))))))
                             | Error -> Some Error)
                          | Error -> Some Error))))
@@ -694,7 +693,7 @@ let compile_cexp size smap vmap bv f r stack temp sn = function
            match t2v with
            | Value t2v' ->
              Some (Value ((None, sn), (Some
-               (Nat.eqb (Nat.modulo (a_nat2fb t2v' size) (succ (succ 0))) 0))))
+               ((=) (Nat.modulo (a_nat2fb t2v' size) (succ (succ 0))) 0))))
            | Error -> Some Error))
 
 (** val l_rotate : (int -> bool) -> int -> int -> bool **)
@@ -720,7 +719,7 @@ let rec lookup_fmap l x =
     let (p4, smap) = p3 in
     let (p5, p) = p4 in
     let (y, a) = p5 in
-    if Nat.eqb x y
+    if (=) x y
     then Some (((((a, p), smap), vmap), bv), r)
     else lookup_fmap xl x
 

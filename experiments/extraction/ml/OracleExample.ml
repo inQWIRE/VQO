@@ -356,10 +356,9 @@ let dmc_estore =
 (** val dmc_cstore : (int -> bool) Store.t **)
 
 let dmc_cstore =
-  Store.add ((L z_var), 0) (nat2fb (succ (succ (succ (succ (succ 0))))))
-    (Store.add ((L y_var), 0)
-      (nat2fb (succ (succ (succ (succ (succ (succ (succ (succ (succ (succ
-        0))))))))))) (init_cstore empty_cstore var_list))
+  Store.add ((L z_var), 0) (nat2fb 38168)
+    (Store.add ((L y_var), 0) (nat2fb 38168)
+      (init_cstore empty_cstore var_list))
 
 (** val compile_dm_qft :
     int -> (((exp option * int) * cstore) * estore) value option **)

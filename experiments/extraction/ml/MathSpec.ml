@@ -73,7 +73,7 @@ let fbrev n f x =
 (** val times_two_spec : (int -> bool) -> int -> bool **)
 
 let times_two_spec f i =
-  if Nat.eqb i 0 then false else f ((fun x y -> max 0 (x-y)) i (succ 0))
+  if (=) i 0 then false else f ((fun x y -> max 0 (x-y)) i (succ 0))
 
 (** val natsum : int -> (int -> int) -> int **)
 
