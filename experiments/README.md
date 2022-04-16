@@ -28,9 +28,3 @@ You can try simulating the programs in vqo_files or quipper_files with `python s
 
 To run these programs through VOQC, clone the [mlvoqc](https://github.com/inQWIRE/mlvoqc) repository and follow the directions there for using `voqc_cli.exe`.
 
-## Chacha 20 gate Estimation
-
-There are 640 addition devices in the Chacha 20 implementation, 640 XOR devices, and 32 equility comparition devices, and 1 extra CNOT gate. Each addition device costs 4628 gates, XOR device costs 64 gate, and an equal-sign costs 9257 gates.
-The total gate estimation is 3299105, which is about 3.3 million gates.
-
-

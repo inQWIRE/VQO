@@ -763,10 +763,10 @@ Fixpoint dmc_vmap'  (l : list (typ * var)) (n:nat) :=
   end.
 Definition dmc_vmap := dmc_vmap' var_list 0.
 
-
 Definition dmc_estore := init_estore empty_estore var_list.
 
-Definition dmc_cstore := Store.add (L z_var,0) (nat2fb 5) (Store.add (L y_var,0) (nat2fb 38168) (init_cstore empty_cstore var_list)).
+Definition C38168 := 38168. (* for easier extraction *)
+Definition dmc_cstore := Store.add (L z_var,0) (nat2fb C38168) (Store.add (L y_var,0) (nat2fb C38168) (init_cstore empty_cstore var_list)).
 
 Definition compile_dm_qft (size:nat) := 
   trans_qexp

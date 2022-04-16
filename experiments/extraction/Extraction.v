@@ -4,6 +4,7 @@ Require Import AltGateSet.
 Require Import OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
+Require Import OracleExample.
 Require Import ExtrOQASM.
 
 (* Standard utilities for bools, options, etc. *)
@@ -15,6 +16,8 @@ Require ExtrOcamlR.
 Extract Inlined Constant R2 => "2.0".
 Extract Inlined Constant R4 => "4.0".
 Extract Inlined Constant R8 => "8.0".
+Extract Inlined Constant IZR => "float_of_int".
+Extract Inlined Constant Coq.Reals.Rpow_def.pow => "(fun r n -> r ** (float_of_int n))".
 
 (* Standard extraction from nat -> OCaml int. *)
 Require Coq.extraction.ExtrOcamlNatInt.
@@ -26,8 +29,7 @@ Extract Inlined Constant Init.Nat.ltb => "(<)".
 Extract Inlined Constant Init.Nat.mul => "( * )".
 Extract Inlined Constant Init.Nat.add => "(+)".
 Extract Inlined Constant Init.Nat.sub => "(fun x y -> max 0 (x-y))".
-Extract Inlined Constant IZR => "float_of_int".
-Extract Inlined Constant Coq.Reals.Rpow_def.pow => "(fun r n -> r ** (float_of_int n))".
+Extract Inlined Constant C38168 => "38168". (* manually extracting large constants *)
 
 Extract Inlined Constant N.of_nat => "(fun x -> x)". (* id *)
 

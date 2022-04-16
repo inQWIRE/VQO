@@ -103,7 +103,7 @@ let vars_for_rz' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_rz size x =
-  if Nat.eqb x z_var
+  if (=) x z_var
   then ((((( * ) size (succ (succ 0))), (succ 0)), id_nat), id_nat)
   else vars_for_rz' size x
 
