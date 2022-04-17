@@ -24,11 +24,10 @@ Local Open Scope nat_scope.
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
 Inductive basic := Var (x:var) | Num (n:nat).
 
-
-Definition posi :Type := (var * basic).
-
 Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
            | TwoTo (e1:basic) | XOR (e1:aexp) (e2:aexp) | Index (x:posi) (a:aexp).
+
+Definition posi :Type := (var * aexp).
 
 Inductive bexp := BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BLe (x:aexp) (y:aexp).
 
@@ -84,7 +83,7 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
                         (*n here means n bits starting from the 0 position in x. *)
 
 (* we want to include all the single qubit gates here in the U below. *)
-Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:basic) (*representing 1/2^n of RZ rotation. *).
+Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
               | InitQubit (p:posi) | AppU (e:singleGate) (p:posi) 
@@ -142,14 +141,70 @@ Inductive eq_pred : predi -> predi -> Prop :=
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
 
 
-Inductive pexp_type : Set := Proba | Class | Normal | Mix (p:basic) | Top.
+Inductive type_rotation := TV (b:aexp) | Infty.
+
+Inductive type_elem : Type := TH (b:type_rotation) | TQFT (b:type_rotation) | TRQFT (b:type_rotation).
+
+Inductive qtype := QS (l:list type_elem) | QC (vl:list (var * nat)) (l:list type_elem).
+
+Inductive pexp_type : Type := Proba | Class | QMix (p:qtype) | Bot.
 
 Definition type_env := (var * nat -> pexp_type).
 
-Inductive type_system : type_env -> pexp -> type_env -> Prop :=
-    | seq_type : forall s1 s2 tv tv' tv'', type_system tv s1 tv' -> type_system tv' s1 tv'' -> type_system tv (PSeq s1 s2) tv''
-    | 
+Definition num_env := (var -> nat).
 
+Definition value_env := (var -> nat).
+
+Definition azero := BA (Num 0).
+
+Definition tazero := TV (BA (Num 0)).
+
+Definition add_p_env (p:pexp_type) (ty:type_elem) :=
+    match p with (QMix (QS qs)) => (QMix (QS (ty::qs)))
+               | a => a
+    end.
+
+Definition rm_elem_env (p:pexp_type) :=
+    match p with (QMix (QS (a::qs))) => (QMix (QS (qs)))
+               | a => a
+    end.
+
+Fixpoint eupdates_elem (tv:type_env) (x:var) (n:nat) (p:type_elem) := 
+        match n with 0 => tv
+            | S m => (eupdates_elem tv x m p)[(x,m) |-> add_p_env (tv (x,m)) p]
+        end.
+
+Fixpoint eupdates_rm (tv:type_env) (x:var) (n:nat) := 
+        match n with 0 => tv
+            | S m => (eupdates_rm tv x m)[(x,m) |-> rm_elem_env (tv (x,m))]
+        end.
+
+Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) := 
+        match l with [] => tv
+            | (a::al) => (eupdate_list tv al p)[a |-> p]
+        end.
+
+Inductive type_system : num_env * type_env -> pexp -> num_env * type_env -> Prop :=
+    | seq_type : forall s1 s2 tv tv' tv'', type_system tv s1 tv' -> type_system tv' s1 tv'' -> type_system tv (PSeq s1 s2) tv''
+    | app_h_type_1 : forall S tv x n, tv (x,n) = QMix (QS nil)
+                -> type_system (S,tv) (AppU H_gate (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ([TH tazero])))]))
+    | app_h_type_2 : forall S tv qs x n, tv (x,n) = QMix (QS ((TH tazero)::qs))
+                -> type_system (S,tv) (AppU H_gate (x,BA (Num n)))(S, (tv[(x,n) |-> (QMix (QS qs))]))
+    | app_rqft_type_1 : forall S tv qs x n,
+                S x = n -> (forall i r, i < n -> tv (x,i) = QMix (QS ((TH r)::qs)))
+                -> type_system (S,tv) (RQFT x) (S,(eupdates_elem tv x n (TRQFT Infty)))
+    | app_rqft_type_2 : forall S tv qs x n,
+                S x = n -> (forall i , i < n -> tv (x,i) = QMix (QS ((TQFT tazero)::qs)))
+                -> type_system (S,tv) (RQFT x) (S,(eupdates_rm tv x n ))
+    | app_cx_type_1 : forall S tv qs r x n y m, tv (x,n)= QMix (QS ((TH r)::qs)) -> tv (y,m) = QMix (QS nil)
+                -> type_system (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) 
+                         (S,tv[(x,n) |-> (QMix (QC ((x,n)::((y,m)::nil)) ((TH r)::qs)))]
+                                [(y,m) |-> (QMix (QC ((x,n)::((y,m)::nil)) ((TH r)::qs)))])
+    | app_cx_type_2 : forall S tv vs qs x n y m, tv (x,n)= QMix (QC vs (qs)) -> tv (y,m) = QMix (QS nil)
+                -> type_system (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) (S,eupdate_list tv ((y,m)::vs) (QMix (QC ((y,m)::vs) (qs)))).
+
+(*
+Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:basic) (*representing 1/2^n of RZ rotation. *).
 
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
               | InitQubit (p:posi) | AppU (e:singleGate) (p:posi) 
@@ -167,7 +222,7 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp)
                     (*max loop number of n, variable x, monotonic function f, bool b and e.*)
             | Reflect (x:var) (l:list (fexp * state)) (* Amplitude amplication, 
 
-
+*)
 
 Definition is_0 (s:state) (n:nat) :=
     match s with NTensor n i b (ket (BA (Num 0))) => True
