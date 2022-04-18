@@ -76,8 +76,10 @@ Definition qpred := list (list (var * aexp) * state).
 
 (* Classical State including variable relations that may be quantum *)
 
-Inductive cpred := PTrue | PFalse | CState (b:bexp) | PAnd (p1:cpred) (p2:cpred) 
-             | PNot (p:cpred) | Forall (xs:list var) (p1:cpred) (p2:cpred).
+Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
+             | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
+
+Definition cpred := list cpred_elem.
 
 (*
 Inductive predi := PTrue | PFalse | PState (l:list (var * aexp)) (s:state)
@@ -218,12 +220,28 @@ Inductive eq_state : state -> state -> Prop :=
       | tensor_empty : forall n i a s,
            eq_state (Tensor a (NTensor n i n s)) a.
 
+Inductive eq_cpred : cpred -> cpred -> Prop :=
+      | cpred_comm: forall x y, eq_cpred (x++y) (y++x).
 
+Inductive eq_qpred : qpred -> qpred -> Prop :=
+      | qpred_comm: forall x y, eq_qpred (x++y) (y++x)
+      | qpred_join : forall vs vsa s s1 qs, eq_qpred ((vs,s)::(vsa,s1)::qs) ((vs++vsa,Tensor s s1)::qs).
+
+
+Inductive eq_tpred : tpred -> tpred -> Prop :=
+      | tpred_comm: forall x y, eq_tpred (x++y) (y++x).
+
+
+(* Classical State including variable relations that may be quantum *)
+
+
+
+(*
 Inductive eq_pred : predi -> predi -> Prop :=
       | and_comm : forall s1 s2, eq_pred (PAnd s1 s2) (PAnd s2 s1)
       | and_assoc : forall s1 s2 s3, eq_pred (PAnd s1 (PAnd s2 s3)) (PAnd (PAnd s1 s2) s3)
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
-
+*)
 
 Inductive triple : predi -> pexp -> predi -> Prop :=
      | conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q)
