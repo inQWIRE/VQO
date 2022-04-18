@@ -35,8 +35,8 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
         | FExp (f:fexp) | FSin (f:exp) | FCos (f:exp)
         | FCom (f:exp) (f1:exp) (* a + b i *).
 
-Inductive bexp := BEq (x:aexp) (y:aexp) | Bgt (x:aexp) (y:aexp) | BLe (x:aexp) (y:aexp)
-                | FEq (x:fexp) (y:fexp) | Fgt (x:fexp) (y:fexp) | FLe (x:fexp) (y:aexp).
+Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
+                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:aexp).
 
 
         
@@ -246,6 +246,13 @@ Inductive eq_pred : predi -> predi -> Prop :=
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
 *)
 
+Definition change_h (s:state) :=
+   match s with (Tensor s1 (NTensor n i b (ket (BA (Num 0))))) => 
+         Tensor s1 (Tensor (Sigma (BA (Num 2)) i (BA (Num 0)) (ket (BA (Var i)))) 
+                  (NTensor n i (APlus b (BA (Num 1))) (ket (BA (Num 0)))))
+       | a => a
+   end.
+
 Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
      | tensorSep_1 : forall x n qs P P' Q e T V, 
@@ -258,10 +265,12 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
            triple ((PState ((x,BA (Num m))::ys) (NTensor (BA (Num m)) y i s))::qs,T,V)
                       e ((PState ([(x,BA (Num m))]) (NTensor (BA (Num m)) y i s'))::qs,T,V) ->
            triple ((PState ((x,BA (Num n))::ys) (Tensor (NTensor (BA (Num m)) y i s) (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V) 
-                       e ((PState ([(x,BA (Num n))]) (Tensor (NTensor (BA (Num m)) y i s') (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V).
-     | appH : forall x i s n, is_0 s i ->
-         triple (PState ([(x,Num n)]) s)
-              (AppH (x,(Num i))) (PState ([(x,Num n)]) (change_h s i))
+                       e ((PState ([(x,BA (Num n))]) (Tensor (NTensor (BA (Num m)) y i s') (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V)
+     | appH : forall x p1 p2 i j t1 qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
+              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P).
+(*
      | appCX_1 : forall x i y j s v,  get_ket s x i = Some v -> is_ket s y j ->
          triple s (CX (x,(Num i)) (y,(Num j))) (change_cx_1 s y j v)
      | appCX_2 : forall x i y j s u v q,  get_sigma s x i = Some (u,v) -> is_ket s y j ->
@@ -279,7 +288,7 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
                  (PAnd P (PState ((x,Num (j+1))::((y, Num m)::[]))
                  (Tensor (NTensor (BA (Num j)) k (BA (Num 0)) s1) 
                      (SPlus (Tensor (ket (BA (Num 0))) s) (Tensor (ket (BA (Num 1))) s'))))).
-
+*)
 
 (*
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:basic) (*representing 1/2^n of RZ rotation. *).
