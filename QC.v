@@ -29,13 +29,16 @@ Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e
 
 Definition posi :Type := (var * aexp).
 
-Inductive bexp := BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BLe (x:aexp) (y:aexp).
-
 Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTimes (f1:fexp) (f2:fexp) 
         | FDiv (f1:fexp) (f2:fexp)
         | FSum (n:aexp) (i:var) (b:aexp) (f:fexp)
         | FExp (f:fexp) | FSin (f:exp) | FCos (f:exp)
         | FCom (f:exp) (f1:exp) (* a + b i *).
+
+Inductive bexp := BEq (x:aexp) (y:aexp) | Bgt (x:aexp) (y:aexp) | BLe (x:aexp) (y:aexp)
+                | FEq (x:fexp) (y:fexp) | Fgt (x:fexp) (y:fexp) | FLe (x:fexp) (y:aexp).
+
+
         
 
 (*Pattern for walk. goto is describing matching patterns such as
@@ -56,6 +59,8 @@ Definition addto_n (r : rz_val) n (rmax : nat) :=
 
 Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
 
+
+(* Quantum State *)
 Inductive state :Type :=
              | STrue (* meaning that the initial state with any possible values. *)
              | ket (b:aexp) (*normal state |0> false or |1> true *)
@@ -66,8 +71,16 @@ Inductive state :Type :=
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
+Definition qpred := list (list (var * aexp) * state).
 
-Inductive predi := PTrue | PFalse | PState (l:list (var * aexp * aexp)) (s:state)
+
+(* Classical State including variable relations that may be quantum *)
+
+Inductive cpred := PTrue | PFalse | CState (b:bexp) | PAnd (p1:cpred) (p2:cpred) 
+             | PNot (p:cpred) | Forall (xs:list var) (p1:cpred) (p2:cpred).
+
+(*
+Inductive predi := PTrue | PFalse | PState (l:list (var * aexp)) (s:state)
                     (* quantum variable, its initial position and qubit size and the state representation*)
             | CState (b:bexp)
                (* bexp is a constant variable predicate. *)
@@ -76,7 +89,7 @@ Inductive predi := PTrue | PFalse | PState (l:list (var * aexp * aexp)) (s:state
             | PAnd (p1:predi) (p2:predi)
             | Forall (x:var) (p1:predi) (p2:predi) (* forall x p1 => p2. need to have someway to restrict the formula. *)
             | PNot (p:predi).
-
+*)
 
 Inductive pattern := Adj (x:var) (* going to adj nodes. *)
                    | Match (x:var) (n:nat) (nll:list (list bool * list bool)).
@@ -89,14 +102,14 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp)
               | InitQubit (p:posi) | AppU (e:singleGate) (p:posi) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | Classic (x:var) (p:exp) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
+            | Classic (x:var) (p:exp) (args: list var) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
             | State (x:var)  (* We first assume that we have H first. state prepreation of n H. *)
             | QFT (x:var)
             | RQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
             | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
             | CX (x:posi) (y:posi)  (* control x on to y. *)
-            | CU (x:posi) (p:exp) (z:var) (* control-U on the reversible expression p from the control node x on to z. *)
+            | CU (x:posi) (p:exp) (z:var) (args: list var) (* control-U on the reversible expression p from the control node x on to z. *)
             | QWhile (n:aexp) (x:var) (f:nat -> nat) (b:bexp) (e:pexp) 
                     (*max loop number of n, variable x, monotonic function f, bool b and e.*)
             | Reflect (x:var) (l:list (fexp * state)) (* Amplitude amplication, 
@@ -112,35 +125,7 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
-Definition add_num (x:aexp) (n:nat) := 
-    match x with APlus e1 (BA (Num m)) => APlus e1 (BA (Num (m+n)))
-               | APlus (BA (Num m)) e2 => APlus (BA (Num (m+n))) e2
-               | a => APlus a (BA (Num n))
-    end.
-
-Definition in_set (x:var) (l:list (var * basic)) :=
-     match List.split l with (la,lb) => In x la end.
-
-
-Check List.find.
-
-Definition in_set_bool (x:var) (l:list (var * basic)) :=
-     match List.split l with (la,lb) => match List.find (fun y => y =? x) la with Some _ => true | _ => false end end.
-
-Inductive eq_state : state -> state -> Prop :=
-      | tensor_assoc : forall s1 s2 s3, eq_state (Tensor s1 (Tensor s2 s3)) (Tensor (Tensor s1 s2) s3)
-      | tensor_break_1 : forall n i j s,
-           eq_state (NTensor n i j s) (Tensor s  (NTensor n i (add_num j 1) s))
-      | tensor_empty : forall n i a s,
-           eq_state (Tensor a (NTensor n i n s)) a.
-
-
-Inductive eq_pred : predi -> predi -> Prop :=
-      | and_comm : forall s1 s2, eq_pred (PAnd s1 s2) (PAnd s2 s1)
-      | and_assoc : forall s1 s2 s3, eq_pred (PAnd s1 (PAnd s2 s3)) (PAnd (PAnd s1 s2) s3)
-      | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
-
-
+(* Define the ground term type system *)
 Inductive type_rotation := TV (b:aexp) | Infty.
 
 Inductive type_elem : Type := TH (b:type_rotation) | TQFT (b:type_rotation) | TRQFT (b:type_rotation).
@@ -202,6 +187,76 @@ Inductive type_system : num_env * type_env -> pexp -> num_env * type_env -> Prop
                                 [(y,m) |-> (QMix (QC ((x,n)::((y,m)::nil)) ((TH r)::qs)))])
     | app_cx_type_2 : forall S tv vs qs x n y m, tv (x,n)= QMix (QC vs (qs)) -> tv (y,m) = QMix (QS nil)
                 -> type_system (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) (S,eupdate_list tv ((y,m)::vs) (QMix (QC ((y,m)::vs) (qs)))).
+
+
+(* Definition Type predicates that will be used in triple. *)
+Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp) (p1:pexp_type) (p2:pexp_type).
+
+Definition tpred := list (tpred_elem).
+
+
+
+Definition add_num (x:aexp) (n:nat) := 
+    match x with APlus e1 (BA (Num m)) => APlus e1 (BA (Num (m+n)))
+               | APlus (BA (Num m)) e2 => APlus (BA (Num (m+n))) e2
+               | a => APlus a (BA (Num n))
+    end.
+
+Definition in_set (x:var) (l:list (var * basic)) :=
+     match List.split l with (la,lb) => In x la end.
+
+
+Check List.find.
+
+Definition in_set_bool (x:var) (l:list (var * basic)) :=
+     match List.split l with (la,lb) => match List.find (fun y => y =? x) la with Some _ => true | _ => false end end.
+
+Inductive eq_state : state -> state -> Prop :=
+      | tensor_assoc : forall s1 s2 s3, eq_state (Tensor s1 (Tensor s2 s3)) (Tensor (Tensor s1 s2) s3)
+      | tensor_break_1 : forall n i j s,
+           eq_state (NTensor n i j s) (Tensor s  (NTensor n i (add_num j 1) s))
+      | tensor_empty : forall n i a s,
+           eq_state (Tensor a (NTensor n i n s)) a.
+
+
+Inductive eq_pred : predi -> predi -> Prop :=
+      | and_comm : forall s1 s2, eq_pred (PAnd s1 s2) (PAnd s2 s1)
+      | and_assoc : forall s1 s2 s3, eq_pred (PAnd s1 (PAnd s2 s3)) (PAnd (PAnd s1 s2) s3)
+      | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
+
+
+Inductive triple : predi -> pexp -> predi -> Prop :=
+     | conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q)
+     | tensorSep_1 : forall x n P P' Q e , 
+           triple (PState ([(x,BA (Num n))]) P) e (PState ([(x,BA (Num n))]) P') ->
+           triple (PState ([(x,BA (Num n))]) (Tensor P Q)) e (PState ([(x,BA (Num n))]) (Tensor P' Q))
+     | tensorSep_2 : forall x n P Q Q' e , 
+           triple (PState ([(x,BA (Num n))]) Q) e (PState ([(x,BA (Num n))]) Q') ->
+           triple (PState ([(x,BA (Num n))]) (Tensor P Q)) e (PState ([(x,BA (Num n))]) (Tensor P Q'))
+     | tensorSep_3 : forall x n ys y i  e s, 
+           triple (PState ((x,BA (Num n))::ys) Q) e (PState ([(x,BA (Num n))]) Q') ->
+           triple (PState ((x,BA (Num n))::ys) (NTensor (BA (Num n)) y i s)) e (PState ([(x,BA (Num n))]) (NTensor (BA (Num n)) y i s)).
+     | appH : forall x i s n, is_0 s i ->
+         triple (PState ([(x,Num n)]) s)
+              (AppH (x,(Num i))) (PState ([(x,Num n)]) (change_h s i))
+     | appCX_1 : forall x i y j s v,  get_ket s x i = Some v -> is_ket s y j ->
+         triple s (CX (x,(Num i)) (y,(Num j))) (change_cx_1 s y j v)
+     | appCX_2 : forall x i y j s u v q,  get_sigma s x i = Some (u,v) -> is_ket s y j ->
+         triple s (CX (x,(Num i)) (y,(Num j))) (PAnd (turn_cx_2 s y j q)
+                       (Forall q (PAnd (CState (BLe (BA (Num 0)) (BA (Var q)))) (CState (BLt (BA (Var q)) (BA v))))
+                           (CState (BEq (Index (x,(Num i)) (BA (Var q))) (Index (y,(Num j)) (BA (Var q)))))))
+     | appState : forall P l x n i b e q, in_set x l ->
+         triple (PAnd P (PState l (NTensor (n:aexp) (i:var) (b:aexp) (ket e)))) (State x)
+                (PAnd P (PState l (NTensor (n:aexp) (i:var) (b:aexp) (Sigma (BA (Num 2)) q (BA (Num 0)) (times_phase q b)))))
+     | appCU : forall P l s1 s s' x p y j m k q b, in_set x l -> in_set y l ->
+         triple (PState ([(y,Num m)]) s) (Classic p) (PState ([(y,Num m)]) s') ->
+         triple (PAnd P (PState ((x,Num (j+1))::((y, Num m)::[]))
+                 (Tensor (Tensor (NTensor (BA (Num j)) k (BA (Num 0)) s1) (Sigma (BA (Num 2)) q (BA (Num 0)) (ket b))) s)))
+                    (CU (x,(Num j)) p y)
+                 (PAnd P (PState ((x,Num (j+1))::((y, Num m)::[]))
+                 (Tensor (NTensor (BA (Num j)) k (BA (Num 0)) s1) 
+                     (SPlus (Tensor (ket (BA (Num 0))) s) (Tensor (ket (BA (Num 1))) s'))))).
+
 
 (*
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:basic) (*representing 1/2^n of RZ rotation. *).
