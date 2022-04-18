@@ -71,7 +71,9 @@ Inductive state :Type :=
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
-Definition qpred := list (list (var * aexp) * state).
+Inductive qpred_elem := PState (l:list (var * aexp)) (s:state).
+
+Definition qpred := list (qpred_elem).
 
 
 (* Classical State including variable relations that may be quantum *)
@@ -225,7 +227,8 @@ Inductive eq_cpred : cpred -> cpred -> Prop :=
 
 Inductive eq_qpred : qpred -> qpred -> Prop :=
       | qpred_comm: forall x y, eq_qpred (x++y) (y++x)
-      | qpred_join : forall vs vsa s s1 qs, eq_qpred ((vs,s)::(vsa,s1)::qs) ((vs++vsa,Tensor s s1)::qs).
+      | qpred_join : forall vs vsa s s1 qs, 
+            eq_qpred ((PState vs s)::(PState vsa s1)::qs) (PState (vs++vsa) (Tensor s s1)::qs).
 
 
 Inductive eq_tpred : tpred -> tpred -> Prop :=
@@ -243,17 +246,19 @@ Inductive eq_pred : predi -> predi -> Prop :=
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
 *)
 
-Inductive triple : predi -> pexp -> predi -> Prop :=
-     | conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q)
-     | tensorSep_1 : forall x n P P' Q e , 
-           triple (PState ([(x,BA (Num n))]) P) e (PState ([(x,BA (Num n))]) P') ->
-           triple (PState ([(x,BA (Num n))]) (Tensor P Q)) e (PState ([(x,BA (Num n))]) (Tensor P' Q))
-     | tensorSep_2 : forall x n P Q Q' e , 
-           triple (PState ([(x,BA (Num n))]) Q) e (PState ([(x,BA (Num n))]) Q') ->
-           triple (PState ([(x,BA (Num n))]) (Tensor P Q)) e (PState ([(x,BA (Num n))]) (Tensor P Q'))
-     | tensorSep_3 : forall x n ys y i  e s, 
-           triple (PState ((x,BA (Num n))::ys) Q) e (PState ([(x,BA (Num n))]) Q') ->
-           triple (PState ((x,BA (Num n))::ys) (NTensor (BA (Num n)) y i s)) e (PState ([(x,BA (Num n))]) (NTensor (BA (Num n)) y i s)).
+Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
+     (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
+     | tensorSep_1 : forall x n qs P P' Q e T V, 
+           triple ((PState ([(x,BA (Num n))]) P)::qs, T, V) e ((PState ([(x,BA (Num n))]) P')::qs, T, V) ->
+           triple ((PState ([(x,BA (Num n))]) (Tensor P Q))::qs, T, V) e ((PState ([(x,BA (Num n))]) (Tensor P' Q))::qs, T, V)
+     | tensorSep_2 : forall x n P Q Q' e qs T V, 
+           triple ((PState ([(x,BA (Num n))]) Q)::qs,T,V) e ((PState ([(x,BA (Num n))]) Q')::qs,T,V) ->
+           triple ((PState ([(x,BA (Num n))]) (Tensor P Q))::qs,T,V) e ((PState ([(x,BA (Num n))]) (Tensor P Q'))::qs,T,V)
+     | tensorSep_3 : forall x m n ys y i  e s s' qs T V, m <= n ->
+           triple ((PState ((x,BA (Num m))::ys) (NTensor (BA (Num m)) y i s))::qs,T,V)
+                      e ((PState ([(x,BA (Num m))]) (NTensor (BA (Num m)) y i s'))::qs,T,V) ->
+           triple ((PState ((x,BA (Num n))::ys) (Tensor (NTensor (BA (Num m)) y i s) (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V) 
+                       e ((PState ([(x,BA (Num n))]) (Tensor (NTensor (BA (Num m)) y i s') (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V).
      | appH : forall x i s n, is_0 s i ->
          triple (PState ([(x,Num n)]) s)
               (AppH (x,(Num i))) (PState ([(x,Num n)]) (change_h s i))
