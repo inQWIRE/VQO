@@ -20,7 +20,6 @@ Local Open Scope pexp_scope.
 Local Open Scope nat_scope.
 
 (* This will be replaced by PQASM. *)
-
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
 Inductive basic := Var (x:var) | Num (n:nat).
 
@@ -29,6 +28,8 @@ Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e
 
 Definition posi :Type := (var * aexp).
 
+(* Ethan: exp here doesn't look right *)
+Print exp.
 Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTimes (f1:fexp) (f2:fexp) 
         | FDiv (f1:fexp) (f2:fexp)
         | FSum (n:aexp) (i:var) (b:aexp) (f:fexp)
@@ -47,6 +48,7 @@ Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (
     1.left-hand and right hand must have the same number of bits.
     2. the number of cases are exactly 2^n where n is the bit number.
     3. only permutation, both the left and right bitstrings must be distinct. *)
+(* Ethan: This doesn't make sense. *)
 Inductive numvar := NNum (n:nat) | NVar (x:var) | NFunApp (x:var) (y:var).
 
 Definition rz_val := nat.
@@ -66,18 +68,24 @@ Inductive state :Type :=
              | ket (b:aexp) (*normal state |0> false or |1> true *)
              | qket (p:fexp) (b:aexp)
              | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
+             (* Ethan: Not + below *)
              | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
              (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
+(* Ethan: What is this...
+ * Can we have records with named fields?
+ * This is really not self-documenting.
+ *)
 Inductive qpred_elem := PState (l:list (var * aexp)) (s:state).
 
 Definition qpred := list (qpred_elem).
 
 
 (* Classical State including variable relations that may be quantum *)
-
+(* Ethan: Need explanation on the forall rule.
+ * Not sure which parameter is what *)
 Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
              | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
 
@@ -102,15 +110,21 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 (* we want to include all the single qubit gates here in the U below. *)
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
+(* Ethan: By allowing RZ and CX gates, the user can write arbitrary circuit.
+ * We don't want to handle arbitrarily large matrices, right?
+ *)
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
+              (* Ethan: Init = reset = trace out = measurement... *)
               | InitQubit (p:posi) | AppU (e:singleGate) (p:posi) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
+            (* Ethan: What's args? *)
             | Classic (x:var) (p:exp) (args: list var) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
             | State (x:var)  (* We first assume that we have H first. state prepreation of n H. *)
             | QFT (x:var)
             | RQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
+            (* Ethan: Why is a "var" here? *)
             | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
             | CX (x:posi) (y:posi)  (* control x on to y. *)
             | CU (x:posi) (p:exp) (z:var) (args: list var) (* control-U on the reversible expression p from the control node x on to z. *)
