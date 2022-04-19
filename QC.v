@@ -187,6 +187,7 @@ Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) :=
             | (a::al) => (eupdate_list tv al p)[a |-> p]
         end.
 
+(* Ethan: Need discussion and example to understand how num_env works *)
 Inductive type_system : num_env * type_env -> pexp -> num_env * type_env -> Prop :=
     | seq_type : forall s1 s2 tv tv' tv'', type_system tv s1 tv' -> type_system tv' s1 tv'' -> type_system tv (PSeq s1 s2) tv''
     | app_h_type_1 : forall S tv x n, tv (x,n) = QMix (QS nil)
@@ -220,6 +221,7 @@ Definition add_num (x:aexp) (n:nat) :=
                | a => APlus a (BA (Num n))
     end.
 
+(* Ethan: Maybe just `fst` instead of match? *)
 Definition in_set (x:var) (l:list (var * basic)) :=
      match List.split l with (la,lb) => In x la end.
 
@@ -228,6 +230,10 @@ Check List.find.
 
 Definition in_set_bool (x:var) (l:list (var * basic)) :=
      match List.split l with (la,lb) => match List.find (fun y => y =? x) la with Some _ => true | _ => false end end.
+
+(* Ethan: Maybe better version below *)
+Definition in_set_bool' (x : var) (l : list (var * basic)) :=
+  in_dec Nat.eq_dec x (fst (List.split l)).
 
 Inductive eq_state : state -> state -> Prop :=
       | tensor_assoc : forall s1 s2 s3, eq_state (Tensor s1 (Tensor s2 s3)) (Tensor (Tensor s1 s2) s3)
@@ -260,6 +266,9 @@ Inductive eq_pred : predi -> predi -> Prop :=
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
 *)
 
+(* Ethan: Currently only works on 0?
+ * Also why is this construction necessary if we already have tensor rules?
+ *)
 Definition change_h (s:state) :=
    match s with (Tensor s1 (NTensor n i b (ket (BA (Num 0))))) => 
          Tensor s1 (Tensor (Sigma (BA (Num 2)) i (BA (Num 0)) (ket (BA (Var i)))) 
@@ -271,6 +280,7 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
      | tensorSep_1 : forall x n qs P P' Q e T V, 
            triple ((PState ([(x,BA (Num n))]) P)::qs, T, V) e ((PState ([(x,BA (Num n))]) P')::qs, T, V) ->
+           (* Ethan: Bigger space = need more variables? *)
            triple ((PState ([(x,BA (Num n))]) (Tensor P Q))::qs, T, V) e ((PState ([(x,BA (Num n))]) (Tensor P' Q))::qs, T, V)
      | tensorSep_2 : forall x n P Q Q' e qs T V, 
            triple ((PState ([(x,BA (Num n))]) Q)::qs,T,V) e ((PState ([(x,BA (Num n))]) Q')::qs,T,V) ->
