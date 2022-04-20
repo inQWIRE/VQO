@@ -346,10 +346,19 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
                       e ((PState ([(x,BA (Num m))]) (NTensor (BA (Num m)) y i s'))::qs,T,V) ->
            triple ((PState ((x,BA (Num n))::ys) (Tensor (NTensor (BA (Num m)) y i s) (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V) 
                        e ((PState ([(x,BA (Num n))]) (Tensor (NTensor (BA (Num m)) y i s') (NTensor (BA (Num n)) y (BA (Num m)) s)))::qs,T,V)
-     | appH : forall x p1 p2 i j t1 qs s T P , 
+     | appH_1 : forall x p1 p2 i j t1 qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
+              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P)
+     | appH_2 : forall x p1 p2 i j t1 qs s T P n ts, n < 2 ->
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH (TV (BA (Num n))))::ts))))::T, P)
+              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ts)))::T,  (CState (BEq i j))::P)
+     | appCX_1 : forall x p1 p2 i j t1 qs s T P , 
          triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
               (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
                             t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P).
+
 (*
      | appCX_1 : forall x i y j s v,  get_ket s x i = Some v -> is_ket s y j ->
          triple s (CX (x,(Num i)) (y,(Num j))) (change_cx_1 s y j v)
