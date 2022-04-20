@@ -33,7 +33,8 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
         | FDiv (f1:fexp) (f2:fexp)
         | FSum (n:aexp) (i:var) (b:aexp) (f:fexp)
         | FExp (f:fexp) | FSin (f:fexp) | FCos (f:fexp)
-        | FCom (f:fexp) (f1:fexp) (* a + b i *).
+        | FCom (f:fexp) (f1:fexp) (* a + b i *)
+        | FExpI (a:aexp) (* e^ 2pi i * a *).
 
 Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
                 | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp).
@@ -62,6 +63,7 @@ Fixpoint collect_var_fexp (a:fexp) :=
               | FExp e1 => (collect_var_fexp e1)
               | FSin e1 => (collect_var_fexp e1)
               | FCos e1 => (collect_var_fexp e1)
+              | FExpI e1 => collect_var_aexp e1
     end.
 
 Definition collect_var_bexp (b:bexp) :=
@@ -377,6 +379,11 @@ Definition change_cx (s:state) :=
       | a => a
    end.
 
+Definition add_phi (s:state) (p:aexp) := 
+   match s with SPlus s1 (qket f s2) => SPlus s1 (qket (FTimes (FExpI p) f) s2)
+    | a => a
+   end.
+
 Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
      | tensorSep_1 : forall x n qs P P' Q e T V, 
@@ -403,12 +410,15 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
          triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
               (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
                             t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P))
-     | appCU_1 : forall x p1 p2 i j t1 r ts qs s T P , 
+     | appCU_1 : forall x p1 p2 i y args p q sa t1 r s ts qs T P , 
          triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
-              (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P)).
+              (CU (x,i) p y args q sa) ((PState ([(x,p1)]) (add_phi s q))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq (BA (Var x)) sa)::P)).
 
 (*
+            | CU (x:posi) (p:exp) (z:var) (args: list var) (p:aexp) (s:aexp)
+
+
      | appCX_1 : forall x i y j s v,  get_ket s x i = Some v -> is_ket s y j ->
          triple s (CX (x,(Num i)) (y,(Num j))) (change_cx_1 s y j v)
      | appCX_2 : forall x i y j s u v q,  get_sigma s x i = Some (u,v) -> is_ket s y j ->
