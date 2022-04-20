@@ -25,21 +25,53 @@ Local Open Scope nat_scope.
 Inductive basic := Var (x:var) | Num (n:nat).
 
 Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
-           | TwoTo (e1:basic) | XOR (e1:aexp) (e2:aexp) | Index (x:posi) (a:aexp).
+           | TwoTo (e1:basic) | XOR (e1:aexp) (e2:aexp) | Index (x:var) (a:aexp).
 
 Definition posi :Type := (var * aexp).
 
 Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTimes (f1:fexp) (f2:fexp) 
         | FDiv (f1:fexp) (f2:fexp)
         | FSum (n:aexp) (i:var) (b:aexp) (f:fexp)
-        | FExp (f:fexp) | FSin (f:exp) | FCos (f:exp)
-        | FCom (f:exp) (f1:exp) (* a + b i *).
+        | FExp (f:fexp) | FSin (f:fexp) | FCos (f:fexp)
+        | FCom (f:fexp) (f1:fexp) (* a + b i *).
 
 Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
-                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:aexp).
+                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp).
 
+Definition collect_var_basic (b:basic) :=
+      match b with Var x => ([x]) | Num n => nil end.
 
-        
+Fixpoint collect_var_aexp (a:aexp) :=
+    match a with BA a => collect_var_basic a
+              | APlus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
+              | AMinus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
+              | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
+              | XOR e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
+              | Index x e2 =>  x::((collect_var_aexp e2))
+              | TwoTo e => collect_var_basic e
+    end.
+
+Fixpoint collect_var_fexp (a:fexp) :=
+    match a with Fixed a => nil
+              | FNeg e1 =>  (collect_var_fexp e1)
+              | FPlus e1 e2 =>  (collect_var_fexp e1)++(collect_var_fexp e2)
+              | FTimes e1 e2 =>  (collect_var_fexp e1)++(collect_var_fexp e2)
+              | FDiv e1 e2 =>  (collect_var_fexp e1)++(collect_var_fexp e2)
+              | FSum a i b f =>  (collect_var_aexp a)++(collect_var_aexp b)++(collect_var_fexp f)
+              | FCom e1 e2 => (collect_var_fexp e1)++(collect_var_fexp e2)
+              | FExp e1 => (collect_var_fexp e1)
+              | FSin e1 => (collect_var_fexp e1)
+              | FCos e1 => (collect_var_fexp e1)
+    end.
+
+Definition collect_var_bexp (b:bexp) :=
+   match b with BEq x y => (collect_var_aexp x)++(collect_var_aexp y)
+              | BGe x y => (collect_var_aexp x)++(collect_var_aexp y)
+              | BLt x y => (collect_var_aexp x)++(collect_var_aexp y)
+              | FEq x y => (collect_var_fexp x)++(collect_var_fexp y)
+              | FGe x y => (collect_var_fexp x)++(collect_var_fexp y)
+              | FLt x y => (collect_var_fexp x)++(collect_var_fexp y)
+   end.
 
 (*Pattern for walk. goto is describing matching patterns such as
     match |01> -> |10> | |00> -> |11> ...
@@ -103,7 +135,7 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
-              | InitQubit (p:posi) | AppU (e:singleGate) (p:posi) 
+              (*| InitQubit (p:posi) *) | AppU (e:singleGate) (p:posi) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
             | Classic (x:var) (p:exp) (args: list var) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
@@ -173,24 +205,59 @@ Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) :=
             | (a::al) => (eupdate_list tv al p)[a |-> p]
         end.
 
-Inductive type_system : num_env * type_env -> pexp -> num_env * type_env -> Prop :=
-    | seq_type : forall s1 s2 tv tv' tv'', type_system tv s1 tv' -> type_system tv' s1 tv'' -> type_system tv (PSeq s1 s2) tv''
-    | app_h_type_1 : forall S tv x n, tv (x,n) = QMix (QS nil)
-                -> type_system (S,tv) (AppU H_gate (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ([TH tazero])))]))
-    | app_h_type_2 : forall S tv qs x n, tv (x,n) = QMix (QS ((TH tazero)::qs))
-                -> type_system (S,tv) (AppU H_gate (x,BA (Num n)))(S, (tv[(x,n) |-> (QMix (QS qs))]))
-    | app_rqft_type_1 : forall S tv qs x n,
+Inductive mode := Qmode (x:var) | Cmode.
+
+Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x => (x <> b) end.
+
+Definition is_q_type (t:pexp_type) := match t with (QMix a) => True | _ => False end.
+
+Inductive type_system : mode -> num_env * type_env -> pexp -> num_env * type_env -> Prop :=
+    | seq_type : forall m s1 s2 tv tv' tv'', type_system m tv s1 tv' -> type_system m tv' s1 tv'' -> type_system m tv (PSeq s1 s2) tv''
+    | app_h_type_1 : forall m S tv x n, tv (x,n) = QMix (QS nil) -> check_mode m x ->
+                type_system m (S,tv) (AppU H_gate (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ([TH tazero])))]))
+    | app_h_type_2 : forall m S tv qs x n, tv (x,n) = QMix (QS ((TH tazero)::qs)) -> check_mode m x ->
+                type_system m (S,tv) (AppU H_gate (x,BA (Num n)))(S, (tv[(x,n) |-> (QMix (QS qs))]))
+    | app_qft_type_1 : forall m S tv x, check_mode m x ->
+                (forall i, i < S x -> tv (x,i) = QMix (QS (([]))))
+                -> type_system m (S,tv) (QFT x) (S,(eupdates_elem tv x (S x) (TQFT tazero)))
+    | app_qft_type_2 : forall m S tv x r qs, check_mode m x ->
+                (forall i, i < S x -> tv (x,i) = QMix (QS (((TQFT r)::qs))))
+                -> type_system m (S,tv) (QFT x) (S,(eupdates_rm tv x (S x) ))
+
+
+    | app_rqft_type_1 : forall m S tv qs x n, check_mode m x ->
                 S x = n -> (forall i r, i < n -> tv (x,i) = QMix (QS ((TH r)::qs)))
-                -> type_system (S,tv) (RQFT x) (S,(eupdates_elem tv x n (TRQFT Infty)))
-    | app_rqft_type_2 : forall S tv qs x n,
+                -> type_system m (S,tv) (RQFT x) (S,(eupdates_elem tv x n (TRQFT Infty)))
+    | app_rqft_type_2 : forall m S tv qs x n, check_mode m x ->
                 S x = n -> (forall i , i < n -> tv (x,i) = QMix (QS ((TQFT tazero)::qs)))
-                -> type_system (S,tv) (RQFT x) (S,(eupdates_rm tv x n ))
-    | app_cx_type_1 : forall S tv qs r x n y m, tv (x,n)= QMix (QS ((TH r)::qs)) -> tv (y,m) = QMix (QS nil)
-                -> type_system (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) 
+                -> type_system m (S,tv) (RQFT x) (S,(eupdates_rm tv x n ))
+    | app_cx_type_1 : forall ma S tv qs r x n y m, check_mode ma x -> check_mode ma y ->
+                     tv (x,n)= QMix (QS ((TH r)::qs)) -> tv (y,m) = QMix (QS nil)
+                -> type_system ma (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) 
                          (S,tv[(x,n) |-> (QMix (QC ((x,n)::((y,m)::nil)) ((TH r)::qs)))]
                                 [(y,m) |-> (QMix (QC ((x,n)::((y,m)::nil)) ((TH r)::qs)))])
-    | app_cx_type_2 : forall S tv vs qs x n y m, tv (x,n)= QMix (QC vs (qs)) -> tv (y,m) = QMix (QS nil)
-                -> type_system (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) (S,eupdate_list tv ((y,m)::vs) (QMix (QC ((y,m)::vs) (qs)))).
+    | app_cx_type_2 : forall ma S tv vs qs x n y m, check_mode ma x -> check_mode ma y ->
+               tv (x,n)= QMix (QC vs (qs)) -> tv (y,m) = QMix (QS nil)
+                -> type_system ma (S,tv) (CX (x,BA (Num n)) (y,BA (Num m))) (S,eupdate_list tv ((y,m)::vs) (QMix (QC ((y,m)::vs) (qs))))
+    | app_x_type_1 : forall ma S tv x n, check_mode ma x -> tv (x,n) = QMix (QS nil)
+                -> type_system ma (S,tv) (AppU X_gate (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ([])))]))
+    | app_x_type_2 : forall ma S tv x n r qs, check_mode ma x -> tv (x,n) = QMix (QS ((TH (TV r))::qs))
+                -> type_system ma (S,tv) (AppU X_gate (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ((TH (TV (APlus r (BA (Num 1)))))::qs)))]))
+    | app_rz_type_1 : forall ma S tv x n r, check_mode ma x -> tv (x,n) = QMix (QS ([]))
+                -> type_system ma (S,tv) (AppU (RZ_gate r) (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ([])))]))
+    | app_rz_type_2 : forall ma S tv x n q r qs, check_mode ma x -> tv (x,n) = QMix (QS ((TH (TV r))::qs))
+                -> type_system ma (S,tv) (AppU (RZ_gate q) (x,BA (Num n))) (S, (tv[(x,n) |-> (QMix (QS ((TH (TV (APlus r q)))::qs)))]))
+    | assign_type : forall ma S tv x v n, S x = v -> (forall i, i < v -> tv (x,i) = Class)
+                -> type_system ma (S,tv) (Assign x n) (S,tv)
+    | qwhile_type : forall S tv n x f b e, (forall y i, In y (collect_var_bexp b) -> x <> y -> i < S y -> (tv (y,i) = Proba \/ tv  (y,i) = Class)) ->
+          type_system (Qmode x) (S,tv) e (S,tv) -> type_system Cmode (S,tv) (QWhile n x f b e) (S,tv)
+    | while_type : forall S tv b e, (forall y i, In y (collect_var_bexp b) -> i < S y -> (tv (y,i) = Proba \/ tv  (y,i) = Class)) ->
+          type_system Cmode (S,tv) e (S,tv) -> type_system Cmode (S,tv) (While b e) (S,tv)
+    | mea_type : forall S tv a x, (forall i, i < S a -> tv (a,i) = Class) -> (forall i, i < S x -> is_q_type (tv (x,i))) ->
+                     type_system Cmode (S,tv) (Meas a x) (S,tv)
+    | pmea_type : forall S tv p a x, (forall i, i < S a -> tv (a,i) = Proba) ->
+         (forall i, i < S a -> tv (a,i) = Class) -> (forall i, i < S x -> is_q_type (tv (x,i))) ->
+                     type_system Cmode (S,tv) (PMeas p a x) (S,tv).
 
 
 (* Definition Type predicates that will be used in triple. *)
