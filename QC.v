@@ -135,7 +135,9 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
 Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
-              (*| InitQubit (p:posi) *) | AppU (e:singleGate) (p:posi) 
+              (*| InitQubit (p:posi) *) 
+              (* Ethan: Init = reset = trace out = measurement... commeneted out *)
+            | AppU (e:singleGate) (p:posi) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
             | Classic (x:var) (p:exp) (args: list var) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
@@ -211,6 +213,7 @@ Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x =
 
 Definition is_q_type (t:pexp_type) := match t with (QMix a) => True | _ => False end.
 
+(* Ethan: Need discussion and example to understand how num_env works *)
 Inductive type_system : mode -> num_env * type_env -> pexp -> num_env * type_env -> Prop :=
     | seq_type : forall m s1 s2 tv tv' tv'', type_system m tv s1 tv' -> type_system m tv' s1 tv'' -> type_system m tv (PSeq s1 s2) tv''
     | app_h_type_1 : forall m S tv x n, tv (x,n) = QMix (QS nil) -> check_mode m x ->
@@ -273,6 +276,7 @@ Definition add_num (x:aexp) (n:nat) :=
                | a => APlus a (BA (Num n))
     end.
 
+(* Ethan: Maybe just `fst` instead of match? *)
 Definition in_set (x:var) (l:list (var * basic)) :=
      match List.split l with (la,lb) => In x la end.
 
@@ -281,6 +285,10 @@ Check List.find.
 
 Definition in_set_bool (x:var) (l:list (var * basic)) :=
      match List.split l with (la,lb) => match List.find (fun y => y =? x) la with Some _ => true | _ => false end end.
+
+(* Ethan: Maybe better version below *)
+Definition in_set_bool' (x : var) (l : list (var * basic)) :=
+  in_dec Nat.eq_dec x (fst (List.split l)).
 
 Inductive eq_state : state -> state -> Prop :=
       | tensor_assoc : forall s1 s2 s3, eq_state (Tensor s1 (Tensor s2 s3)) (Tensor (Tensor s1 s2) s3)
@@ -313,6 +321,10 @@ Inductive eq_pred : predi -> predi -> Prop :=
       | and_tensor : forall l1 l2 s1 s2, eq_pred (PAnd (PState l1 s1) (PState l2 s2)) (PState (l1++l2) (Tensor s1 s2)).
 *)
 
+(* Ethan: Currently only works on 0?
+ * Also why is this construction necessary if we already have tensor rules?
+ *)
+
 Definition change_h (s:state) :=
    match s with (Tensor s1 (NTensor n i b (ket (BA (Num 0))))) => 
          Tensor s1 (Tensor (Sigma (BA (Num 2)) i (BA (Num 0)) (ket (BA (Var i)))) 
@@ -325,6 +337,7 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
      | tensorSep_1 : forall x n qs P P' Q e T V, 
            triple ((PState ([(x,BA (Num n))]) P)::qs, T, V) e ((PState ([(x,BA (Num n))]) P')::qs, T, V) ->
            triple ((PState ([(x,BA (Num n))]) (Tensor P Q))::qs, T, V) e ((PState ([(x,BA (Num n))]) (Tensor P' Q))::qs, T, V)
+           (* Ethan: Bigger space = need more variables? *)
      | tensorSep_2 : forall x n P Q Q' e qs T V, 
            triple ((PState ([(x,BA (Num n))]) Q)::qs,T,V) e ((PState ([(x,BA (Num n))]) Q')::qs,T,V) ->
            triple ((PState ([(x,BA (Num n))]) (Tensor P Q))::qs,T,V) e ((PState ([(x,BA (Num n))]) (Tensor P Q'))::qs,T,V)
