@@ -140,14 +140,17 @@ Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp)
             | AppU (e:singleGate) (p:posi) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | Classic (x:var) (p:exp) (args: list var) (*quantum of oracle computation. we use exp first (OQASM) for simplicity *)
+            | Classic (x:var) (p:exp) (args: list var) (p:aexp) (s:aexp)
+                   (*quantum of oracle computation. we use exp first (OQASM) for simplicity,
+                         p is the phase, s is a result state containing x *)
             | State (x:var)  (* We first assume that we have H first. state prepreation of n H. *)
             | QFT (x:var)
             | RQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
             | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
             | CX (x:posi) (y:posi)  (* control x on to y. *)
-            | CU (x:posi) (p:exp) (z:var) (args: list var) (* control-U on the reversible expression p from the control node x on to z. *)
+            | CU (x:posi) (p:exp) (z:var) (args: list var) (p:aexp) (s:aexp)
+             (* control-U on the reversible expression p from the control node x on to z. *)
             | QWhile (n:aexp) (x:var) (f:nat -> nat) (b:bexp) (e:pexp) 
                     (*max loop number of n, variable x, monotonic function f, bool b and e.*)
             | Reflect (x:var) (l:list (fexp * state)) (* Amplitude amplication, 
@@ -207,6 +210,16 @@ Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) :=
             | (a::al) => (eupdate_list tv al p)[a |-> p]
         end.
 
+Definition change_entangle (p:pexp_type) (l: list (var *nat)) :=
+    match p with QMix (QS a) => QMix (QC l a)
+             | a => a
+    end.
+
+Fixpoint eupdates_elem_ent (tv:type_env) (x:var) (n:nat) (p:list (var * nat)) := 
+        match n with 0 => tv
+            | S m => (eupdates_elem_ent tv x m p)[(x,m) |-> change_entangle (tv (x,m)) p]
+        end.
+
 Inductive mode := Qmode (x:var) | Cmode.
 
 Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x => (x <> b) end.
@@ -260,8 +273,18 @@ Inductive type_system : mode -> num_env * type_env -> pexp -> num_env * type_env
                      type_system Cmode (S,tv) (Meas a x) (S,tv)
     | pmea_type : forall S tv p a x, (forall i, i < S a -> tv (a,i) = Proba) ->
          (forall i, i < S a -> tv (a,i) = Class) -> (forall i, i < S x -> is_q_type (tv (x,i))) ->
-                     type_system Cmode (S,tv) (PMeas p a x) (S,tv).
-
+                     type_system Cmode (S,tv) (PMeas p a x) (S,tv)
+    | class_type : forall ma S tv x p args q s, (forall y i, In y args -> i < S y -> tv (y,i) = Class) ->
+          (forall i, i < S x -> is_q_type (tv (x,i))) -> (forall y, In y (collect_var_aexp s) -> y = x \/ In y args) ->
+           type_system ma (S,tv) (Classic x p args q s) (S,tv)
+    | cu_type_1 : forall ma S tv x a z p args q, (forall y i, In y args -> i < S y -> tv (y,i) = Class) ->
+          (is_q_type (tv (x,a))) -> (forall i, i < S z -> (tv (z,i)) = QMix (QS nil)) ->
+           type_system ma (S,tv) (CU (x,(BA (Num a))) p z args q (BA (Var x))) (S,tv)
+    | cu_type_2 : forall ma S tv x a z p args q n qs, n <> 0 ->
+           (forall y i, In y args -> i < S y -> tv (y,i) = Class) -> tv (x,a) = QMix (QS qs) ->
+           type_system ma (S,tv) (CU (x,(BA (Num a)))
+              p z args q (APlus (BA (Var x)) (BA (Num n)))) 
+           (S,eupdates_elem_ent (eupdate tv (x,a) (QMix (QC ((x,a)::(z,0)::nil) qs))) z (S z) ((x,a)::(z,0)::nil)) .
 
 (* Definition Type predicates that will be used in triple. *)
 Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp) (p1:pexp_type) (p2:pexp_type).
@@ -332,6 +355,28 @@ Definition change_h (s:state) :=
        | a => a
    end.
 
+(* effects of applying cx. *)
+Fixpoint change_cx_aux_1 (s:state) :=
+     match s with Sigma n i b s => Sigma n i b (change_cx_aux_1 s)
+       | NTensor n i b (ket (BA (Num 0))) => Tensor (NTensor n i b (ket (BA (Num 0)))) ((ket (BA (Num 1))))
+       | NTensor n i b (ket (BA (Num 1))) => Tensor (NTensor n i b (ket (BA (Num 1)))) ((ket (BA (Num 0))))
+     | a => a
+    end.
+
+Fixpoint change_cx_aux (s:state) :=
+     match s with Sigma n i b s => Sigma n i b (change_cx_aux s)
+       | NTensor n i b s => NTensor n i (APlus b (BA (Num 1))) s
+     | a => a
+    end.
+
+Definition change_cx (s:state) := 
+   match s with (Tensor s1 (NTensor n i b (ket (BA (Num 0)))))
+       => (Tensor (change_cx_aux s1) (NTensor n i (APlus b (BA (Num 1))) (ket (BA (Num 0))))) 
+      | (Tensor s1 (NTensor n i b (ket (BA (Num 1)))))
+       => (Tensor (change_cx_aux_1 s1) (NTensor n i (APlus b (BA (Num 1))) (ket (BA (Num 1))))) 
+      | a => a
+   end.
+
 Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
      | tensorSep_1 : forall x n qs P P' Q e T V, 
@@ -354,10 +399,14 @@ Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -
          triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH (TV (BA (Num n))))::ts))))::T, P)
               (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
                             t1 (QMix (QS ts)))::T,  (CState (BEq i j))::P)
-     | appCX_1 : forall x p1 p2 i j t1 qs s T P , 
-         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
-              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P).
+     | appCX_1 : forall x p1 p2 i j t1 r ts qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
+              (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P))
+     | appCU_1 : forall x p1 p2 i j t1 r ts qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
+              (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P)).
 
 (*
      | appCX_1 : forall x i y j s v,  get_ket s x i = Some v -> is_ket s y j ->
