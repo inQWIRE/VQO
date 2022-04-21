@@ -109,6 +109,9 @@ Inductive qpred_elem := PState (l:list (var * aexp)) (s:state).
 
 Definition qpred := list (qpred_elem).
 
+Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
+             | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
 
+Definition cpred := list cpred_elem.
 
 

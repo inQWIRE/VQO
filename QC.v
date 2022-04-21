@@ -25,11 +25,6 @@ Local Open Scope nat_scope.
 
 (* Classical State including variable relations that may be quantum *)
 
-Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
-             | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
-
-Definition cpred := list cpred_elem.
-
 (*
 Inductive predi := PTrue | PFalse | PState (l:list (var * aexp)) (s:state)
                     (* quantum variable, its initial position and qubit size and the state representation*)
