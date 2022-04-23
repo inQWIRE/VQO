@@ -129,7 +129,7 @@ Inductive z3_pred := ztrue | zfalse
     | zle (a:z3_exp) (b:z3_exp) | zlt (a:z3_exp) (b:z3_exp)
     | znot (a:z3_pred) | zand (a:z3_pred) (b:z3_pred)
     | zimply (a:z3_pred) (b:z3_pred)
-    | lambda (x:var) (z:z3_pred) | ite (b:z3_pred) (l:z3_pred) (r:z3_pred)
+    | lambdaITE (x:var) (b:z3_pred) (l:z3_pred) (r:z3_pred) | ite (b:z3_pred) (l:z3_pred) (r:z3_pred)
     | zread (a:basic) (n:aexp) | write (a:basic) (n:aexp) (v:ze_arr_elem)
     | zset (a:basic) (p:basic) (v:ze_arr_elem) (s:basic)
     | zsetInf (a:basic) (p:basic) (v:ze_arr_elem)
@@ -211,6 +211,28 @@ Definition trans_qubit (v:state) (x:var) (i:aexp)  :=
 
                | _ => None
     end.
+
+Fixpoint trans_tensor' (v:state) (x:var) (i:aexp) :=
+   match v with NTensor h y l s =>
+       match trans_qubit s x (BA (Var y)) with None => None
+                 | Some p => Some (zand (lambdaITE y (zand (zle (z3_ba i) (z3_ba (BA (Var y)))) (zlt (z3_ba (BA (Var y))) (z3_ba h)))
+                                       p (zread (Var x) (BA (Var y)))) (zeq (z3_ba i) (z3_ba l)),h)
+       end
+             | Tensor s1 s2 => match trans_tensor' s1 x i with None => None
+                                           | Some (p1,h1) => 
+                                match trans_tensor' s2 x h1 with None => None
+                                          | Some (p2,h2) => 
+                                     Some (zand p1 p2, h2)
+                                end
+                              end
+    | _ => None
+   end.
+Definition trans_tensor (v:state) (x:var) (n:nat) := 
+       match trans_tensor' v x (BA (Num 0)) with None => None
+                                  | Some (p,h) => Some (zand p (zeq (z3_ba h) (z3_ba (BA (Num n)))))
+       end.
+
+
 (* 
 
               | NTensor n i b s => 
