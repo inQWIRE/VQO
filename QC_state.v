@@ -115,3 +115,118 @@ Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred
 Definition cpred := list cpred_elem.
 
 
+(* compilation to Z3. *)
+Inductive ze_qubit_elem := znone | zsome (n:aexp).
+
+Definition ze_arr_elem :Set :=  (ze_qubit_elem * ze_qubit_elem).
+
+Inductive z3_exp := z3_ba (a:aexp)
+                 | z3_lem (a:ze_arr_elem).
+
+Inductive z3_pred := ztrue | zfalse
+    | zqeq (a:z3_exp) (b:z3_exp)
+    | zeq (a:z3_exp) (b:z3_exp) 
+    | zle (a:z3_exp) (b:z3_exp) | zlt (a:z3_exp) (b:z3_exp)
+    | znot (a:z3_pred) | zand (a:z3_pred) (b:z3_pred)
+    | zimply (a:z3_pred) (b:z3_pred)
+    | lambda (x:var) (z:z3_pred) | ite (b:z3_pred) (l:z3_pred) (r:z3_pred)
+    | zread (a:basic) (n:aexp) | write (a:basic) (n:aexp) (v:ze_arr_elem)
+    | zset (a:basic) (p:basic) (v:ze_arr_elem) (s:basic)
+    | zsetInf (a:basic) (p:basic) (v:ze_arr_elem)
+    | zcopy (a:basic) (p:basic) (b:basic) (q:basic) (s:basic)
+    | zcopyInf (a:basic) (p:basic) (b:basic) (q:basic)
+    | zforall (x:var) (a:z3_pred).
+
+
+Axiom var_num_map : var -> nat.
+
+Axiom encode_fexp : fexp -> aexp.
+
+Definition fresh (l:nat) := l +1.
+
+(*
+Definition elem_diff x n y m u v :=
+     zforall u (zforall v (zimply (zand (zand (zle (z3_plus x (z3_ba (Num 0))) (z3_ba (Var u))) 
+               (zlt (z3_ba (Var u)) (z3_plus x n))) 
+         (zand (zle (z3_plus y (z3_ba (Num 0))) (z3_ba (Var v))) 
+               (zlt (z3_ba (Var v)) (z3_plus y m)))) (znot (zeq (z3_ba (Var u)) (z3_ba (Var v)))))).
+
+Definition set_diff :var := 1.
+
+Fixpoint set_elem_diff_aux (x:var) (l:list var) (freshs:nat) :=
+    match l with [] => (ztrue,freshs)
+            | y::ys => let u := fresh freshs in let v := fresh (fresh freshs) in
+          match (set_elem_diff_aux x ys (fresh (fresh freshs))) with (next1,fre) =>
+          (zand (elem_diff (z3_ba (Var (var_map x))) (z3_ba (Var (var_map y)))
+                 (z3_ba (Num (var_num_map x))) (z3_ba (Num (var_num_map y))) u v) next1,fre)
+          end
+    end.
+
+Fixpoint set_elem_diff (l:list var) (freshs:nat) :=
+      match l with [] => ztrue
+                 | (x::xs) =>
+               match set_elem_diff_aux x xs freshs with (new,fre) => 
+                   zand new (set_elem_diff xs fre)
+               end
+      end.
+*)
+
+Definition subst_basic (v:basic) (x:var) (i:nat) :=
+  match v with Var y => if x =? y then Num i else Var y
+            | Num a => Num a
+  end.
+
+Fixpoint subst_aexp (a:aexp) (x:var) (i:nat) :=
+    match a with BA b => BA (subst_basic b x i)
+             | APlus e1 e2 => APlus (subst_aexp e1 x i) (subst_aexp e2 x i)
+             | AMinus e1 e2 => AMinus (subst_aexp e1 x i) (subst_aexp e2 x i)
+             | AMult e1 e2 => AMult (subst_aexp e1 x i) (subst_aexp e2 x i)
+             | TwoTo e1 => TwoTo (subst_basic e1 x i)
+             | XOR e1 e2 => XOR (subst_aexp e1 x i) (subst_aexp e2 x i)
+             | Index y a => if y =? x then Index y a else Index y (subst_aexp a x i)
+    end.
+
+Definition trans_qubit (v:state) (x:var) (i:aexp)  :=
+    match v with ket a => Some (ite (zeq (z3_ba a) (z3_ba (BA (Num 0))))
+                                    (write (Var x) i (zsome (BA (Num 1)), znone))
+                                    (write (Var x) i (znone,zsome (BA (Num 1)))))
+                | qket p a => Some (ite (zeq (z3_ba a) (z3_ba (BA (Num 0))))
+                                    (write (Var x) i (zsome (encode_fexp p), znone))
+                                    (write (Var x) i (znone,zsome (encode_fexp p))))
+                | SPlus (qket p a) (qket q b) =>
+                              Some (zand
+                                      (write (Var x) i (zsome (encode_fexp p), zsome (encode_fexp q)))
+                                      (zand (zeq (z3_ba a) (z3_ba (BA (Num 0))))
+                                            (zeq (z3_ba b) (z3_ba (BA (Num 1))))))
+                | Sigma (BA (Num 2)) j b (ket a) =>
+                              Some (zand
+                                      (write (Var x) i (zsome (BA (Num 1)), zsome (BA (Num 1))))
+                                      (zand (zeq (z3_ba (subst_aexp a j 0)) (z3_ba (BA (Num 0))))
+                                            (zeq (z3_ba (subst_aexp a j 1)) (z3_ba (BA (Num 1))))))
+                | Sigma (BA (Num 2)) j b (qket p a) =>
+                              Some (zand
+                                      (write (Var x) i (zsome (encode_fexp p), zsome (encode_fexp p)))
+                                      (zand (zeq (z3_ba (subst_aexp a j 0)) (z3_ba (BA (Num 0))))
+                                            (zeq (z3_ba (subst_aexp a j 1)) (z3_ba (BA (Num 1))))))
+
+               | _ => None
+    end.
+(* 
+
+              | NTensor n i b s => 
+              | Sigma n i b s => 
+
+
+             | STrue (* meaning that the initial state with any possible values. *)
+             | ket (b:aexp) (*normal state |0> false or |1> true *)
+             | qket (p:fexp) (b:aexp)
+             | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
+             | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
+             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
+             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
+             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
+
+
+Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
+           | TwoTo (e1:basic) | XOR (e1:aexp) (e2:aexp) | Index (x:var) (a:aexp).
+*)
