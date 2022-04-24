@@ -25,7 +25,7 @@ Local Open Scope nat_scope.
 Inductive basic := Var (x:var) | Num (n:nat).
 
 Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
-           | TwoTo (e1:basic) | XOR (e1:aexp) (e2:aexp) | Index (x:var) (a:aexp).
+           | TwoTo (e1:aexp) | XOR (e1:aexp) (e2:aexp) | Index (x:var) (a:aexp).
 
 Definition posi :Type := (var * aexp).
 
@@ -49,7 +49,7 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | XOR e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | Index x e2 =>  x::((collect_var_aexp e2))
-              | TwoTo e => collect_var_basic e
+              | TwoTo e => collect_var_aexp e
     end.
 
 Fixpoint collect_var_fexp (a:fexp) :=
@@ -116,26 +116,35 @@ Definition cpred := list cpred_elem.
 
 
 (* compilation to Z3. *)
-Inductive ze_qubit_elem := znone | zsome (n:aexp).
 
-Definition ze_arr_elem :Set :=  (ze_qubit_elem * ze_qubit_elem).
+Inductive z3_exp := z3_var (x:var)
+                 | z3_bit (n:ze_qubit_elem)
+                 | Pair (a:ze_qubit_elem) (z2:ze_qubit_elem)
+                 | ite (b:z3_pred) (l:z3_exp) (r:z3_exp)
+                 | lambdaITE (x:var) (b:z3_pred) (l:z3_exp) (r:z3_exp)
+                 | zread (a:z3_exp) (b:aexp)
+                 | zwrite (a:z3_exp) (n:aexp) (v:z3_exp)
+                 | zset (a:z3_exp) (p:aexp) (v:z3_exp) (s:aexp)
+                 | zsetInf (a:z3_exp) (p:aexp) (v:z3_exp)
+                 | zcopy (a:z3_exp) (p:aexp) (b:z3_exp) (q:z3_exp) (s:aexp)
+                 | zcopyInf (a:z3_exp) (p:aexp) (b:z3_exp) (q:z3_exp)
+                 | intRead (x:z3_exp) (a:aexp) | intValue (n:aexp)
 
-Inductive z3_exp := z3_ba (a:aexp)
-                 | z3_lem (a:ze_arr_elem).
-
-Inductive z3_pred := ztrue | zfalse
+with z3_pred := ztrue | zfalse
     | zqeq (a:z3_exp) (b:z3_exp)
-    | zeq (a:z3_exp) (b:z3_exp) 
-    | zle (a:z3_exp) (b:z3_exp) | zlt (a:z3_exp) (b:z3_exp)
+    | zeq (a:aexp) (b:aexp) 
+    | zle (a:aexp) (b:aexp) | zlt (a:aexp) (b:aexp)
     | znot (a:z3_pred) | zand (a:z3_pred) (b:z3_pred)
+    | zor (a:z3_pred) (b:z3_pred)
     | zimply (a:z3_pred) (b:z3_pred)
-    | lambdaITE (x:var) (b:z3_pred) (l:z3_pred) (r:z3_pred) | ite (b:z3_pred) (l:z3_pred) (r:z3_pred)
-    | zread (a:basic) (n:aexp) | write (a:basic) (n:aexp) (v:ze_arr_elem)
-    | zset (a:basic) (p:basic) (v:ze_arr_elem) (s:basic)
-    | zsetInf (a:basic) (p:basic) (v:ze_arr_elem)
-    | zcopy (a:basic) (p:basic) (b:basic) (q:basic) (s:basic)
-    | zcopyInf (a:basic) (p:basic) (b:basic) (q:basic)
-    | zforall (x:var) (a:z3_pred).
+    | zforall (x:var) (a:z3_pred)
+
+with ze_qubit_elem := znone | zsome (n:aexp) | elem_var (x:var) 
+       | zget (a:z3_exp) (b:aexp) (c:z3_exp) | ztimes (n1:aexp) (z:ze_qubit_elem).
+
+Definition write_left (a:z3_exp) (n:aexp) (v:aexp) := zwrite a n (Pair ((zsome v)) (zget a n (intValue (BA (Num 1))))).
+
+Definition write_right (a:z3_exp) (n:aexp) (v:aexp) := zwrite a n (Pair (zget a n (intValue (BA (Num 0)))) ( (zsome v))).
 
 
 Axiom var_num_map : var -> nat.
@@ -181,59 +190,92 @@ Fixpoint subst_aexp (a:aexp) (x:var) (i:nat) :=
              | APlus e1 e2 => APlus (subst_aexp e1 x i) (subst_aexp e2 x i)
              | AMinus e1 e2 => AMinus (subst_aexp e1 x i) (subst_aexp e2 x i)
              | AMult e1 e2 => AMult (subst_aexp e1 x i) (subst_aexp e2 x i)
-             | TwoTo e1 => TwoTo (subst_basic e1 x i)
+             | TwoTo e1 => TwoTo (subst_aexp e1 x i)
              | XOR e1 e2 => XOR (subst_aexp e1 x i) (subst_aexp e2 x i)
              | Index y a => if y =? x then Index y a else Index y (subst_aexp a x i)
     end.
 
-Definition trans_qubit (v:state) (x:var) (i:aexp)  :=
-    match v with ket a => Some (ite (zeq (z3_ba a) (z3_ba (BA (Num 0))))
-                                    (write (Var x) i (zsome (BA (Num 1)), znone))
-                                    (write (Var x) i (znone,zsome (BA (Num 1)))))
-                | qket p a => Some (ite (zeq (z3_ba a) (z3_ba (BA (Num 0))))
-                                    (write (Var x) i (zsome (encode_fexp p), znone))
-                                    (write (Var x) i (znone,zsome (encode_fexp p))))
+Definition trans_qubit (v:state) (x:z3_exp) (i:aexp)  :=
+    match v with ket a => Some (ite (zeq (a) ((BA (Num 0))))
+                                    (zwrite ( x) i (Pair (zsome (BA (Num 1))) znone))
+                                    (zwrite ( x) i (Pair znone (zsome (BA (Num 1))))), ztrue)
+                | qket p a => Some (ite (zeq ( a) ( (BA (Num 0))))
+                                    (zwrite ( x) i (Pair (zsome (encode_fexp p)) znone))
+                                    (zwrite ( x) i (Pair znone (zsome (encode_fexp p)))),ztrue)
                 | SPlus (qket p a) (qket q b) =>
-                              Some (zand
-                                      (write (Var x) i (zsome (encode_fexp p), zsome (encode_fexp q)))
-                                      (zand (zeq (z3_ba a) (z3_ba (BA (Num 0))))
-                                            (zeq (z3_ba b) (z3_ba (BA (Num 1))))))
+                              Some (zwrite ( x) i (Pair (zsome (encode_fexp p)) (zsome (encode_fexp q))),
+                                      (zand (zeq ( a) ( (BA (Num 0))))
+                                            (zeq ( b) ( (BA (Num 1))))))
                 | Sigma (BA (Num 2)) j b (ket a) =>
-                              Some (zand
-                                      (write (Var x) i (zsome (BA (Num 1)), zsome (BA (Num 1))))
-                                      (zand (zeq (z3_ba (subst_aexp a j 0)) (z3_ba (BA (Num 0))))
-                                            (zeq (z3_ba (subst_aexp a j 1)) (z3_ba (BA (Num 1))))))
+                              Some (zwrite ( x) i (Pair (zsome (BA (Num 1))) (zsome (BA (Num 1)))),
+                                      (zand (zeq ( (subst_aexp a j 0)) ( (BA (Num 0))))
+                                            (zeq ( (subst_aexp a j 1)) ( (BA (Num 1))))))
                 | Sigma (BA (Num 2)) j b (qket p a) =>
-                              Some (zand
-                                      (write (Var x) i (zsome (encode_fexp p), zsome (encode_fexp p)))
-                                      (zand (zeq (z3_ba (subst_aexp a j 0)) (z3_ba (BA (Num 0))))
-                                            (zeq (z3_ba (subst_aexp a j 1)) (z3_ba (BA (Num 1))))))
+                              Some (zwrite ( x) i (Pair (zsome (encode_fexp p)) (zsome (encode_fexp p))),
+                                      (zand (zeq ( (subst_aexp a j 0)) ( (BA (Num 0))))
+                                            (zeq ( (subst_aexp a j 1)) ( (BA (Num 1))))))
+                | _ => None
+   end.
 
-               | _ => None
-    end.
+Definition trans_qubit_one (v:state) (x:z3_exp) (i:aexp) (y:z3_exp) (ind:var) (m:nat)  :=
+    match v with ket a => Some (zwrite y i (z3_bit (zget x i (intValue (subst_aexp a ind m)))))
+               | qket p a => Some (zwrite y i (z3_bit (ztimes (encode_fexp p) (zget x i (intValue (subst_aexp a ind m))))))
+             | _ => None
+   end.
 
-Fixpoint trans_tensor' (v:state) (x:var) (i:aexp) :=
+
+Fixpoint trans_tensor' (v:state) (x:z3_exp) (i:aexp) (yh:z3_exp) :=
    match v with NTensor h y l s =>
        match trans_qubit s x (BA (Var y)) with None => None
-                 | Some p => Some (zand (lambdaITE y (zand (zle (z3_ba i) (z3_ba (BA (Var y)))) (zlt (z3_ba (BA (Var y))) (z3_ba h)))
-                                       p (zread (Var x) (BA (Var y)))) (zeq (z3_ba i) (z3_ba l)),h)
+                 | Some (ps,pr) => Some ((lambdaITE y (zand (zle ( i) ( (BA (Var y)))) (zlt ( (BA (Var y))) ( h)))
+                                       ps (zread x (BA (Var y)))), zand pr (zeq ( i) ( l)),h)
        end
-             | Tensor s1 s2 => match trans_tensor' s1 x i with None => None
-                                           | Some (p1,h1) => 
-                                match trans_tensor' s2 x h1 with None => None
-                                          | Some (p2,h2) => 
-                                     Some (zand p1 p2, h2)
+             | Tensor s1 s2 => match trans_tensor' s1 x i yh with None => None
+                                           | Some (p1,pr1,h1) => 
+                                match trans_tensor' s2 p1 h1 yh with None => None
+                                          | Some (p2,pr2,h2) => 
+                                     Some (p2, zand pr1 pr2, h2)
                                 end
                               end
-    | _ => None
+            | Sigma (BA (Num 2)) j b (NTensor h k l s) =>
+                  match trans_qubit_one s x (BA (Var k)) yh j 0 with None => None 
+                        | Some p1 => 
+                     match trans_qubit_one s x (BA (Var k)) yh j 1 with None => None 
+                        | Some p2 => Some (lambdaITE k (zand (zle i (BA (Var k))) (zlt ( (BA (Var k))) ( h)))
+                                             (ite (zeq (BA (Var j)) (BA (Num 0))) p1 p2) 
+                                             (zread yh (BA (Var k))), (zeq ( i) ( l)),h)
+                     end 
+                 end
+    | a => match trans_qubit a x i with None => None | Some (p,pr) => Some (p,pr,APlus i (BA (Num 1))) end
    end.
-Definition trans_tensor (v:state) (x:var) (n:nat) := 
-       match trans_tensor' v x (BA (Num 0)) with None => None
-                                  | Some (p,h) => Some (zand p (zeq (z3_ba h) (z3_ba (BA (Num n)))))
+Definition trans_tensor (v:state) (x:z3_exp) (n:nat) (yh:var) := 
+       match trans_tensor' v x (BA (Num 0)) (z3_var yh) with None => None
+                                  | Some (p,pr,h) => Some (p,zand pr (zeq ( h) ( (BA (Num n)))),h)
        end.
 
 
-(* 
+Definition is_tensor (v:state) := match v with NTensor h y l s => true | Tensor s1 s2 => true | _ => false end.
+
+
+Definition trans_sigma (v:state) (x:var) (n:nat) (y:var) (z:var) (fresh:var) := 
+    match v with | Sigma (TwoTo q) j b s =>
+     let u := fresh in let v := fresh+1 in let w := fresh+2 in
+       Some (z3_var z, zforall u (zforall v (zimply (zand (zand (zle (BA (Num 0)) (BA (Var v))) (zlt (BA (Var v)) q))
+                            (zor (zqeq ( (intRead (z3_var u) (BA (Var v)))) ( (intValue (BA (Num 0)))))
+                                 (zqeq ( (intRead (z3_var u) (BA (Var v)))) ( (intValue (BA (Num 1)))))))
+                     (zqeq (lambdaITE w ((zand (zle (BA (Num 0)) (BA (Var v))) (zlt (BA (Var v)) q)))
+                                        (zread (z3_var z) (BA (Var w)))
+                                        (zread (z3_var z) (BA (Num 0))))
+                           (lambdaITE w ((zand (zle (BA (Num 0)) (BA (Var v))) (zlt (BA (Var v)) q)))
+                                        (z3_bit (zget (z3_var x) (BA (Var w)) (intRead (z3_var u) (BA (Var w)))))
+                                        (zread (z3_var x) (BA (Num 0))))))), fresh+3)
+       
+    | a => match trans_tensor a (z3_var x) n y with None => None
+            | Some (p,pr,h) => Some (p,pr,fresh)
+           end
+    end.
+
+(*
 
               | NTensor n i b s => 
               | Sigma n i b s => 

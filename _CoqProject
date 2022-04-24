@@ -35,3 +35,4 @@ OracleExample.v
 ArithTesting.v
 ExtrOQASM.v
 QC_state.v
+QC.v
