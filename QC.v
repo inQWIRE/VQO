@@ -44,25 +44,27 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
 (* we want to include all the single qubit gates here in the U below. *)
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
-Inductive pexp := PSKIP | Abort | Assign (x:var) (n:aexp) 
+Inductive pexp := PSKIP (a:vari) | Assign (x:var) (n:aexp) 
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
-            | AppU (e:singleGate) (p:posi) 
+            | AppU (e:singleGate) (p:vari) 
             | PSeq (s1:pexp) (s2:pexp)
             | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
-            | Classic (x:var) (p:exp) (args: list var) (q:aexp) (s:aexp)
-                   (*quantum of oracle computation. we use exp first (OQASM) for simplicity,
-                         p is the phase, s is a result state containing x *)
-            | State (x:var)  (* We first assume that we have H first. state prepreation of n H. *)
+            | Classic (p:exp) (args: list (var * aexp * aexp))
+                   (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
+                      the first argument is the list of variables of quantum to p,
+                       the second arguments a is the phase of the post-state of x,
+                       the third is the state s = f(x) as |x> -> e^2pi i * a *|s>  *)
             | QFT (x:var)
             | RQFT (x:var)
+            | Abort (a:vari)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
             | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
-            | CX (x:posi) (y:posi)  (* control x on to y. *)
-            | CU (x:posi) (p:exp) (z:var) (args: list var) (q:aexp) (s:aexp)
+          (*  | CX (x:posi) (y:posi)  (* control x on to y. *)
+            | CU (x:posi) (p:exp) (z:var) (args: list var) (q:aexp) (s:aexp) *)
              (* control-U on the reversible expression p from the control node x on to z. *)
-            | QWhile (n:aexp) (x:var) (f:nat -> nat) (b:bexp) (e:pexp) 
-                    (*max loop number of n, variable x, monotonic function f, bool b and e.*)
+            | QWhile (n:aexp) (x:var) (f:aexp) (b:bexp) (e:pexp) 
+                    (*max loop number of n, variable x, monotonic function f on x as x -> f(x), bool b and e.*)
             | Reflect (x:var) (l:list (fexp * state)) (* Amplitude amplication, 
                   each list is a node to amplify, (p,t), where p is the probability and t is a position. *)
                   (*we can restrict the syntax of reflect to a list of probabilty with tensor summasion formula. *)
@@ -91,9 +93,9 @@ Definition num_env := (var -> nat).
 
 Definition value_env := (var -> nat).
 
-Definition azero := BA (Num 0).
+Definition azero :=  (Num 0).
 
-Definition tazero := TV (BA (Num 0)).
+Definition tazero := TV ( (Num 0)).
 
 Definition add_p_env (p:pexp_type) (ty:type_elem) :=
     match p with (QMix (QS qs)) => (QMix (QS (ty::qs)))

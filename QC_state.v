@@ -22,12 +22,15 @@ Local Open Scope nat_scope.
 (* This will be replaced by PQASM. *)
 
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
-Inductive basic := Var (x:var) | Num (n:nat).
 
-Inductive aexp := BA (b:basic) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
-           | TwoTo (e1:aexp) | XOR (e1:aexp) (e2:aexp) | Index (x:var) (a:aexp).
+Inductive aexp := BA (b:vari) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
+           | TwoTo (e1:aexp) | XOR (e1:aexp) (e2:aexp)
 
+with vari := Var(x:var) | Index (x:var) (a:aexp).
+
+(*
 Definition posi :Type := (var * aexp).
+*)
 
 Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTimes (f1:fexp) (f2:fexp) 
         | FDiv (f1:fexp) (f2:fexp)
@@ -37,20 +40,22 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
         | FExpI (a:aexp) (* e^ 2pi i * a *).
 
 Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
-                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp).
+                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp)
+                | BTest (x:aexp).
 
-Definition collect_var_basic (b:basic) :=
-      match b with Var x => ([x]) | Num n => nil end.
 
 Fixpoint collect_var_aexp (a:aexp) :=
     match a with BA a => collect_var_basic a
+              | Num x => nil
               | APlus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | AMinus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | XOR e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
-              | Index x e2 =>  x::((collect_var_aexp e2))
               | TwoTo e => collect_var_aexp e
-    end.
+    end
+
+with  collect_var_basic (b:vari) :=
+      match b with Var x => ([x]) | Index x e2 =>  x::((collect_var_aexp e2)) end.
 
 Fixpoint collect_var_fexp (a:fexp) :=
     match a with Fixed a => nil
@@ -73,6 +78,7 @@ Definition collect_var_bexp (b:bexp) :=
               | FEq x y => (collect_var_fexp x)++(collect_var_fexp y)
               | FGe x y => (collect_var_fexp x)++(collect_var_fexp y)
               | FLt x y => (collect_var_fexp x)++(collect_var_fexp y)
+              | BTest x => collect_var_aexp x
    end.
 
 (*Pattern for walk. goto is describing matching patterns such as
@@ -97,8 +103,8 @@ Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
 (* Quantum State *)
 Inductive state :Type :=
              | STrue (* meaning that the initial state with any possible values. *)
-             | ket (b:aexp) (*normal state |0> false or |1> true *)
-             | qket (p:fexp) (b:aexp)
+             | ket (b:bexp) (*normal state |0> false or |1> true *)
+             | qket (p:fexp) (b:bexp)
              | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
              | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
              (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
@@ -142,6 +148,7 @@ with z3_pred := ztrue | zfalse
 with ze_qubit_elem := znone | zsome (n:aexp) | elem_var (x:var) 
        | zget (a:z3_exp) (b:aexp) (c:z3_exp) | ztimes (n1:aexp) (z:ze_qubit_elem).
 
+(*
 Definition write_left (a:z3_exp) (n:aexp) (v:aexp) := zwrite a n (Pair ((zsome v)) (zget a n (intValue (BA (Num 1))))).
 
 Definition write_right (a:z3_exp) (n:aexp) (v:aexp) := zwrite a n (Pair (zget a n (intValue (BA (Num 0)))) ( (zsome v))).
@@ -152,7 +159,7 @@ Axiom var_num_map : var -> nat.
 Axiom encode_fexp : fexp -> aexp.
 
 Definition fresh (l:nat) := l +1.
-
+*)
 (*
 Definition elem_diff x n y m u v :=
      zforall u (zforall v (zimply (zand (zand (zle (z3_plus x (z3_ba (Num 0))) (z3_ba (Var u))) 
@@ -180,6 +187,7 @@ Fixpoint set_elem_diff (l:list var) (freshs:nat) :=
       end.
 *)
 
+(*
 Definition subst_basic (v:basic) (x:var) (i:nat) :=
   match v with Var y => if x =? y then Num i else Var y
             | Num a => Num a
@@ -274,7 +282,7 @@ Definition trans_sigma (v:state) (x:var) (n:nat) (y:var) (z:var) (fresh:var) :=
             | Some (p,pr,h) => Some (p,pr,fresh)
            end
     end.
-
+*)
 (*
 
               | NTensor n i b s => 
