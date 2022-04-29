@@ -136,7 +136,7 @@ Fixpoint eupdates_elem_ent (tv:type_env) (x:var) (n:nat) (p:list (var * nat)) :=
 
 
 
-(* Type system *)
+(* Type system -- The Static Type system, and the dynamic gradual typing part will be merged with the triple rule. *)
 
 (*
 
