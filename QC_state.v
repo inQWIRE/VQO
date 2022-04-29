@@ -24,7 +24,7 @@ Local Open Scope nat_scope.
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
 
 Inductive aexp := BA (b:vari) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
-           | TwoTo (e1:aexp) | XOR (e1:aexp) (e2:aexp)
+           | TwoTo (e1:aexp)
 
 with vari := Var(x:var) | Index (x:var) (a:aexp).
 
@@ -41,7 +41,7 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
 
 Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
                 | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp)
-                | BTest (x:aexp).
+                | BTest (x:aexp) | BXOR (x:bexp) (y:bexp) | BNeg (x:bexp).
 
 
 Fixpoint collect_var_aexp (a:aexp) :=
@@ -50,7 +50,6 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | APlus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | AMinus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
-              | XOR e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | TwoTo e => collect_var_aexp e
     end
 
@@ -71,13 +70,15 @@ Fixpoint collect_var_fexp (a:fexp) :=
               | FExpI e1 => collect_var_aexp e1
     end.
 
-Definition collect_var_bexp (b:bexp) :=
+Fixpoint collect_var_bexp (b:bexp) :=
    match b with BEq x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BGe x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BLt x y => (collect_var_aexp x)++(collect_var_aexp y)
               | FEq x y => (collect_var_fexp x)++(collect_var_fexp y)
               | FGe x y => (collect_var_fexp x)++(collect_var_fexp y)
               | FLt x y => (collect_var_fexp x)++(collect_var_fexp y)
+              | BXOR x y => (collect_var_bexp x)++(collect_var_bexp y)
+              | BNeg x => (collect_var_bexp x)
               | BTest x => collect_var_aexp x
    end.
 
