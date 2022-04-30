@@ -80,59 +80,11 @@ Inductive pexp := PSKIP (a:list vari) | Assign (x:var) (n:aexp)
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
+
 (* Define the ground term type system *)
 Inductive type_rotation := TV (b:aexp) | Infty.
 
-Inductive type_elem : Type := TH (b:type_rotation) | TQFT (b:type_rotation) | TRQFT (b:type_rotation).
 
-Inductive qtype := QS (l:list type_elem) | QC (vl:list (var * nat)) (l:list type_elem).
-
-Inductive pexp_type : Type := Proba | Class | QMix (p:qtype) | Bot.
-
-Definition type_env := (var * nat -> pexp_type).
-
-Definition num_env := (var -> nat).
-
-Definition value_env := (var -> nat).
-
-Definition azero :=  (Num 0).
-
-Definition tazero := TV ( (Num 0)).
-
-Definition add_p_env (p:pexp_type) (ty:type_elem) :=
-    match p with (QMix (QS qs)) => (QMix (QS (ty::qs)))
-               | a => a
-    end.
-
-Definition rm_elem_env (p:pexp_type) :=
-    match p with (QMix (QS (a::qs))) => (QMix (QS (qs)))
-               | a => a
-    end.
-
-Fixpoint eupdates_elem (tv:type_env) (x:var) (n:nat) (p:type_elem) := 
-        match n with 0 => tv
-            | S m => (eupdates_elem tv x m p)[(x,m) |-> add_p_env (tv (x,m)) p]
-        end.
-
-Fixpoint eupdates_rm (tv:type_env) (x:var) (n:nat) := 
-        match n with 0 => tv
-            | S m => (eupdates_rm tv x m)[(x,m) |-> rm_elem_env (tv (x,m))]
-        end.
-
-Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) := 
-        match l with [] => tv
-            | (a::al) => (eupdate_list tv al p)[a |-> p]
-        end.
-
-Definition change_entangle (p:pexp_type) (l: list (var *nat)) :=
-    match p with QMix (QS a) => QMix (QC l a)
-             | a => a
-    end.
-
-Fixpoint eupdates_elem_ent (tv:type_env) (x:var) (n:nat) (p:list (var * nat)) := 
-        match n with 0 => tv
-            | S m => (eupdates_elem_ent tv x m p)[(x,m) |-> change_entangle (tv (x,m)) p]
-        end.
 
 
 
@@ -212,6 +164,24 @@ Fixpoint vars (x: list vari) :=
 Definition get_var_static (x:static_type) := match x with SPos a => vars a | SNeg a => vars a end.
 
 
+Fixpoint get_var_pexp (p:pexp) :=
+   match p with PSKIP a => List.fold_left (fun acc x => (collect_var_basic x)++acc) a []
+           | Assign x n => (x::collect_var_aexp n)
+           | AppU e p => collect_var_basic p
+           | PSeq s1 s2 => (get_var_pexp s1)++(get_var_pexp s2)
+           | IfExp b e1 e2 => (collect_var_bexp b)++(get_var_pexp e1)++(get_var_pexp e2)
+           | While b p => (collect_var_bexp b)++(get_var_pexp p)
+           | Classic p args => List.map (fun x => fst (fst x)) args
+           | QFT x => [x]
+           | RQFT x => [x]
+           | Abort a x => (a::x::nil)
+           | Meas a x => (a::x::nil)
+           | PMeas p x a => (p::a::x::nil)
+           | QWhile n x f b e => x::(collect_var_aexp n)++(collect_var_aexp f)++(collect_var_bexp b)++(get_var_pexp e)
+           | Reflect x xl => [x]
+   end.
+
+
 Inductive session_weak_match : list static_type -> list static_type -> Prop := 
    session_weak_empty : session_weak_match nil nil
   | session_weak_many : forall a b l1 l2, (get_var_static a) = (get_var_static b) 
@@ -275,13 +245,104 @@ Inductive mode := Qmode (x:var) | Cmode.
 
 Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x => (x <> b) end.
 
+Inductive type_elem : Type := TNor | TH (b:type_rotation) | DFT (b:type_rotation) | RDFT (b:type_rotation).
+
+(*
+Inductive qtype := QS (l:list type_elem) | QC (vl:list (var * nat)) (l:list type_elem).
+
+Inductive pexp_type : Type := Proba | Class | QMix (p:qtype) | Bot.
+
+
+Definition type_env := (var * nat -> pexp_type).
+
+Definition num_env := (var -> nat).
+
+Definition value_env := (var -> nat).
 Definition is_q_type (t:pexp_type) := match t with (QMix a) => True | _ => False end.
 
 
+Definition add_p_env (p:pexp_type) (ty:type_elem) :=
+    match p with (QMix (QS qs)) => (QMix (QS (ty::qs)))
+               | a => a
+    end.
+
+Definition rm_elem_env (p:pexp_type) :=
+    match p with (QMix (QS (a::qs))) => (QMix (QS (qs)))
+               | a => a
+    end.
+
+Fixpoint eupdates_elem (tv:type_env) (x:var) (n:nat) (p:type_elem) := 
+        match n with 0 => tv
+            | S m => (eupdates_elem tv x m p)[(x,m) |-> add_p_env (tv (x,m)) p]
+        end.
+
+Fixpoint eupdates_rm (tv:type_env) (x:var) (n:nat) := 
+        match n with 0 => tv
+            | S m => (eupdates_rm tv x m)[(x,m) |-> rm_elem_env (tv (x,m))]
+        end.
+
+Fixpoint eupdate_list (tv:type_env) (l:list (var*nat)) (p:pexp_type) := 
+        match l with [] => tv
+            | (a::al) => (eupdate_list tv al p)[a |-> p]
+        end.
+
+Definition change_entangle (p:pexp_type) (l: list (var *nat)) :=
+    match p with QMix (QS a) => QMix (QC l a)
+             | a => a
+    end.
+
+Fixpoint eupdates_elem_ent (tv:type_env) (x:var) (n:nat) (p:list (var * nat)) := 
+        match n with 0 => tv
+            | S m => (eupdates_elem_ent tv x m p)[(x,m) |-> change_entangle (tv (x,m)) p]
+        end.
+*)
+Definition azero :=  (Num 0).
+
+Definition tazero := TV ( (Num 0)).
+
+
+
+
+(*
 Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp) (p1:pexp_type) (p2:pexp_type).
+*)
 
-Definition tpred := list (tpred_elem).
+Definition tpred := list (list (var * aexp) * list (list type_elem)).
 
+Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
+     (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
+     | qpred_comm : forall x y T V e, triple (x++y,T,V) e (y++x,T,V)
+     | tpred_comm : forall x y Q V e, triple (Q,x++y,V) e (Q,y++x,V)
+     | vpred_comm : forall x y Q T e, triple (Q,T,x++y) e (Q,T,y++x)
+
+     | tensorSep_1 : forall x qs P P' Q e T V, 
+           triple ((PState ([(x)]) P)::qs, T, V) e ((PState ([(x)]) P')::qs, T, V) ->
+           triple ((PState ([(x)]) (Tensor P Q))::qs, T, V) e ((PState ([(x)]) (Tensor P' Q))::qs, T, V)
+           (* Ethan: Bigger space = need more variables? *)
+     | tensorSep_2 : forall x P Q Q' e qs T V, 
+           triple ((PState ([(x)]) Q)::qs,T,V) e ((PState ([(x)]) Q')::qs,T,V) ->
+           triple ((PState ([(x)]) (Tensor P Q))::qs,T,V) e ((PState ([(x)]) (Tensor P Q'))::qs,T,V).
+     | tensorSep_3 : forall x m n ys y i  e s s' qs T V, 
+           triple ((PState ((x,m)::ys) (NTensor m y i s))::qs,T,V)
+                      e ((PState ([(x,m)]) (NTensor m y i s'))::qs,T,V) ->
+           triple ((PState ((x,n)::ys) (Tensor (NTensor m y i s) (NTensor n y m s)))::qs,T,V) 
+                       e ((PState ([(x,n)]) (Tensor (NTensor m y i s') (NTensor n y m s)))::qs,T,(CState (BGe n m))::V).
+     | appH_1 : forall x p1 p2 i j t1 qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
+              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P).
+     | appH_2 : forall x p1 p2 i j t1 qs s T P n ts, n < 2 ->
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH (TV (BA (Num n))))::ts))))::T, P)
+              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ts)))::T,  (CState (BEq i j))::P)
+     | appCX_1 : forall x p1 p2 i j t1 r ts qs s T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
+              (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P))
+     | appCU_1 : forall x p1 p2 i y args p q sa t1 r s ts qs T P , 
+         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
+              (CU (x,i) p y args q sa) ((PState ([(x,p1)]) (add_phi s q))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
+                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq (BA (Var x)) sa)::P)).
 
 
 (* Ethan: Need discussion and example to understand how num_env works *)
@@ -363,36 +424,7 @@ Inductive state :Type :=
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
-Inductive triple : (qpred * tpred * cpred) -> pexp -> (qpred * tpred * cpred)  -> Prop :=
-     (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
-     | tensorSep_1 : forall x n qs P P' Q e T V, 
-           triple ((PState ([(x,n)]) P)::qs, T, V) e ((PState ([(x,n)]) P')::qs, T, V) ->
-           triple ((PState ([(x,n)]) (Tensor P Q))::qs, T, V) e ((PState ([(x,n)]) (Tensor P' Q))::qs, T, V)
-           (* Ethan: Bigger space = need more variables? *)
-     | tensorSep_2 : forall x n P Q Q' e qs T V, 
-           triple ((PState ([(x,n)]) Q)::qs,T,V) e ((PState ([(x,n)]) Q')::qs,T,V) ->
-           triple ((PState ([(x,n)]) (Tensor P Q))::qs,T,V) e ((PState ([(x,n)]) (Tensor P Q'))::qs,T,V)
-     | tensorSep_3 : forall x m n ys y i  e s s' qs T V, 
-           triple ((PState ((x,m)::ys) (NTensor m y i s))::qs,T,V)
-                      e ((PState ([(x,m)]) (NTensor m y i s'))::qs,T,V) ->
-           triple ((PState ((x,n)::ys) (Tensor (NTensor m y i s) (NTensor n y m s)))::qs,T,V) 
-                       e ((PState ([(x,n)]) (Tensor (NTensor m y i s') (NTensor n y m s)))::qs,T,(CState (BGe n m))::V)
-     | appH_1 : forall x p1 p2 i j t1 qs s T P , 
-         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS (nil))))::T, P)
-              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ([TH (TV (BA (Num 0)))]))))::T,  (CState (BEq i j))::P).
-     | appH_2 : forall x p1 p2 i j t1 qs s T P n ts, n < 2 ->
-         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH (TV (BA (Num n))))::ts))))::T, P)
-              (AppU H_gate (x,j)) ((PState ([(x,p1)]) (change_h s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ts)))::T,  (CState (BEq i j))::P)
-     | appCX_1 : forall x p1 p2 i j t1 r ts qs s T P , 
-         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
-              (CX (x,i) (x,j)) ((PState ([(x,p1)]) (change_cx s))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq i (APlus j (BA (Num 1))))::P))
-     | appCU_1 : forall x p1 p2 i y args p q sa t1 r s ts qs T P , 
-         triple ((PState ([(x,p1)]) s)::qs, (Binary (x,p2) (BLt p2 i) t1 (QMix (QS ((TH r)::ts))))::T, P)
-              (CU (x,i) p y args q sa) ((PState ([(x,p1)]) (add_phi s q))::qs, (Binary (x,p2) (BLt p2 (APlus i (BA (Num 1)))) 
-                            t1 (QMix (QS ((TH r)::ts))))::T,  (CState (BEq (BA (Var x)) sa)::P)).
+
 
 
 

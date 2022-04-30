@@ -39,7 +39,8 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
         | FCom (f:fexp) (f1:fexp) (* a + b i *)
         | FExpI (a:aexp) (* e^ 2pi i * a *).
 
-Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
+Inductive bexp := BFalse | BTrue
+                | BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
                 | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp)
                 | BTest (x:aexp) | BXOR (x:bexp) (y:bexp) | BNeg (x:bexp).
 
@@ -71,7 +72,8 @@ Fixpoint collect_var_fexp (a:fexp) :=
     end.
 
 Fixpoint collect_var_bexp (b:bexp) :=
-   match b with BEq x y => (collect_var_aexp x)++(collect_var_aexp y)
+   match b with BTrue => nil | BFalse => nil
+              | BEq x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BGe x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BLt x y => (collect_var_aexp x)++(collect_var_aexp y)
               | FEq x y => (collect_var_fexp x)++(collect_var_fexp y)
@@ -112,7 +114,7 @@ Inductive state :Type :=
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
-Inductive qpred_elem := PState (l:list (var * aexp)) (s:state).
+Inductive qpred_elem := PState (l:list var) (s:state).
 
 Definition qpred := list (qpred_elem).
 
