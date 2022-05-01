@@ -400,7 +400,7 @@ Definition change_h_single (s:state) :=
        | a => a
   end.
 
-Inductive triple : var -> (qpred * tpred * cpred) -> pexp -> var -> (qpred * tpred * cpred)  -> Prop :=
+Inductive triple {env:aenv} : var -> (qpred * tpred * cpred) -> pexp -> var -> (qpred * tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
      | qpred_comm : forall new x y T V e, triple new (x++y,T,V) e new (y++x,T,V)
      | tpred_comm : forall new x y Q V e, triple new (Q,x++y,V) e new (Q,y++x,V)
@@ -440,15 +440,20 @@ Inductive triple : var -> (qpred * tpred * cpred) -> pexp -> var -> (qpred * tpr
                           ((TH tv)) (TNor))))::T, P)
               (AppU H_gate (Index x i)) (fresh new) (([x], (change_h_single s))::qs,
                    (([(x,n)], (TITE j (BLt (BA (Var j)) (APlus m (Num 1))) 
-                          ((TH tv)) (TNor))))::T,  (CState (BEq i n))::(CState (BLt i n))::P).
+                          ((TH tv)) (TNor))))::T,  (CState (BEq i n))::(CState (BLt i n))::P)
+     | if_1 : forall new new' new'' b e1 e2 V T P V' T' P', type_bexp env b C ->
+                  triple new (V,T,(CState b)::P) (IfExp b e1 e2) new' (V',T',P') ->
+                  triple new' (V,T,(PNot (CState b))::P) (IfExp b e1 e2) new'' (V',T',P') ->
+                          triple new (V,T,P) (IfExp b e1 e2) new'' (V',T',P')
+     | if_2 : forall new new' new'' b e1 e2 V T P V' T' P', type_bexp env b Q ->
+                  triple new (V,T,(CState b)::P) (IfExp b e1 e2) new' (V',T',P') ->
+                  triple new' (V,T,(PNot (CState b))::P) (IfExp b e1 e2) new'' (V',T',P') ->
+                          triple new (V,T,P) (IfExp b e1 e2) new'' (V',T',P').
 
 (*
 
-Inductive type_elem : Type := TNor | TH (b:type_rotation) | DFT (b:type_rotation) | RDFT (b:type_rotation).
-
-Inductive type_pred : Type := TAll (t:type_elem) | TITE (b:bexp) (t1:type_elem) (t2:type_elem).
-
-Inductive qtype := QS (t:type_pred) (L:list qtype) | QC (t:type_pred) (l:list qtype).
+            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
+            | Classic (p:exp) (args: list (var * aexp * aexp))
 
 *)
 
@@ -512,7 +517,7 @@ Inductive type_system : mode -> num_env * type_env -> pexp -> num_env * type_env
            type_system ma (S,tv) (CU (x,(BA (Num a)))
               p z args q (APlus (BA (Var x)) (BA (Num n)))) 
            (S,eupdates_elem_ent (eupdate tv (x,a) (QMix (QC ((x,a)::(z,0)::nil) qs))) z (S z) ((x,a)::(z,0)::nil)) .
-*)
+
 
 Definition change_h (s:state) :=
    match s with (Tensor s1 (NTensor n i b (ket ( (Num 0))))) => 
@@ -579,7 +584,7 @@ Inductive eq_qpred : qpred -> qpred -> Prop :=
 Inductive eq_tpred : tpred -> tpred -> Prop :=
       | tpred_comm: forall x y, eq_tpred (x++y) (y++x).
 
-
+*)
 (* Classical State including variable relations that may be quantum *)
 
 
@@ -597,7 +602,7 @@ Inductive eq_pred : predi -> predi -> Prop :=
 
 
 
-(* effects of applying cx. *)
+(* effects of applying cx. 
 Fixpoint change_cx_aux_1 (s:state) :=
      match s with Sigma n i b s => Sigma n i b (change_cx_aux_1 s)
        | NTensor n i b (ket (BA (Num 0))) => Tensor (NTensor n i b (ket (BA (Num 0)))) ((ket (BA (Num 1))))
@@ -623,7 +628,7 @@ Definition add_phi (s:state) (p:aexp) :=
    match s with SPlus s1 (qket f s2) => SPlus s1 (qket (FTimes (FExpI p) f) s2)
     | a => a
    end.
-
+*)
 
 (*
             | CU (x:posi) (p:exp) (z:var) (args: list var) (p:aexp) (s:aexp)
