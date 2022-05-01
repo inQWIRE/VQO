@@ -24,7 +24,7 @@ Local Open Scope nat_scope.
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
 
 Inductive aexp := BA (b:vari) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
-           | TwoTo (e1:aexp)
+           | TwoTo (e1:aexp) | App (f:var) (x:aexp) (* uninterpreted function. *)
 
 with vari := Var(x:var) | Index (x:var) (a:aexp).
 
@@ -42,7 +42,8 @@ Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTi
 Inductive bexp := BFalse | BTrue
                 | BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
                 | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp)
-                | BTest (x:aexp) | BXOR (x:bexp) (y:bexp) | BNeg (x:bexp).
+                | BTest (i:aexp) (x:aexp) (* bit test on x[i] *)
+                | BXOR (x:bexp) (y:bexp) | BITE (x:bexp) (e1:bexp) (e2:bexp) | BNeg (x:bexp).
 
 
 Fixpoint collect_var_aexp (a:aexp) :=
@@ -52,6 +53,7 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | AMinus e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | TwoTo e => collect_var_aexp e
+              | App f x => f::(collect_var_aexp x)
     end
 
 with  collect_var_basic (b:vari) :=
@@ -80,8 +82,9 @@ Fixpoint collect_var_bexp (b:bexp) :=
               | FGe x y => (collect_var_fexp x)++(collect_var_fexp y)
               | FLt x y => (collect_var_fexp x)++(collect_var_fexp y)
               | BXOR x y => (collect_var_bexp x)++(collect_var_bexp y)
+              | BITE x y z => (collect_var_bexp x)++(collect_var_bexp y)++(collect_var_bexp z)
               | BNeg x => (collect_var_bexp x)
-              | BTest x => collect_var_aexp x
+              | BTest i x => collect_var_aexp i++collect_var_aexp x
    end.
 
 (*Pattern for walk. goto is describing matching patterns such as
@@ -114,16 +117,14 @@ Inductive state :Type :=
              | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
              | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
-Inductive qpred_elem := PState (l:list var) (s:state).
-
-Definition qpred := list (qpred_elem).
+Definition qpred := list (list var * state).
 
 Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
              | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
 
 Definition cpred := list cpred_elem.
 
-
+Definition fresh (l:nat) := l +1.
 (* compilation to Z3. *)
 
 Inductive z3_exp := z3_var (x:var)
