@@ -23,28 +23,61 @@ Local Open Scope nat_scope.
 
 (* For simplicity, let's assume that we deal with natural number arithemtic first. *)
 
-Inductive aexp := BA (b:vari) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
+Inductive aexp := BA (b:vari)
+          | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMinus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp)
            | TwoTo (e1:aexp) | App (f:var) (x:aexp) (* uninterpreted function. *)
+           | FExpI (a:aexp) (* e ^ 2pi i * 1/2^a *)
+           | FAddExpI (b:bexp) (a:aexp) (* (1+ e ^ 2pi i * a) / 2 or  (1-  e ^ 2pi i * a) / 2, the b is the +- sign *)
+           | GetP (s:state)   (* in a normal state alpha |b>, the alpha *)
+           | Left (s:state)   (* in a superposition alpha |0> + beta |1>, the alpha *)
+           | Right (s:state)  (* in a superposition alpha |0> + beta |1>, the beta *)
 
-with vari := Var(x:var) | Index (x:var) (a:aexp).
+with vari := Var(x:var) | Index (x:var) (al:list aexp)
+
+with  bexp := BFalse | BTrue
+                | BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
+               (* | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp) *)
+                | BTest (x:vari)
+                | BXOR (x:bexp) (y:bexp) | BITE (x:bexp) (e1:bexp) (e2:bexp) | BNeg (x:bexp)
+                | BAnd (x:bexp) (y:bexp)
+                 | GetB (s:state)   (* in a normal state alpha |b>, the b *)
+
+with state :Type :=
+             | SA (x:list vari) (l:list (list vari * state))
+             | ket (b:bexp) (*normal state |0> false or |1> true *)
+             | qket (p:aexp) (b:bexp)
+             | SITE (x:bexp) (e1:state) (e2:state)
+             | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
+             | Tensor (s1:list state) (* tensor of list of states, avoiding associativy definition *)
+             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
+             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
+             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
 (*
 Definition posi :Type := (var * aexp).
 *)
-
+(*
 Inductive fexp := Fixed (r:R) | FNeg (f1:fexp) | FPlus (f1:fexp) (f2:fexp) | FTimes (f1:fexp) (f2:fexp) 
         | FDiv (f1:fexp) (f2:fexp)
         | FSum (n:aexp) (i:var) (b:aexp) (f:fexp)
         | FExp (f:fexp) | FSin (f:fexp) | FCos (f:fexp)
         | FCom (f:fexp) (f1:fexp) (* a + b i *)
         | FExpI (a:aexp) (* e^ 2pi i * a *).
-
+*)
+(*
 Inductive bexp := BFalse | BTrue
                 | BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp)
-                | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp)
+               (* | FEq (x:fexp) (y:fexp) | FGe (x:fexp) (y:fexp) | FLt (x:fexp) (y:fexp) *)
                 | BTest (i:aexp) (x:aexp) (* bit test on x[i] *)
                 | BXOR (x:bexp) (y:bexp) | BITE (x:bexp) (e1:bexp) (e2:bexp) | BNeg (x:bexp).
+*)
 
+Fixpoint list_mem (a:var) (l:list var) :=
+    match l with [] => false
+             | x::xs => if a =? x then true else list_mem a xs
+    end.
+
+Definition diff l1 l2 := List.filter (fun a => ¬  (list_mem a l2)) l1.
 
 Fixpoint collect_var_aexp (a:aexp) :=
     match a with BA a => collect_var_basic a
@@ -54,11 +87,18 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | AMult e1 e2 =>  (collect_var_aexp e1)++(collect_var_aexp e2)
               | TwoTo e => collect_var_aexp e
               | App f x => f::(collect_var_aexp x)
+              | FExpI x => collect_var_aexp x
+              | FAddExpI b x => collect_var_bexp b ++ collect_var_aexp x
+              | GetP s => collect_var_state s
+              | Left s => collect_var_state s
+              | Right s => collect_var_state s
+
     end
 
 with  collect_var_basic (b:vari) :=
-      match b with Var x => ([x]) | Index x e2 =>  x::((collect_var_aexp e2)) end.
+      match b with Var x => ([x]) | Index x e2 =>  [x]++(fold_left (fun acc b => acc++(collect_var_aexp b)) e2 []) end
 
+(*
 Fixpoint collect_var_fexp (a:fexp) :=
     match a with Fixed a => nil
               | FNeg e1 =>  (collect_var_fexp e1)
@@ -72,20 +112,33 @@ Fixpoint collect_var_fexp (a:fexp) :=
               | FCos e1 => (collect_var_fexp e1)
               | FExpI e1 => collect_var_aexp e1
     end.
+*)
 
-Fixpoint collect_var_bexp (b:bexp) :=
+with collect_var_bexp (b:bexp) :=
    match b with BTrue => nil | BFalse => nil
               | BEq x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BGe x y => (collect_var_aexp x)++(collect_var_aexp y)
               | BLt x y => (collect_var_aexp x)++(collect_var_aexp y)
-              | FEq x y => (collect_var_fexp x)++(collect_var_fexp y)
-              | FGe x y => (collect_var_fexp x)++(collect_var_fexp y)
-              | FLt x y => (collect_var_fexp x)++(collect_var_fexp y)
               | BXOR x y => (collect_var_bexp x)++(collect_var_bexp y)
+              | BAnd x y => (collect_var_bexp x)++(collect_var_bexp y)
               | BITE x y z => (collect_var_bexp x)++(collect_var_bexp y)++(collect_var_bexp z)
               | BNeg x => (collect_var_bexp x)
-              | BTest i x => collect_var_aexp i++collect_var_aexp x
-   end.
+              | BTest x => collect_var_basic x
+              | GetB s => collect_var_state s
+   end
+
+with collect_var_state (s:state) :=
+    match s with SA x xl => (fold_left (fun acc y => acc++ collect_var_basic y) x [])++(fold_left (fun acc yb =>
+                match yb with (yl,b) => acc++((fold_left (fun acc b => acc++(collect_var_basic b)) yl []))++(collect_var_state b) end) xl [])
+                | ket b => collect_var_bexp b
+                | qket p b => collect_var_aexp p ++ collect_var_bexp b
+                 | SITE x y z => (collect_var_bexp x)++(collect_var_state y)++(collect_var_state z)
+                | SPlus s1 s2 => (collect_var_state s1)++(collect_var_state s2)
+                | Tensor sl => (fold_left (fun acc b => acc++(collect_var_state b)) sl [])
+                | Sigma n i b s => (collect_var_aexp n)++(collect_var_aexp b)++(diff  (collect_var_state s) [i])
+                | NTensor n i b s => (collect_var_aexp n)++(collect_var_aexp b)++(diff  (collect_var_state s) [i])
+    end.
+
 
 (*Pattern for walk. goto is describing matching patterns such as
     match |01> -> |10> | |00> -> |11> ...
@@ -107,20 +160,16 @@ Definition rotate (r :rz_val) (q:nat) rmax := addto r q rmax.
 
 
 (* Quantum State *)
-Inductive state :Type :=
-             | STrue (* meaning that the initial state with any possible values. *)
-             | ket (b:bexp) (*normal state |0> false or |1> true *)
-             | qket (p:fexp) (b:bexp)
-             | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
-             | Tensor (s1:state) (s2:state) (* |x> + |y> state. x and y are not equal *)
-             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
-             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
-             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
 Definition qpred := list (list var * state).
 
-Inductive cpred_elem := PFalse | CState (b:bexp) | POr (p1:cpred_elem) (p2:cpred_elem) 
-             | PNot (p:cpred_elem) | Forall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem).
+Inductive var_sub := SVar (x:var) | Subs (x:var_sub) (a:vari) (s:state).
+
+Inductive cpred_elem := PFalse | CState (b:bexp) 
+             | QState (x:state) (s:state)
+             | QIn (p:aexp) (x:aexp) (s:state) (* (p,x) \in Sigma s. *)
+             | PNot (p:cpred_elem) | CForall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem)
+             | Valid (range:bexp) (b:bexp).
 
 Definition cpred := list cpred_elem.
 

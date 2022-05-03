@@ -67,7 +67,7 @@ Inductive pexp := PSKIP (a:list vari) | Assign (x:var) (n:aexp)
              (* control-U on the reversible expression p from the control node x on to z. *)
             | QWhile (n:aexp) (x:var) (f:aexp) (b:bexp) (e:pexp) 
                     (*max loop number of n, variable x, monotonic function f on x as x -> f(x), bool b and e.*)
-            | Reflect (x:var) (l:list (fexp * state)) (* Amplitude amplication, 
+            | Reflect (x:var) (l:list (aexp * state)) (* Amplitude amplication, 
                   each list is a node to amplify, (p,t), where p is the probability and t is a position. *)
                   (*we can restrict the syntax of reflect to a list of probabilty with tensor summasion formula. *)
              (*quantum while, x is a variable, represents a monotonic function variable.
@@ -118,7 +118,7 @@ Module AEnvFacts := FMapFacts.Facts (AEnv).
 Definition aenv := AEnv.t atype.
 Definition empty_benv := @AEnv.empty atype.
 
-
+(*
 Inductive static_type := SPos (x:list vari) | SNeg (x:list vari).
 
 
@@ -135,19 +135,16 @@ Inductive type_aexp : aenv -> aexp -> atype -> Prop :=
 
 with type_vari : aenv -> vari -> atype -> Prop :=
    | var_type : forall env x t, AEnv.MapsTo x t env -> type_vari env (Var x) t
-   | index_type : forall env x e t, AEnv.MapsTo x t env -> type_aexp env e C -> type_vari env (Index x e) t.
+   | index_type : forall env x e t, type_vari env x t -> type_aexp env e C -> type_vari env (Index x e) t
 
 
-Inductive type_bexp : aenv -> bexp -> atype -> Prop :=
+with type_bexp : aenv -> bexp -> atype -> Prop :=
      beq_type : forall env e1 e2 t1 t2, type_aexp env e1 t1 -> type_aexp env e2 t2 
                -> type_bexp env (BEq e1 e2) (meet_atype t1 t2)
    | blt_type : forall env e1 e2 t1 t2, type_aexp env e1 t1 -> type_aexp env e2 t2 
                -> type_bexp env (BLt e1 e2) (meet_atype t1 t2)
    | bge_type : forall env e1 e2 t1 t2, type_aexp env e1 t1 -> type_aexp env e2 t2 
                -> type_bexp env (BGe e1 e2) (meet_atype t1 t2)
-   | feq_type : forall env e1 e2, type_bexp env (FEq e1 e2) C
-   | flt_type : forall env e1 e2, type_bexp env (FLt e1 e2) C
-   | fge_type : forall env e1 e2, type_bexp env (FGe e1 e2) C
    | btest_type : forall env n e1 t1, type_aexp env n C -> 
                        type_aexp env e1 t1 -> type_bexp env (BTest n e1) t1
    | bxor_type : forall env e1 e2 t1 t2, type_bexp env e1 t1 -> type_bexp env e2 t2 
@@ -155,7 +152,7 @@ Inductive type_bexp : aenv -> bexp -> atype -> Prop :=
    | bneg_type : forall env e1 t1, type_bexp env e1 t1 -> type_bexp env (BNeg e1) t1.
 
 
-Definition get_var (x : vari) := match x with Var a => a | Index b y => b end.
+Fixpoint get_var (x : vari) := match x with Var a => a | Index b y => get_var b end.
 
 Fixpoint vars (x: list vari) := 
    match x with [] => []
@@ -237,7 +234,7 @@ Inductive type_system : atype -> aenv -> pexp -> list static_type -> Prop :=
                       (forall y, In y (collect_var_bexp b) -> y <> x -> AEnv.MapsTo y C env) ->
                       type_system m env p al -> type_system m env (QWhile n x f b p) al
     | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> type_system m env (Reflect x l) ([SPos ([Var x])]).
-
+*)
 
 
 (* Definition Type predicates that will be used in triple. *)
@@ -314,7 +311,7 @@ Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp
 *)
 
 Definition tpred := list (list (var * aexp) * type_pred).
-
+(*
 Fixpoint subst_var_aexp (a:aexp) (x:var) (y:var) :=
    match a with BA b => BA (subst_var_vari b x y)
               | Num n => Num n
@@ -328,9 +325,9 @@ Fixpoint subst_var_aexp (a:aexp) (x:var) (y:var) :=
 with subst_var_vari (a:vari) (x:var) (y:var) :=
    match a with Var q => if q =? x then Var y else Var q
              | Index q a => if q =? x then Index y (subst_var_aexp a x y) else Index q (subst_var_aexp a x y)
-   end.
+   end
 
-Fixpoint subst_var_bexp (b:bexp) (x:var) (y:var) :=
+with subst_var_bexp (b:bexp) (x:var) (y:var) :=
    match b with BFalse => BFalse | BTrue => BTrue
            | BEq e1 e2 => BEq (subst_var_aexp e1 x y) (subst_var_aexp e2 x y)
            | BGe e1 e2 => BGe (subst_var_aexp e1 x y) (subst_var_aexp e2 x y)
@@ -343,50 +340,60 @@ Fixpoint subst_var_bexp (b:bexp) (x:var) (y:var) :=
            | BITE e1 e2 e3 => BITE (subst_var_bexp e1 x y) (subst_var_bexp e2 x y) (subst_var_bexp e3 x y)
            | BNeg e1 => BNeg (subst_var_bexp e1 x y)
   end.
+*)
 
 
 Fixpoint subst_aexp (a:aexp) (x:var) (y:aexp) :=
    match a with BA (Var q) => if q =? x then y else BA (Var q)
-              | BA (Index q a) => BA (Index q (subst_aexp a x y))
+              | BA (Index q al) => BA (Index q (map (fun a => subst_aexp a x y) al))
               | Num n => Num n
               | APlus e1 e2 => APlus (subst_aexp e1 x y) (subst_aexp e2 x y)
               | AMinus e1 e2 => AMinus (subst_aexp e1 x y) (subst_aexp e2 x y)
               | AMult e1 e2 => AMult (subst_aexp e1 x y) (subst_aexp e2 x y)
               | TwoTo e1 => TwoTo (subst_aexp e1 x y) 
               | App f e1 => App f (subst_aexp e1 x y)
-   end.
+           | FExpI a => FExpI (subst_aexp a x y)
+           | FAddExpI b a => FAddExpI (subst_bexp b x y) (subst_aexp a x y)
 
-Fixpoint subst_bexp (b:bexp) (x:var) (y:aexp) :=
+           | GetP s => GetP s
+           | Left s => Left s
+           | Right s => Right s
+   end
+
+with subst_bexp (b:bexp) (x:var) (y:aexp) :=
    match b with BFalse => BFalse | BTrue => BTrue
            | BEq e1 e2 => BEq (subst_aexp e1 x y) (subst_aexp e2 x y)
            | BGe e1 e2 => BGe (subst_aexp e1 x y) (subst_aexp e2 x y)
            | BLt e1 e2 => BLt (subst_aexp e1 x y) (subst_aexp e2 x y)
-           | FEq e1 e2 => FEq e1 e2
-           | FGe e1 e2 => FGe e1 e2
-           | FLt e1 e2 => FLt e1 e2
-           | BTest e1 e2 => BTest (subst_aexp e1 x y) (subst_aexp e2 x y)
+           | BTest (Var q) => BTest (Var q)
+           | BTest (Index q al) => BTest (Index q (map (fun a => subst_aexp a x y) al))
            | BXOR e1 e2 => BXOR (subst_bexp e1 x y) (subst_bexp e2 x y)
+           | BAnd e1 e2 => BAnd (subst_bexp e1 x y) (subst_bexp e2 x y)
            | BITE e1 e2 e3 => BITE (subst_bexp e1 x y) (subst_bexp e2 x y) (subst_bexp e3 x y)
            | BNeg e1 => BNeg (subst_bexp e1 x y)
+           | GetB s => GetB s
   end.
+
 
 Inductive qstate_equiv: var-> state -> var -> state -> Prop :=
    | ket_qket : forall new b,  qstate_equiv new (ket b) new (qket (FExpI (Num 0)) b)
    | ten_sigma : forall new n i q s, qstate_equiv new (NTensor n i (Num 0) (qket q s))
                    (fresh new) (Sigma (TwoTo n) (new) (Num 0) (NTensor n i (Num 0) (qket q s)))
    | plus_sigma_1 : forall new q b, qstate_equiv new (SPlus (qket q b) (qket q (BNeg b)))
-                   (fresh new) (Sigma (Num 2) (new) (Num 0) (qket q (BXOR (BTest (Num 0) (BA (Var new))) b)))
+                   (fresh new) (Sigma (Num 2) (new) (Num 0) (qket q (BXOR (BTest ( (Index new [(Num 0)]))) b)))
    | plus_sigma_2 : forall new q b, qstate_equiv new (SPlus (qket q (BNeg b)) (qket q b))
-                   (fresh new) (Sigma (Num 2) (new) (Num 0) (qket q (BXOR (BNeg (BTest (Num 0) (BA (Var new)))) b)))
+                   (fresh new) (Sigma (Num 2) (new) (Num 0) (qket q (BXOR (BNeg (BTest ((Index new [ (Num 0)])))) b)))
    | ten_sigma_sigma: forall new n i j q b, qstate_equiv new (NTensor n i (Num 0) (Sigma (Num 2) j (Num 0) (qket q b)))
                    (fresh new) (Sigma (TwoTo n) (new) (Num 0) (NTensor n i (Num 0)
-             (qket q (BITE (BTest (BA (Var j)) (BA (Var new))) (subst_bexp b j (Num 0)) (subst_bexp b j (Num 1))))))
+             (qket q (BITE (BTest (Index new [(BA (Var j))])) (subst_bexp b j (Num 0)) (subst_bexp b j (Num 1))))))
+(*
    | tensor_sub_1 : forall new new' s1 s1' s2, qstate_equiv new s1 new' s1' ->  qstate_equiv new (Tensor s2 s1) new' (Tensor s2 s1')
    | tensor_sub_2 : forall new new' s1 s1' s2, qstate_equiv new s1 new' s1' ->  qstate_equiv new (Tensor s2 s1) new' (Tensor s2 s1')
+*)
    | tensor_cut : forall new n i m q b, qstate_equiv new (NTensor n i m (qket q b))
-                 new (Tensor (qket q (subst_bexp b i m)) (NTensor n i (APlus m (Num 1)) (qket q b)))
+                 new (Tensor ((qket q (subst_bexp b i m)):: (NTensor n i (APlus m (Num 1)) (qket q b))::nil))
    | tensor_merge : forall new n i m b q b', subst_bexp b i n = b' -> 
-            qstate_equiv new (Tensor (NTensor n i m (qket q b)) (qket q b')) new (NTensor (APlus n (Num 1)) i m (qket q b)).
+            qstate_equiv new (Tensor ((NTensor n i m (qket q b)):: (qket q b')::nil)) new (NTensor (APlus n (Num 1)) i m (qket q b)).
      
 Definition change_h (s:state) :=
    match s with (NTensor n i s (qket q b)) => (NTensor n i s (SPlus (qket q b) (qket q (BNeg b))))
@@ -395,17 +402,91 @@ Definition change_h (s:state) :=
    end.
 
 Definition change_h_single (s:state) :=
-  match s with (Tensor (NTensor n i m st) (Tensor (qket q b) st')) => 
-           (Tensor (NTensor n i m st) (Tensor (SPlus (qket q b) (qket q (BNeg b))) st'))
+  match s with (Tensor ((NTensor n i m st):: (qket q b):: st')) => 
+           (Tensor ((NTensor n i m st):: (SPlus (qket q b) (qket q (BNeg b))):: st'))
        | a => a
   end.
 
-Inductive triple {env:aenv} : var -> (qpred * tpred * cpred) -> pexp -> var -> (qpred * tpred * cpred)  -> Prop :=
+Definition vari_eq (a:vari) (b:vari) :=
+    match a with Var x => match b with Var y => x =? y
+                                     | _ => false
+                          end
+              | Index x xl => false
+    end.
+
+Fixpoint list_vari_mem (a:vari) (l:list vari) :=
+    match l with [] => false
+             | x::xs => if vari_eq a x then true else list_vari_mem a xs
+    end.
+
+Fixpoint subst_add_aexp (a:aexp) x (xa: state) :=
+   match a with BA b => BA (subst_add_vari b x xa)
+              | Num n => Num n
+              | APlus e1 e2 => APlus (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+              | AMinus e1 e2 => AMinus (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+              | AMult e1 e2 => AMult (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+              | TwoTo e1 => TwoTo (subst_add_aexp e1 x xa)
+              | App f e1 => App f (subst_add_aexp e1 x xa)
+              | FExpI e1 => FExpI (subst_add_aexp e1 x xa)
+              | FAddExpI e1 e2 => FAddExpI (subst_add_bexp e1 x xa) (subst_add_aexp e2 x xa)
+              | GetP e1 => GetP (subst_add_state e1 x xa)
+              | Left e1 => Left (subst_add_state e1 x xa)
+              | Right e1 => Right (subst_add_state e1 x xa)
+   end
+
+with subst_add_vari (v:vari) (x:var) (xa: state) :=
+    match v with Var x => Var x | Index x al => Index x (map (fun a => subst_add_aexp a x xa) al) end
+
+with subst_add_bexp (b:bexp) x (xa: state) :=
+   match b with BFalse => BFalse | BTrue => BTrue
+          | BEq e1 e2 => BEq (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+          | BGe e1 e2 => BGe (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+          | BLt e1 e2 => BLt (subst_add_aexp e1 x xa) (subst_add_aexp e2 x xa)
+          | BTest e2 => BTest (subst_add_vari e2 x xa)
+          | BXOR e1 e2 => BXOR (subst_add_bexp e1 x xa) (subst_add_bexp e2 x xa)
+          | BITE b e1 e2 => BITE (subst_add_bexp b x xa) (subst_add_bexp e1 x xa) (subst_add_bexp e2 x xa)
+          | BNeg e1 => BNeg (subst_add_bexp e1 x xa)
+          | BAnd e1 e2 => BAnd (subst_add_bexp e1 x xa) (subst_add_bexp e2 x xa)
+          | GetB e1 => GetB (subst_add_state e1 x xa)
+   end
+
+with subst_add_state (v:state) x (xa: state) :=
+  match v with SA xl al => if list_vari_mem (Var x) xl then SA xl (([Var x],xa)::al)
+                           else SA xl al
+             | ket b => ket (subst_add_bexp b x xa)
+             | qket p b => qket (subst_add_aexp p x xa) (subst_add_bexp b x xa)
+             | SITE b e1 e2 => SITE (subst_add_bexp b x xa) (subst_add_state e1 x xa) (subst_add_state e2 x xa)
+             | SPlus e1 e2 => SPlus (subst_add_state e1 x xa) (subst_add_state e2 x xa)
+             | Tensor el => Tensor (map (fun a => subst_add_state a x xa) el)
+             | Sigma n i b e1 => Sigma (subst_add_aexp n x xa) i (subst_add_aexp b x xa) (subst_add_state e1 x xa)
+             | NTensor n i b e1 => NTensor (subst_add_aexp n x xa) i (subst_add_aexp b x xa) (subst_add_state e1 x xa)
+  end.
+
+Fixpoint subst_add_cpred (c:cpred_elem) x (xa: state) :=
+   match c with PFalse => PFalse
+     | CState b => CState (subst_add_bexp b x xa)
+     | QState e1 e2 => QState (subst_add_state e1 x xa) (subst_add_state e2 x xa)
+     | QIn p a e1 => QIn (subst_add_aexp p x xa) (subst_add_aexp a x xa) (subst_add_state e1 x xa)
+     | PNot p => PNot (subst_add_cpred p x xa)
+     | CForall xs p1 p2 => if list_mem x xs then CForall xs p1 p2 else 
+                    CForall xs (map (fun a => subst_add_cpred a x xa) p1) (subst_add_cpred p2 x xa)
+     | Valid r b => Valid (subst_add_bexp r x xa) (subst_add_bexp b x xa)
+   end.
+
+
+Inductive triple {env:aenv} : var -> (tpred * cpred) -> pexp -> var -> (tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
-     | qpred_comm : forall new x y T V e, triple new (x++y,T,V) e new (y++x,T,V)
-     | tpred_comm : forall new x y Q V e, triple new (Q,x++y,V) e new (Q,y++x,V)
-     | vpred_comm : forall new x y Q T e, triple new (Q,T,x++y) e new (Q,T,y++x)
-     | equiv_app : forall new new' x s s' e y T V, qstate_equiv new s new' s' -> triple new ((x,s)::y,T,V) e new' ((x,s')::y,T,V)
+     | tpred_comm : forall new x y V e, triple new (x++y,V) e new (y++x,V)
+     | vpred_comm : forall new x y T e, triple new (T,x++y) e new (T,y++x)
+     | equiv_app : forall new new' x s s' e T V, qstate_equiv new s new' s' -> triple new (T,(QState x s)::V) e new' (T,(QState x s)::V)
+     | appH_1 : forall new x n T P , 
+         triple new ((([(x,n)], (TAll TNor)))::T,
+           (map (fun a => subst_add_cpred a x (NTensor n new (Num 0)
+                          (SPlus (qket (GetP (SA ((Index x [BA (Var new)])::nil) [])) BFalse)
+                                 (SITE (GetB (SA ((Index x [BA (Var new)])::nil) []))
+                                     (qket (GetP (SA ((Index x [BA (Var new)])::nil) [])) BTrue)
+                                       (qket (AMult (AMinus (Num 0) (Num 1)) (GetP (SA ((Index x [BA (Var new)])::nil) []))) BTrue))))) P))
+              (AppU H_gate (Var x)) (fresh new) ((([(x,n)], (TAll (TH (TV (Num 0))))))::T,  P).
 
      | tensorSep_1 : forall new x qs P P' Q e T V, 
            triple new (( ([(x)]), P)::qs, T, V) e new (( ([(x)]), P')::qs, T, V) ->
@@ -418,7 +499,7 @@ Inductive triple {env:aenv} : var -> (qpred * tpred * cpred) -> pexp -> var -> (
            triple new ((x::ys, (NTensor m y i s))::qs,((x,m)::ts,t)::T,V)
                       e new ((x::ys, (NTensor m y i s'))::qs,((x,m)::ts,t)::T,V) ->
            triple new ((x::ys, (Tensor (NTensor m y i s) (NTensor n y m s)))::qs,((x,n)::ts,t)::T,V) 
-                       e new ((x::ys, (Tensor (NTensor m y i s') (NTensor n y m s)))::qs,((x,n)::ts,t)::T,(CState (BGe n m))::V)
+                       e new ((x::ys, (Tensor (NTensor m y i s') (NTensor n y m s)))::qs,((x,n)::ts,t)::T,(CState (BGe n m))::V).
      | appH_1 : forall new x n s qs T P , 
          triple new (([x], s)::qs,(([(x,n)], (TAll TNor)))::T, P)
               (AppU H_gate (Var x)) new (([x], (change_h s))::qs, (([(x,n)], (TAll (TH (TV (Num 0))))))::T,  P)
@@ -976,5 +1057,4 @@ This is implementable in the current QC.
 *)
 
 *)
-
 
