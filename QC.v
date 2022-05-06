@@ -729,8 +729,18 @@ Inductive triple {env:aenv} : var -> (tpred * cpred) -> pexp -> var -> (tpred * 
                      (Tensor ((ket (subst_bexp b x (BA (Var new''))))::[be2]))) )))
               (IfExp b e1 e2) (fresh new'') ((([(x,n)], (TAll (TH (TV (Num 0))))))::T, 
                          (PNot (Valid (BAnd (BGe (BA (Var x)) (Num 0)) (BLt (BA (Var x)) n)) (BNeg b)))::
-                                    (PNot (Valid (BAnd (BGe (BA (Var x)) (Num 0)) (BLt (BA (Var x)) n)) b))::P).
+                                    (PNot (Valid (BAnd (BGe (BA (Var x)) (Num 0)) (BLt (BA (Var x)) n)) b))::P)
+
+     | qwhile_rule : forall new new' T P m n x f b e xl r, type_bexp env b (Q,[Var x]) -> type_system Q env e xl -> 
+         triple (fresh new) (T,(CState (BGe (BA (Var x)) (BA (Var new))))::(CState (subst_bexp b x (BA (Var new))))::[QState (SA ((Var x)::xl) []) P])
+               e new' (T,[QState (SA ((Var x)::xl) []) P]) ->
+         triple new ((([(x,n)], TAll (TH r)))::T, [QState (SA ((Var x)::xl) []) (Sigma m x (Num 0) P)])
+              (QWhile m x f b e) new' ((([(x,n)], TAll (TH r)))::T, 
+                 (CState (BNeg (subst_bexp b x m)))::[QState (SA ((Var x)::xl) []) (Sigma m x (Num 0) P)]).
 (*
+            | QWhile (n:aexp) (x:var) (f:aexp) (b:bexp) (e:pexp) 
+
+
      | tensorSep_1 : forall new x qs P P' Q e T V, 
            triple new (( ([(x)]), P)::qs, T, V) e new (( ([(x)]), P')::qs, T, V) ->
            triple new (( ([(x)]), (Tensor P Q))::qs, T, V) e new (( ([(x)]), (Tensor P' Q))::qs, T, V)
