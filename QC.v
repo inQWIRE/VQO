@@ -204,30 +204,63 @@ with type_state : aenv -> state -> atype * list vari -> Prop :=
         | ntensor_type : forall aenv n i b s t, type_aexp aenv n (C,[]) -> type_aexp (AEnv.add i C aenv) b (C,[]) ->
                                     type_state (AEnv.add i C aenv) s t -> type_state aenv (NTensor n i b s) t.
 
-Inductive type_system : atype -> aenv -> pexp -> list vari -> Prop :=
-    | skip_type : forall m env a, type_system m env (PSKIP a) [a]
-    | assign_type : forall env a v, type_aexp env v (C,[]) -> type_system C env (Assign a v) nil
-    | appu_type : forall m env e p x, type_vari env p (Q,x) -> type_system m env (AppU e p) x
-    | seq_type : forall m env e1 e2 l1 l2, type_system m env e1 l1 -> type_system m env e2 l2 -> type_system m env (PSeq e1 e2) (l1++l2)
-    | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> type_system C env e1 l1 -> type_system C env e2 l2 ->
-                    type_system C env (IfExp b e1 e2) l1
-    | if_type_cq : forall env b e1 e2 l, type_bexp env b (C,[]) -> type_system Q env e1 l -> type_system Q env e2 l ->
-                                        type_system Q env (IfExp b e1 e2) l
-    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> type_system Q env e1 l -> type_system Q env e2 l ->
-                                                     type_system m env (IfExp b e1 e2) l
+Axiom aexp_eq_dec : aexp -> aexp -> bool.
+
+Fixpoint aexp_list_eq_dec (a b : list aexp) :=
+   match (a,b) with ([], []) => true
+              | (x::xl,y::yl) => aexp_eq_dec x y && aexp_list_eq_dec xl yl
+              | (_,_) => false
+   end.
+
+Definition vari_eq_dec (a b: vari) :=
+   match a with Var x => match b with Var y => x =? y
+                                 | Index y z => false
+                         end
+             | Index x u => match b with Var y => false
+                                  | Index y z => (x =? y) && aexp_list_eq_dec u z
+                            end
+   end.
+
+Fixpoint vari_list_eq_dec (a b : list vari) :=
+   match (a,b) with ([], []) => true
+              | (x::xl,y::yl) => vari_eq_dec x y && vari_list_eq_dec xl yl
+              | (_,_) => false
+   end.
+
+Inductive type_elem : Type := TNor (b:bexp) | TH (b:type_rotation) (r:nat) (* phase rotation and rank. *)
+             | TC (b:type_rotation) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
+             | DFT (b:type_rotation) | RDFT (b:type_rotation)
+
+with type_pred := TT (l:list type_pred) | THT (n:aexp) (t:type_elem). (* tensor of n. *)
+
+
+Definition tpred := list (list (var * bexp * bexp) * type_pred).
+
+Inductive session_system {P: cpred} {qenv: var -> nat}: atype -> aenv -> pexp -> list vari -> Prop :=
+    | skip_type : forall m env a, session_system m env (PSKIP a) [a]
+    | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
+    | appu_type : forall m env e p x, type_vari env p (Q,[x]) -> session_system m env (AppU e p) [x]
+    | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
+             -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
+    | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
+                    session_system C env (IfExp b e1 e2) l1
+    | if_type_cq : forall env b e1 e2 l, type_bexp env b (C,[]) -> session_system Q env e1 l -> session_system Q env e2 l ->
+                                        session_system Q env (IfExp b e1 e2) l
+    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
+                                                     session_system m env (IfExp b e1 e2) l
     | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
-                 -> type_system m env (Classic e args) xl
-    | qft_type : forall m env x a, type_vari env (Var x) (Q,a) -> type_system m env (QFT x) a
-    | rqft_type : forall m env x a, type_vari env (Var x) (Q,a) -> type_system m env (RQFT x) a
-    | abort_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t -> type_system C env (Abort a x) (snd t)
-    | meas_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t-> type_system C env (Meas a x) (snd t)
+                 -> session_system m env (Classic e args) xl
+    | qft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (QFT x) a
+    | rqft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (RQFT x) a
+    | abort_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t -> session_system C env (Abort a x) (snd t)
+    | meas_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t-> session_system C env (Meas a x) (snd t)
     | pmeas_type : forall env p a x t, type_vari env (Var p) (C,[]) -> type_vari env (Var a) (C,[])
-                        -> type_vari env (Var x) t -> type_system C env (PMeas p x a) (snd t)
-    | while_type : forall m env p b al, type_bexp env b (C,[]) -> type_system m env p al -> type_system m env (While b p) al
+                        -> type_vari env (Var x) t -> session_system C env (PMeas p x a) (snd t)
+    | while_type : forall m env p b al, type_bexp env b (C,[]) -> session_system m env p al -> session_system m env (While b p) al
     | qwhile_type : forall m env p al n x f b, type_aexp env n (C,[]) ->  AEnv.MapsTo x Q env
                    -> type_aexp env f (Q,[Var x]) -> type_bexp env b (Q,[Var x]) ->
-                      type_system m env p al -> type_system m env (QWhile n x f b p) al
-    | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> type_system m env (Reflect x l) [Var x].
+                      session_system m env p al -> session_system m env (QWhile n x f b p) al
+    | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> session_system m env (Reflect x l) [Var x].
 
 
 (*
@@ -322,10 +355,11 @@ Inductive mode := Qmode (x:var) | Cmode.
 
 Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x => (x <> b) end.
 
-Inductive type_elem : Type := TNor | TC (l:list var) (b:type_rotation) | TH (b:type_rotation) | DFT (b:type_rotation) | RDFT (b:type_rotation).
 
+
+(*
 Inductive type_pred : Type := TAll (t:type_elem) | TITE (x:var) (bl: list (bexp * type_elem)).
-
+*)
 
 Fixpoint subst_num_aexp (a:aexp) (x:var) (b:aexp) :=
    match a with BA (Var y) => if x =? y then b else BA (Var y)
@@ -411,7 +445,12 @@ Definition tazero := TV ( (Num 0)).
 Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp) (p1:pexp_type) (p2:pexp_type).
 *)
 
-Definition tpred := list (list (var * aexp) * type_pred).
+(*TODO: chage type predicate to a triple of (P, S, T) where S is a tuple of (var, list var)
+  mapping from a ghost variable to a region of qubit array variables. P maps from ghost variable to type (CH type),
+   t maps from qubit variable to type *)
+
+
+Definition var_eqs := list ((var * aexp) * list (var * aexp)).
 (*
 Fixpoint subst_var_aexp (a:aexp) (x:var) (y:var) :=
    match a with BA b => BA (subst_var_vari b x y)
@@ -630,7 +669,7 @@ Fixpoint isubst_add_cpred (c:cpred_elem) x i (xa: state) :=
    end.
 
 
-Axiom vari_eq_dec : vari -> vari -> bool.
+
 
 Fixpoint list_equal (al bl : list vari) :=
   match (al,bl) with ([],[]) => true | (a::xl,b::yl) => (vari_eq_dec a b) && list_equal xl yl  | _ => false end.
@@ -692,11 +731,12 @@ Fixpoint subst_adds_cpred (c:cpred_elem) (xa: list vari * state) :=
 Definition  subst_adds_cpreds (c:list cpred_elem) (xa: list vari * state) :=
         List.map (fun a => subst_adds_cpred a xa) c.
 
-Inductive triple {env:aenv} : var -> (tpred * cpred) -> pexp -> var -> (tpred * cpred)  -> Prop :=
+Inductive triple {env:aenv} : var -> (var_eqs * tpred * cpred) -> pexp -> var -> (var_eqs * tpred * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
-     | tpred_comm : forall new x y V e, triple new (x++y,V) e new (y++x,V)
-     | vpred_comm : forall new x y T e, triple new (T,x++y) e new (T,y++x)
-     | equiv_app : forall new new' x s s' e T V, qstate_equiv new s new' s' -> triple new (T,(QState x s)::V) e new' (T,(QState x s)::V)
+     | eqs_comm : forall new x y T V e, triple new (x++y,T,V) e new (y++x,T,V)
+     | tpred_comm : forall new x y A V e, triple new (A,x++y,V) e new (A,y++x,V)
+     | vpred_comm : forall new x y A T e, triple new (A,T,x++y) e new (A,T,y++x)
+     | equiv_app : forall new new' x s s' e A T V, qstate_equiv new s new' s' -> triple new (A,T,(QState x s)::V) e new' (A,T,(QState x s)::V).
      | appH_1 : forall new x n T P , 
          triple new ((([(x,n)], (TAll TNor)))::T,
            (map (fun a => subst_add_cpred a x (NTensor n new (Num 0)
