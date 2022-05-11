@@ -234,12 +234,46 @@ Inductive type_elem : Type := TNor (b:bexp) | TH (b:type_rotation) (r:nat) (* ph
 with type_pred := TT (l:list type_pred) | THT (n:aexp) (t:type_elem). (* tensor of n. *)
 
 
-Definition tpred := list (list (var * bexp * bexp) * type_pred).
+Definition tpred := list (list (var * aexp * aexp) * type_pred).
 
-Inductive session_system {P: cpred} {qenv: var -> nat}: atype -> aenv -> pexp -> list vari -> Prop :=
-    | skip_type : forall m env a, session_system m env (PSKIP a) [a]
+Axiom satisfy : cpred -> bool. (* decide P to be satisfiable or not. *)
+
+Fixpoint in_session_var (P:cpred) (qenv: var-> nat) (y:var) (l :list (var * aexp * aexp))  :=
+   match l with [] => true
+             | ((x,l,r)::xs) =>
+            if x =? y then (satisfy ((CState (BAnd (BEq l (Num 0)) (BEq r (Num (qenv x)))))::P))
+                      else in_session_var P qenv y xs
+  end.
+
+Fixpoint in_session_index (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (l :list (var * aexp * aexp))  :=
+   match l with [] => false
+             | ((x,l,r)::xs) =>
+            if (x =? y) && (satisfy ((CState (BAnd (BAnd (BAnd (BGe (Num 0) l) (BGe l i)) (BLt i r)) (BGe r (Num (qenv x)))))::P))
+                   then true else in_session_index P qenv y i xs
+  end.
+
+Fixpoint in_session_vars (P:cpred) (qenv: var-> nat) (y:var) (ts:tpred) :=
+  match ts with [] => None
+            | ((xl,t)::xll) => if in_session_var P qenv y xl then Some (xl,t) else in_session_vars P qenv y xll
+  end.
+
+Fixpoint in_session_indexs (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (ts:tpred) :=
+  match ts with [] => None
+            | ((xl,t)::xll) => if in_session_index P qenv y i xl then Some (xl,t) else in_session_indexs P qenv y i xll
+  end.
+
+Definition in_sessions (P:cpred) (qenv: var-> nat) (a:vari) (ts:tpred) :=
+  match a with Var y => in_session_vars P qenv y ts
+            | Index y al => (match hd_error al with None => None
+                                  | Some aa => in_session_indexs P qenv y aa ts
+                            end)
+  end.
+
+Inductive session_system {P: cpred} {qenv: var -> nat} {T : tpred} : atype -> aenv -> pexp -> list (list (var * aexp * aexp) * type_pred) -> Prop :=
+    | skip_type : forall m env a l t, in_sessions P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)]
     | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
-    | appu_type : forall m env e p x, type_vari env p (Q,[x]) -> session_system m env (AppU e p) [x]
+    | appu_type : forall m env e p x l t r, type_vari env p (Q,[x]) -> e = X_gate \/ e = RZ_gate r
+              -> in_sessions P qenv x T = Some (l,t) -> session_system m env (AppU e p) [(l,t)].
     | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
     | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
