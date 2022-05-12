@@ -457,13 +457,23 @@ Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred}
     | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
     | appu_type : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
               -> in_sessions_v P qenv (Index x (a::al)) T = Some (l,t) -> eval_aexp P a = Some av ->
-              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')].
+              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')]
     | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
+    | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
+                 -> session_system m env (Classic e args) nil
+    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
+                                                     session_system m env (IfExp b e1 e2) l.
+(*
+            | Classic (p:exp) (args: list (var * aexp * aexp))
+
     | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
-                    session_system C env (IfExp b e1 e2) l1
+                    session_system C env (IfExp b e1 e2) l1.
+
     | if_type_cq : forall env b e1 e2 l, type_bexp env b (C,[]) -> session_system Q env e1 l -> session_system Q env e2 l ->
                                         session_system Q env (IfExp b e1 e2) l
+*)
+
     | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
                                                      session_system m env (IfExp b e1 e2) l
     | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
