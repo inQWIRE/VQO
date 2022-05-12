@@ -419,23 +419,38 @@ Fixpoint count_num' (l :list (var * aexp * aexp)) (x:var) acc :=
    end.
 Definition count_num (l :list (var * aexp * aexp)) (x:var) (i:nat) := count_num' l x i.
 
+
+Fixpoint count_type_pred a := 
+    match a with TT l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | THT (Num n) t => n | _ => 0 end.
+
+
+Definition count_type (t: type_elem) := 
+   match t with TNor a => 1 | TH b r => 1 | TC b r l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | _ => 0 end.
+
+
 Definition change_type_one (t: type_elem) (op:singleGate) :=
-   match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH a r => Some (TH (AMinus (Num 0) a)) | _ => None end
+   match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH a r => Some (TH (AMinus (Num 0) a) r) | _ => None end
+               | _ => None
    end.
 
-
-Fixpoint change_type' (t:type_pred) (n:nat) (op:singleGate) (acc:type_elem) := 
-   match n with 0 => app_change op acc
-
-
+Inductive change_type : type_pred -> nat -> singleGate -> type_pred -> Prop :=
+    change_type_eq : forall t n op t', type_eq t t' -> change_type t n op t'
+  | change_type_ex : forall t tl tl' n op, count_type_pred t <= n -> 
+                    change_type (TT (tl)) (n-count_type_pred t) op (TT tl') ->
+                     change_type (TT (t::tl)) (n-count_type_pred t) op (TT (t::tl'))
+  | change_type_0 : forall t t' tl op, (change_type_one t op) = Some t' -> 
+                change_type (TT ((THT (Num 1) t)::tl)) 0 op (TT ((THT (Num 1) t')::tl))
+  | change_type_hit : forall tl n m b r l l' op, n < m ->
+                change_type (TT l) n op (TT l') ->
+                change_type (TT ((THT (Num m) (TC b r l))::tl)) n op (TT ((THT (Num m) (TC b r l'))::tl)).
 
 Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred} 
             : atype -> aenv -> pexp -> list (list (var * aexp * aexp) * type_pred) -> Prop :=
     | skip_type : forall m env a l t, in_sessions_v P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)]
     | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
-    | appu_type_x : forall m env p x a al av num l t, type_vari env p (Q,[Index x (a::al)])
+    | appu_type : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
               -> in_sessions_v P qenv (Index x (a::al)) T = Some (l,t) -> eval_aexp P a = Some av ->
-              count_num l x av = Some num -> -> session_system m env (AppU X_gate p) [(l,t)].
+              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')].
     | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
     | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
