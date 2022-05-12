@@ -430,6 +430,10 @@ Definition count_type (t: type_elem) :=
 
 Definition change_type_one (t: type_elem) (op:singleGate) :=
    match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH a r => Some (TH (AMinus (Num 0) a) r) | _ => None end
+               | RZ_gate b => match t with TNor b => Some (TNor b) | TH a r => Some (TH (APlus a b) r) | _ => None end
+               | H_gate => match t with TNor b => Some (TH (Num 0) 1) 
+               | TH (Num 0) r => if r =? 1 then Some (TNor BFalse) else Some (TH (Num 0) (r-1)) 
+               | TH (Num 1) r => if r =? 1 then Some (TNor BTrue) else Some (TH (Num 0) (r-1))  | _ => None end
                | _ => None
    end.
 
