@@ -239,7 +239,7 @@ Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
 
 
 
-Inductive type_elem : Type := TNor (b:bexp) | TH (b:list aexp) (r:nat) (* phase rotation and rank. *)
+Inductive type_elem : Type := TNor (p:aexp) (b:bexp) | TH (b:list aexp) (r:nat) (* phase rotation and rank. *)
              | TC (b:list aexp) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
              | DFT (b:aexp) | RDFT (b:aexp)
 
@@ -425,16 +425,17 @@ Fixpoint count_type_pred a :=
 
 
 Definition count_type (t: type_elem) := 
-   match t with TNor a => 1 | TH b r => 1 | TC b r l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | _ => 0 end.
+   match t with TNor p a => 1 | TH b r => 1 | TC b r l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | _ => 0 end.
 
 
 Definition change_type_one (t: type_elem) (op:singleGate) :=
-   match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH (a::al) r => Some (TH ((AMinus (Num 0) a)::al) r) | _ => None end
-               | RZ_gate b => match t with TNor b => Some (TNor b) | TH (a::al) r => Some (TH ((APlus a b)::al) r) | _ => None end
-               | H_gate => match t with TNor b => Some (TH ([Num 0]) 0) 
+   match op with X_gate => match t with TNor p b => Some (TNor p (BNeg b)) 
+               | TH (a::al) r => Some (TH ((AMinus (Num 0) a)::al) r) | _ => None end
+               | RZ_gate b => match t with TNor p b => Some (TNor p b) | TH (a::al) r => Some (TH ((APlus a b)::al) r) | _ => None end
+               | H_gate => match t with TNor p b => Some (TH ([Num 0]) 0) 
                        | TH ((Num a)::l) r =>
-                             if a =? 0 then (if r =? 1 then Some (TNor BFalse) else Some (TH l (r-1)))
-                             else if a =? 1 then (if r =? 1 then Some (TNor BTrue) else Some (TH l (r-1)))
+                             if a =? 0 then (if r =? 1 then Some (TNor (Num 0) BFalse) else Some (TH l (r-1)))
+                             else if a =? 1 then (if r =? 1 then Some (TNor (Num 0) BTrue) else Some (TH l (r-1)))
                              else Some (TH (Num 0::l) (r+1))
                 | _ => None end
                | _ => None
@@ -451,8 +452,11 @@ Inductive change_type : type_pred -> nat -> singleGate -> type_pred -> Prop :=
                 change_type (TT l) n op (TT l') ->
                 change_type (TT ((THT (Num m) (TC b r l))::tl)) n op (TT ((THT (Num m) (TC b r l'))::tl)).
 
+(* a function that is defined later to check if a session keeps bit the same before and after. *)
+Axiom session_same : (var -> option nat) -> (var -> nat) -> aenv -> tpred -> bool.
+
 Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred} 
-            : atype -> aenv -> pexp -> list (list (var * aexp * aexp) * type_pred) -> Prop :=
+            : atype -> aenv -> pexp -> tpred -> Prop :=
     | skip_type : forall m env a l t, in_sessions_v P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)]
     | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
     | appu_type : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
@@ -462,8 +466,10 @@ Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred}
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
     | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
                  -> session_system m env (Classic e args) nil
-    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
-                                                     session_system m env (IfExp b e1 e2) l.
+    | if_type_q_1 : forall m env b e1 e2 x l r, type_bexp env b (Q,[Var x]) -> in_session_vars_v P qenv x (l++r) = None
+           -> in_session_vars_v P qenv x (l++r) = None -> session_same P qenv env l = false 
+              -> session_same P qenv env r= true ->  session_system Q env e1 (l++r) -> session_system Q env e2 (l++r) -> 
+                                                     session_system m env (IfExp b e1 e2) (l++r).
 (*
             | Classic (p:exp) (args: list (var * aexp * aexp))
 
