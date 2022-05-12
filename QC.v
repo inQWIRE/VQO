@@ -239,8 +239,8 @@ Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
 
 
 
-Inductive type_elem : Type := TNor (b:bexp) | TH (b:aexp) (r:nat) (* phase rotation and rank. *)
-             | TC (b:aexp) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
+Inductive type_elem : Type := TNor (b:bexp) | TH (b:list aexp) (r:nat) (* phase rotation and rank. *)
+             | TC (b:list aexp) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
              | DFT (b:aexp) | RDFT (b:aexp)
 
 with type_pred := TT (l:list type_pred) | THT (n:aexp) (t:type_elem). (* tensor of n. *)
@@ -429,11 +429,14 @@ Definition count_type (t: type_elem) :=
 
 
 Definition change_type_one (t: type_elem) (op:singleGate) :=
-   match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH a r => Some (TH (AMinus (Num 0) a) r) | _ => None end
-               | RZ_gate b => match t with TNor b => Some (TNor b) | TH a r => Some (TH (APlus a b) r) | _ => None end
-               | H_gate => match t with TNor b => Some (TH (Num 0) 1) 
-               | TH (Num 0) r => if r =? 1 then Some (TNor BFalse) else Some (TH (Num 0) (r-1)) 
-               | TH (Num 1) r => if r =? 1 then Some (TNor BTrue) else Some (TH (Num 0) (r-1))  | _ => None end
+   match op with X_gate => match t with TNor b => Some (TNor (BNeg b)) | TH (a::al) r => Some (TH ((AMinus (Num 0) a)::al) r) | _ => None end
+               | RZ_gate b => match t with TNor b => Some (TNor b) | TH (a::al) r => Some (TH ((APlus a b)::al) r) | _ => None end
+               | H_gate => match t with TNor b => Some (TH ([Num 0]) 0) 
+                       | TH ((Num a)::l) r =>
+                             if a =? 0 then (if r =? 1 then Some (TNor BFalse) else Some (TH l (r-1)))
+                             else if a =? 1 then (if r =? 1 then Some (TNor BTrue) else Some (TH l (r-1)))
+                             else Some (TH (Num 0::l) (r+1))
+                | _ => None end
                | _ => None
    end.
 
