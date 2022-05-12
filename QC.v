@@ -243,10 +243,10 @@ Inductive type_elem : Type := TNor (p:aexp) (b:bexp) | TH (b:list aexp) (r:nat) 
              | TC (b:list aexp) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
              | DFT (b:aexp) | RDFT (b:aexp)
 
-with type_pred := TT (l:list type_pred) | THT (n:aexp) (t:type_elem). (* tensor of n. *)
+with type_pred := THT (n:aexp) (t:type_elem). (* tensor of n. *)
 
 
-Definition tpred := list (list (var * aexp * aexp) * type_pred).
+Definition tpred := list (list (var * aexp * aexp) * list type_pred).
 
 
 Definition testbit (n:nat) (i:nat) := N.testbit_nat (N.of_nat n) i.
@@ -392,12 +392,10 @@ Definition in_sessions_v (P:var -> option nat) (qenv: var-> nat) (a:vari) (ts:tp
   end.
 
 
-Inductive type_eq : type_pred -> type_pred -> Prop :=
-   type_sum_eq : forall t n i, i < n -> type_eq (THT (Num n) t) (TT ((THT (Num i) t)::(THT (Num (n-i)) t)::nil))
-  | type_sum_eq_m : forall t n i r l, i < n -> type_eq (TT (r++(THT (Num n) t)::l)) (TT (r++((THT (Num i) t)::(THT (Num (n-i)) t)::l)))
-  | type_sum_eq_a :  forall t n i r l, i < n -> type_eq (TT (r++((THT (Num i) t)::(THT (Num (n-i)) t)::l))) (TT ((r++((THT (Num n) t)::l))))
-  | type_empty_eq : forall t n, type_eq (TT ((THT n t)::nil)) (THT n t)
-  | type_zero_eq : forall t r l, type_eq (TT (r++((THT (Num 0) t)::l))) (TT (r++l)).
+Inductive type_eq : list type_pred -> list type_pred -> Prop :=
+  | type_sum_eq_m : forall t n i r l, i < n -> type_eq ( (r++(THT (Num n) t)::l)) ( (r++((THT (Num i) t)::(THT (Num (n-i)) t)::l)))
+  | type_sum_eq_a :  forall t n i r l, i < n -> type_eq ( (r++((THT (Num i) t)::(THT (Num (n-i)) t)::l))) ( ((r++((THT (Num n) t)::l))))
+  | type_zero_eq : forall t r l, type_eq ( (r++((THT (Num 0) t)::l))) ( (r++l)).
 
 
 (*
@@ -420,12 +418,14 @@ Fixpoint count_num' (l :list (var * aexp * aexp)) (x:var) acc :=
 Definition count_num (l :list (var * aexp * aexp)) (x:var) (i:nat) := count_num' l x i.
 
 
-Fixpoint count_type_pred a := 
-    match a with TT l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | THT (Num n) t => n | _ => 0 end.
+Definition count_type_pred a := 
+    (fold_left (fun a b => a+(match b with THT (Num n) t => n | _ => 0 end)) a 0).
+
+Definition count_tpred (t:tpred) := fold_left (fun a b => a + (count_type_pred (snd b))) t 0.
 
 
 Definition count_type (t: type_elem) := 
-   match t with TNor p a => 1 | TH b r => 1 | TC b r l => (fold_left (fun a b => a+(count_type_pred b)) l 0) | _ => 0 end.
+   match t with TNor p a => 1 | TH b r => 1 | TC b r l => count_type_pred l | _ => 0 end.
 
 
 Definition change_type_one (t: type_elem) (op:singleGate) :=
@@ -441,19 +441,90 @@ Definition change_type_one (t: type_elem) (op:singleGate) :=
                | _ => None
    end.
 
-Inductive change_type : type_pred -> nat -> singleGate -> type_pred -> Prop :=
+Inductive change_type : list type_pred -> nat -> singleGate -> list type_pred -> Prop :=
     change_type_eq : forall t n op t', type_eq t t' -> change_type t n op t'
-  | change_type_ex : forall t tl tl' n op, count_type_pred t <= n -> 
-                    change_type (TT (tl)) (n-count_type_pred t) op (TT tl') ->
-                     change_type (TT (t::tl)) (n-count_type_pred t) op (TT (t::tl'))
+  | change_type_ex : forall t tl tl' n op, count_type_pred ([t]) <= n -> 
+                    change_type ( (tl)) (n-count_type_pred ([t])) op ( tl') ->
+                     change_type ( (t::tl)) (n-count_type_pred ([t])) op ( (t::tl'))
   | change_type_0 : forall t t' tl op, (change_type_one t op) = Some t' -> 
-                change_type (TT ((THT (Num 1) t)::tl)) 0 op (TT ((THT (Num 1) t')::tl))
+                change_type ( ((THT (Num 1) t)::tl)) 0 op ( ((THT (Num 1) t')::tl))
   | change_type_hit : forall tl n m b r l l' op, n < m ->
-                change_type (TT l) n op (TT l') ->
-                change_type (TT ((THT (Num m) (TC b r l))::tl)) n op (TT ((THT (Num m) (TC b r l'))::tl)).
+                change_type ( l) n op ( l') ->
+                change_type ( ((THT (Num m) (TC b r l))::tl)) n op ( ((THT (Num m) (TC b r l'))::tl)).
+
+Definition is_had (t:list type_pred) := 
+  fold_left (fun a b => a && 
+       match b with | THT n (TH bl r) => true | THT n (TC bl r l) => true | _ => false end) t true.
+
+
+Definition is_nor (t:list type_pred) := 
+  fold_left (fun a b => a && 
+       match b with | THT n (TNor r b) => true | _ => false end) t true.
+
+Definition is_nor_all (t:tpred) := fold_left (fun a b => a && is_nor (snd b)) t true. 
+
+Definition acc_phase (t:list type_pred) := 
+  fold_left (fun a b => APlus a 
+       match b with | THT n (TNor p b) => p | _ => (Num 0) end) t (Num 0).
+
+Definition acc_phase_all (t:tpred) := fold_left (fun a b => APlus a (acc_phase (snd b))) t (Num 0).
+
+(*
+Fixpoint combine_one' (t:list type_pred) := 
+  fold_left (fun a b => APlus a 
+       match b with | THT n (TNor p b) => p | _ => (Num 0) end) t [].
+
+   match t with al => fold_left (fun a b => a ++ combine_one' b) al [] | THT n q => [THT n q] end.
+
+Definition combine_all (t:list type_pred) := fold_left (fun a b => a ++ combine_one' b) t [].
+*) 
+
+Axiom aexp_eq_dec : aexp -> aexp -> bool.
+
+Fixpoint aexp_list_eq_dec (a b : list aexp) :=
+   match (a,b) with ([], []) => true
+              | (x::xl,y::yl) => aexp_eq_dec x y && aexp_list_eq_dec xl yl
+              | (_,_) => false
+   end.
+
+Fixpoint th_tc_aux (l:list type_pred) n b bl r :=
+   match l with [] => Some (n,b,bl,r)
+           | (THT n1 (TH (b1::bl1) r1))::xs => if r =? r1 
+                         then (if aexp_list_eq_dec bl bl1 then
+                             match th_tc_aux xs n b bl r with
+                                   | Some (na,ba,bla,ra) => Some ((APlus na n1),(APlus b1 ba),bla,ra)
+                                   | _ => None
+                            end else None)
+                         else None
+           | _ => None
+   end.
+
+
+Definition th_tc (t:list type_pred) :=
+   match t with [] => None
+          | (THT n (TH (b::bl) r))::l =>
+                match th_tc_aux l n b bl r with Some (na,ba,bla,ra) 
+                      => Some (THT na (TC (ba::bla) ra ([THT na (TNor (Num 0) BFalse)])))
+                 | None => None
+                end
+          | _ => None
+   end.
+
+Definition merge_tc (t:list type_pred) (n:aexp) (l:list type_pred) (p:aexp) :=
+    match t with [THT na (TC (b::bl) r xl)] => Some ([THT (APlus n na) (TC ((APlus p b)::bl) r (xl++l))])
+               | a => match th_tc a with Some (THT na (TC (ba::bla) ra la))
+                                     =>  Some ([THT (APlus n na) (TC ((APlus p ba)::bla) ra (la++l))])
+                                  | _ => None
+                      end
+    end.
+
+Definition split_join_snd (t:tpred) := fold_left (fun a b => a ++ snd b) t [].
+
+Definition split_join_fst (t:tpred) := fold_left (fun a b => a ++ fst b) t [].
 
 (* a function that is defined later to check if a session keeps bit the same before and after. *)
 Axiom session_same : (var -> option nat) -> (var -> nat) -> aenv -> tpred -> bool.
+
 
 Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred} 
             : atype -> aenv -> pexp -> tpred -> Prop :=
@@ -466,10 +537,12 @@ Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred}
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
     | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
                  -> session_system m env (Classic e args) nil
-    | if_type_q_1 : forall m env b e1 e2 x l r, type_bexp env b (Q,[Var x]) -> in_session_vars_v P qenv x (l++r) = None
-           -> in_session_vars_v P qenv x (l++r) = None -> session_same P qenv env l = false 
-              -> session_same P qenv env r= true ->  session_system Q env e1 (l++r) -> session_system Q env e2 (l++r) -> 
-                                                     session_system m env (IfExp b e1 e2) (l++r).
+    | if_type_q_1 : forall m env b e1 e2 x l r tl t ta, type_bexp env b (Q,[x]) -> in_sessions_v P qenv x (l++r) = None
+       -> in_sessions_v P qenv x (l++r) = None -> session_same P qenv env l = false -> session_same P qenv env r= true 
+       -> in_sessions_v P qenv x T = Some (tl,t) -> is_had t = true -> is_nor_all (l++r) = true 
+       -> session_system Q env e1 (l++r) -> session_system Q env e2 (l++r)
+       -> merge_tc t (Num (count_tpred l)) (split_join_snd l) (acc_phase_all r) = Some ta ->
+                                                     session_system m env (IfExp b e1 e2) ((tl++split_join_fst l,ta)::r).
 (*
             | Classic (p:exp) (args: list (var * aexp * aexp))
 
@@ -496,13 +569,7 @@ Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred}
                       session_system m env p al -> session_system m env (QWhile n x f b p) al
     | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> session_system m env (Reflect x l) [Var x].
 
-Axiom aexp_eq_dec : aexp -> aexp -> bool.
 
-Fixpoint aexp_list_eq_dec (a b : list aexp) :=
-   match (a,b) with ([], []) => true
-              | (x::xl,y::yl) => aexp_eq_dec x y && aexp_list_eq_dec xl yl
-              | (_,_) => false
-   end.
 
 Definition vari_eq_dec (a b: vari) :=
    match a with Var x => match b with Var y => x =? y
