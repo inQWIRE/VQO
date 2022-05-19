@@ -233,7 +233,7 @@ Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
     | meas_stype : forall m env x y, AEnv.MapsTo y Q env  -> AEnv.MapsTo x C env -> stype_pexp m env (Meas x y)
     | pmeas_stype : forall m env p x y, AEnv.MapsTo y Q env  -> AEnv.MapsTo x C env 
                     -> AEnv.MapsTo p C env -> stype_pexp m env (PMeas p x y)
-    | while_stype : forall env b p, type_bexp env b (C,[]) -> stype_pexp C env p -> stype_pexp C env (While b p)
+    | while_stype : forall m env b p, type_bexp env b (C,[]) -> stype_pexp m env p -> stype_pexp m env (While b p)
     | qwhile_stype : forall m env n x f b e a c, type_aexp env n (C,[]) -> type_aexp env f (Q,[a])
              -> get_var a = x -> type_bexp env b (Q,[c]) -> get_var c = x
                -> stype_pexp Q env e -> stype_pexp m env (QWhile n x f b e)
@@ -429,7 +429,7 @@ Fixpoint count_num' (l :list (var * aexp * aexp)) (x:var) acc :=
    end.
 Definition count_num (l :list (var * aexp * aexp)) (x:var) (i:nat) := count_num' l x i.
 
-
+(*
 Definition count_type_pred a := 
     (fold_left (fun a b => a+(match b with THT (Num n) t => n | _ => 0 end)) a 0).
 
@@ -533,18 +533,50 @@ Definition merge_tc (t:list type_pred) (n:aexp) (l:list type_pred) (p:aexp) :=
 Definition split_join_snd (t:tpred) := fold_left (fun a b => a ++ snd b) t [].
 
 Definition split_join_fst (t:tpred) := fold_left (fun a b => a ++ fst b) t [].
-
+*)
 (* a function that is defined later to check if a session keeps bit the same before and after. *)
-Axiom session_same : (var -> option nat) -> (var -> nat) -> aenv -> tpred -> bool.
+Axiom satisfy : cpred -> bool. (* decide P to be satisfiable or not. *)
+
+Fixpoint in_session_var (P:cpred) (qenv: var-> nat) (y:var) (l :list (var * aexp * aexp))  :=
+   match l with [] => false
+             | ((x,l,r)::xs) =>
+            if x =? y then (satisfy ((CState (BAnd (BEq l (Num 0)) (BEq r (Num (qenv x)))))::P))
+                      else in_session_var P qenv y xs
+  end.
+
+Fixpoint in_session_index (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (l :list (var * aexp * aexp))  :=
+   match l with [] => false
+             | ((x,l,r)::xs) =>
+            if (x =? y) && (satisfy ((CState (BAnd (BAnd (BAnd (BGe (Num 0) l) (BGe l i)) (BLt i r)) (BGe r (Num (qenv x)))))::P))
+                   then true else in_session_index P qenv y i xs
+  end.
+
+Fixpoint in_session_vars (P:cpred) (qenv: var-> nat) (y:var) (ts:tpred) :=
+  match ts with [] => None
+            | ((xl,t)::xll) => if in_session_var P qenv y xl then Some (xl,t) else in_session_vars P qenv y xll
+  end.
+
+Fixpoint in_session_indexs (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (ts:tpred) :=
+  match ts with [] => None
+            | ((xl,t)::xll) => if in_session_index P qenv y i xl then Some (xl,t) else in_session_indexs P qenv y i xll
+  end.
+
+Definition in_sessions (P:cpred) (qenv: var-> nat) (a:vari) (ts:tpred) :=
+  match a with Var y => in_session_vars P qenv y ts
+            | Index y al => (match hd_error al with None => None
+                                  | Some aa => in_session_indexs P qenv y aa ts
+                            end)
+  end.
 
 
-Inductive session_system {P: var -> option nat} {qenv: var -> nat} {T : tpred} 
-            : atype -> aenv -> pexp -> tpred -> Prop :=
-    | skip_type : forall m env a l t, in_sessions_v P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)]
-    | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil
-    | appu_type : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
+(* an operation is either applied on  (x,0) or applying on all.  *)
+Inductive session_system {P: cpred} {qenv: var -> nat} {T : tpred} 
+            : atype -> aenv -> pexp -> tpred -> cpred -> Prop :=
+    | skip_type : forall m env a l t, in_sessions P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)] []
+    | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil []
+    | appu_type_1 : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
               -> in_sessions_v P qenv (Index x (a::al)) T = Some (l,t) -> eval_aexp P a = Some av ->
-              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')]
+              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')] [].
     | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
              -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
     | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
@@ -599,38 +631,6 @@ Fixpoint vari_list_eq_dec (a b : list vari) :=
    end.
 
 
-Axiom satisfy : cpred -> bool. (* decide P to be satisfiable or not. *)
-
-Fixpoint in_session_var (P:cpred) (qenv: var-> nat) (y:var) (l :list (var * aexp * aexp))  :=
-   match l with [] => false
-             | ((x,l,r)::xs) =>
-            if x =? y then (satisfy ((CState (BAnd (BEq l (Num 0)) (BEq r (Num (qenv x)))))::P))
-                      else in_session_var P qenv y xs
-  end.
-
-Fixpoint in_session_index (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (l :list (var * aexp * aexp))  :=
-   match l with [] => false
-             | ((x,l,r)::xs) =>
-            if (x =? y) && (satisfy ((CState (BAnd (BAnd (BAnd (BGe (Num 0) l) (BGe l i)) (BLt i r)) (BGe r (Num (qenv x)))))::P))
-                   then true else in_session_index P qenv y i xs
-  end.
-
-Fixpoint in_session_vars (P:cpred) (qenv: var-> nat) (y:var) (ts:tpred) :=
-  match ts with [] => None
-            | ((xl,t)::xll) => if in_session_var P qenv y xl then Some (xl,t) else in_session_vars P qenv y xll
-  end.
-
-Fixpoint in_session_indexs (P:cpred) (qenv: var-> nat) (y:var) (i:aexp) (ts:tpred) :=
-  match ts with [] => None
-            | ((xl,t)::xll) => if in_session_index P qenv y i xl then Some (xl,t) else in_session_indexs P qenv y i xll
-  end.
-
-Definition in_sessions (P:cpred) (qenv: var-> nat) (a:vari) (ts:tpred) :=
-  match a with Var y => in_session_vars P qenv y ts
-            | Index y al => (match hd_error al with None => None
-                                  | Some aa => in_session_indexs P qenv y aa ts
-                            end)
-  end.
 
 
 
