@@ -51,7 +51,8 @@ Inductive pexp := PSKIP (a: vari) | Assign (x:var) (n:aexp)
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppU (e:singleGate) (p:vari) 
             | PSeq (s1:pexp) (s2:pexp)
-            | IfExp (b:bexp) (e1:pexp) (e2:pexp) | While (b:bexp) (p:pexp)
+            | Switch (x:vari) (l:list (bexp * pexp)) 
+            | While (b:bexp) (p:pexp)
             | Classic (p:exp) (args: list (var * aexp * aexp))
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
@@ -67,16 +68,10 @@ Inductive pexp := PSKIP (a: vari) | Assign (x:var) (n:aexp)
              (* control-U on the reversible expression p from the control node x on to z. *)
             | QWhile (n:aexp) (x:var) (f:aexp) (b:bexp) (e:pexp) 
                     (*max loop number of n, variable x, monotonic function f on x as x -> f(x), bool b and e.*)
-            | Reflect (x:var) (l:list (aexp * state)) (* Amplitude amplication, 
-                  each list is a node to amplify, (p,t), where p is the probability and t is a position. *)
-                  (*we can restrict the syntax of reflect to a list of probabilty with tensor summasion formula. *)
-             (*quantum while, x is a variable, represents a monotonic function variable.
-                 n is the upperbound, b is the boolean formula but it needs to be monotonic. 
-                e is an expression that does not contain x and no measurement.
-                  an example of using QWhile is to find optimimal solution.  *)
-          (*  | QWalk (e1:pexp) (e2:pexp).
-            SingleTon walk step, e1 is defussion step that does not include permutation,
-                      e2 is a walk step that cannot do defussion. *).
+            | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. *)
+            | Reflect (x:var) (p:aexp) (a1:aexp) (a2:aexp) (* reflection on two state x=a1 and x=a2 with x=a1 happens in a probablity p, a1 <> a2  *)
+            | Distr (x:var) (al : list aexp) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
+                                               This statement basically distributes/diverges a vector x to many different vectors. *).
 
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
@@ -216,15 +211,22 @@ Inductive stype_aexp_list {l:list var} {env:aenv} : list (var * aexp * aexp) -> 
          -> list_subset (get_core_vars el1) l -> type_aexp env e2 (Q,el2)
        -> list_subset (get_core_vars el2) l -> stype_aexp_list xl -> stype_aexp_list ((a,e1,e2)::xl).
 
+
+Inductive type_bexp_list : aenv -> list bexp -> atype * list vari -> Prop :=
+   | blist_empty_type_1 : forall env, type_bexp_list env [] (C,[])
+   | blist_empty_type_2 : forall env x, type_bexp_list env [] (Q,[x])
+   | blist_many_type: forall env b bl m l, type_bexp env b (m,l) -> type_bexp_list env bl (m,l)
+                          -> type_bexp_list env (b::bl) (m,l).
+
 Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
     | skip_stype : forall m env a, stype_pexp m env (PSKIP a)
     | assign_stype : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v)
     | appu_stype : forall m env e p x,  type_vari env p (Q,[x]) -> stype_pexp m env (AppU e p)
     | seq_stype : forall m env e1 e2, stype_pexp m env e1 -> stype_pexp m env e2 -> stype_pexp m env (PSeq e1 e2)
-    | if_stype_c : forall m l env b e1 e2, type_bexp env b (m,l)
-                          -> stype_pexp m env e1 -> stype_pexp m env e2 -> stype_pexp C env (IfExp b e1 e2)
-    | if_stype_q : forall l env b e1 e2, type_bexp env b (Q,l)
-                          -> stype_pexp Q env e1 -> stype_pexp Q env e2 -> stype_pexp Q env (IfExp b e1 e2)
+    | switch_stype_c : forall env x el, type_bexp_list env (fst (List.split el)) (C,[])
+                          -> stype_pexp_list C env (snd (List.split el)) -> stype_pexp C env (Switch x el)
+   | switch_stype_q : forall m env x el, type_bexp_list env (fst (List.split el)) (Q,[x])
+                          -> stype_pexp_list Q env (snd (List.split el)) -> stype_pexp m env (Switch x el) 
     | class_stype : forall m env p l, @stype_aexp_list (map (fun a => fst (fst a)) l) env l -> stype_pexp m env (Classic p l)
     | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x)
     | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x)
@@ -235,15 +237,25 @@ Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
     | qwhile_stype : forall m env n x f b e a c, type_aexp env n (C,[]) -> type_aexp env f (Q,[a])
              -> get_var a = x -> type_bexp env b (Q,[c]) -> get_var c = x
                -> stype_pexp Q env e -> stype_pexp m env (QWhile n x f b e)
-    | reflect_stype : forall m env x l, AEnv.MapsTo x Q env -> stype_pexp m env (Reflect x l).
+    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n)
+    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
+             -> type_aexp env a1 (C,[])  -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2)
+    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list env al -> stype_pexp m env (Distr x al)
+
+with stype_pexp_list : atype -> aenv -> list pexp -> Prop :=
+    stype_pexp_empty : forall m env, stype_pexp_list m env []
+   | stype_pexp_many : forall m env p pl, stype_pexp m env p -> stype_pexp_list m env pl -> stype_pexp_list m env (p::pl).
 
 
 
+(* The dynamic type system. Symbolic type. *)
 Inductive type_elem : Type := TNor (p:aexp) (b:bexp) | TH (b:list aexp) (r:nat) (* phase rotation and rank. *)
-             | TC (b:list aexp) (r:nat) (l: list type_pred)  (*phase rank and variables that are entangled *)
+             | TC (b:list aexp) (r:nat) (c: type_cfac)  (*phase rank and variables that are entangled *)
              | DFT (b:aexp) | RDFT (b:aexp)
 
-with type_pred := THT (n:aexp) (t:type_elem). (* tensor of n. *)
+with type_cfac := TPair (l:list type_pred) | TMore (l: list type_cfac)
+
+with type_pred := THT (n:aexp) (t:type_elem) | TSym (x:var) (n:aexp) (al:list aexp). (* tensor of n. *)
 
 
 Definition tpred := list (list (var * aexp * aexp) * list type_pred).
