@@ -28,9 +28,11 @@ Inductive aexp := BA (b:vari)
            | TwoTo (e1:aexp) | App (f:var) (x:aexp) (* uninterpreted function. *)
            | FExpI (a:aexp) (* e ^ 2pi i * 1/2^a *)
            | FAddExpI (b:bexp) (a:aexp) (* (1+ e ^ 2pi i * a) / 2 or  (1-  e ^ 2pi i * a) / 2, the b is the +- sign *)
-           | GetP (s:state)   (* in a normal state alpha |b>, the alpha *)
+           | GetP (s:state)   (* in a normal state alpha |b>, the alpha
+                                 if had_state get beta in R |0> + beta * R |1> *)
            | Left (s:state)   (* in a superposition alpha |0> + beta |1>, the alpha *)
            | Right (s:state)  (* in a superposition alpha |0> + beta |1>, the beta *)
+           | Bit (b:bexp)
 
 with vari := Var(x:var) | Index (x:var) (al:list aexp)
 
@@ -46,7 +48,10 @@ with state :Type :=
              | SA (x:list vari) (l:list (list vari * state))
              | ket (b:bexp) (*normal state |0> false or |1> true *)
              | qket (p:aexp) (b:bexp)
+             | upP (e:state) (a:aexp)
              | SITE (x:bexp) (e1:state) (e2:state)
+             | Join (e1:state) (e2:state)
+            
              | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
              | Tensor (s1:list state) (* tensor of list of states, avoiding associativy definition *)
              (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
@@ -92,6 +97,7 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | GetP s => collect_var_state s
               | Left s => collect_var_state s
               | Right s => collect_var_state s
+              | Bit s => collect_var_bexp s
 
     end
 
@@ -111,6 +117,7 @@ Fixpoint collect_var_fexp (a:fexp) :=
               | FSin e1 => (collect_var_fexp e1)
               | FCos e1 => (collect_var_fexp e1)
               | FExpI e1 => collect_var_aexp e1
+             
     end.
 *)
 
@@ -134,6 +141,8 @@ with collect_var_state (s:state) :=
                 | qket p b => collect_var_aexp p ++ collect_var_bexp b
                  | SITE x y z => (collect_var_bexp x)++(collect_var_state y)++(collect_var_state z)
                 | SPlus s1 s2 => (collect_var_state s1)++(collect_var_state s2)
+                | Join s1 s2 => (collect_var_state s1)++(collect_var_state s2)
+                | upP s1 p => (collect_var_state s1)++(collect_var_aexp p)
                 | Tensor sl => (fold_left (fun acc b => acc++(collect_var_state b)) sl [])
                 | Sigma n i b s => (collect_var_aexp n)++(collect_var_aexp b)++(diff  (collect_var_state s) [i])
                 | NTensor n i b s => (collect_var_aexp n)++(collect_var_aexp b)++(diff  (collect_var_state s) [i])
