@@ -44,9 +44,9 @@ Inductive pattern := Adj (x:var) (* going to adj nodes. *)
                         (*n here means n bits starting from the 0 position in x. *)
 
 (* we want to include all the single qubit gates here in the U below. *)
-Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
+Inductive singleGate := H_gate | X_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 
-Inductive pexp := PSKIP (a: vari) | Assign (x:var) (n:aexp) 
+Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppU (e:singleGate) (p:vari) 
@@ -218,33 +218,36 @@ Inductive type_bexp_list : aenv -> list bexp -> atype * list vari -> Prop :=
    | blist_many_type: forall env b bl m l, type_bexp env b (m,l) -> type_bexp_list env bl (m,l)
                           -> type_bexp_list env (b::bl) (m,l).
 
-Inductive stype_pexp : atype -> aenv -> pexp -> Prop :=
-    | skip_stype : forall m env a, stype_pexp m env (PSKIP a)
-    | assign_stype : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v)
-    | appu_stype : forall m env e p x,  type_vari env p (Q,[x]) -> stype_pexp m env (AppU e p)
-    | seq_stype : forall m env e1 e2, stype_pexp m env e1 -> stype_pexp m env e2 -> stype_pexp m env (PSeq e1 e2)
-    | switch_stype_c : forall env x el, type_bexp_list env (fst (List.split el)) (C,[])
-                          -> stype_pexp_list C env (snd (List.split el)) -> stype_pexp C env (Switch x el)
-   | switch_stype_q : forall m env x el, type_bexp_list env (fst (List.split el)) (Q,[x])
-                          -> stype_pexp_list Q env (snd (List.split el)) -> stype_pexp m env (Switch x el) 
-    | class_stype : forall m env p l, @stype_aexp_list (map (fun a => fst (fst a)) l) env l -> stype_pexp m env (Classic p l)
-    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x)
-    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x)
-    | meas_stype : forall m env x y, AEnv.MapsTo y Q env  -> AEnv.MapsTo x C env -> stype_pexp m env (Meas x y)
+Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list vari -> Prop :=
+    | skip_stype_c : forall m env, stype_pexp m env (PSKIP) (C,[])
+    | skip_stype_q : forall m env l, stype_pexp m env (PSKIP) (Q,l)
+    | assign_stype : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v) (C,[])
+    | appu_stype : forall m env e p x,  type_vari env p (Q,[x]) -> stype_pexp m env (AppU e p) (Q,[x])
+    | seq_stype : forall m env e1 e2 m1 xl m2 yl, 
+           stype_pexp m env e1 (m1,xl) -> stype_pexp m env e2 (m2,yl) -> stype_pexp m env (PSeq e1 e2) (meet_atype m1 m2,xl++yl)
+    | switch_stype_c : forall env x el m xl, type_bexp_list env (fst (List.split el)) (C,[])
+                  -> stype_pexp_list C env (snd (List.split el)) (m,xl) -> stype_pexp C env (Switch x el) (m,xl)
+   | switch_stype_q : forall m env x el m1 xl, type_bexp_list env (fst (List.split el)) (Q,[x])
+                          -> stype_pexp_list Q env (snd (List.split el)) (m1,xl) -> stype_pexp m env (Switch x el) (m1,x::xl)
+    | class_stype : forall m env p l, @stype_aexp_list (map (fun a => fst (fst a)) l) env l 
+                                                   -> stype_pexp m env (Classic p l) (Q,(map (fun a => Var (fst (fst a))) l))
+    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x) (Q,[Var x])
+    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x) (Q,[Var x])
+    | meas_stype : forall m env x y, AEnv.MapsTo y Q env  -> AEnv.MapsTo x C env -> stype_pexp m env (Meas x y) (C,[])
     | pmeas_stype : forall m env p x y, AEnv.MapsTo y Q env  -> AEnv.MapsTo x C env 
-                    -> AEnv.MapsTo p C env -> stype_pexp m env (PMeas p x y)
-    | while_stype : forall m env b p, type_bexp env b (C,[]) -> stype_pexp m env p -> stype_pexp m env (While b p)
-    | qwhile_stype : forall m env n x f b e a c, type_aexp env n (C,[]) -> type_aexp env f (Q,[a])
+                    -> AEnv.MapsTo p C env -> stype_pexp m env (PMeas p x y) (C,[])
+    | while_stype : forall m env b p l, type_bexp env b (C,[]) -> stype_pexp m env p l -> stype_pexp m env (While b p) l
+    | qwhile_stype : forall m env n x f b e a c l, type_aexp env n (C,[]) -> type_aexp env f (Q,[a])
              -> get_var a = x -> type_bexp env b (Q,[c]) -> get_var c = x
-               -> stype_pexp Q env e -> stype_pexp m env (QWhile n x f b e)
-    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n)
+               -> stype_pexp Q env e (Q,l) -> stype_pexp m env (QWhile n x f b e) (Q,(Var x)::l)
+    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n) (Q,[Var x])
     | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
-             -> type_aexp env a1 (C,[])  -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2)
-    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list env al -> stype_pexp m env (Distr x al)
+             -> type_aexp env a1 (C,[])  -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
+    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list env al -> stype_pexp m env (Distr x al) (Q,[Var x])
 
-with stype_pexp_list : atype -> aenv -> list pexp -> Prop :=
-    stype_pexp_empty : forall m env, stype_pexp_list m env []
-   | stype_pexp_many : forall m env p pl, stype_pexp m env p -> stype_pexp_list m env pl -> stype_pexp_list m env (p::pl).
+with stype_pexp_list : atype -> aenv -> list pexp -> atype * list vari -> Prop :=
+    stype_pexp_empty : forall m env l, stype_pexp_list m env [] (Q,l)
+   | stype_pexp_many : forall m env p pl l, stype_pexp m env p l -> stype_pexp_list m env pl l -> stype_pexp_list m env (p::pl) l.
 
 
 
@@ -598,6 +601,7 @@ Fixpoint subst_aexp (a:aexp) (x:var) (y:aexp) :=
            | Left s => Left s
            | Right s => Right s
            | Bit b => Bit (subst_bexp b x y)
+           | ASum s s2 => ASum (subst_bexp s x y) (subst_aexp s2 x y)
    end
 
 with subst_bexp (b:bexp) (x:var) (y:aexp) :=
@@ -673,6 +677,7 @@ Fixpoint subst_add_aexp (a:aexp) x (xa: state) :=
               | Left e1 => Left (subst_add_state e1 x xa)
               | Right e1 => Right (subst_add_state e1 x xa)
               | Bit e1 => Bit (subst_add_bexp e1 x xa)
+              | ASum e1 e2 => ASum (subst_add_bexp e1 x xa) (subst_add_aexp e2 x xa)
    end
 
 with subst_add_vari (v:vari) (x:var) (xa: state) :=
@@ -731,6 +736,7 @@ Fixpoint isubst_add_aexp (a:aexp) x (i:aexp) (xa: state) :=
               | Left e1 => Left (isubst_add_state e1 x i xa)
               | Right e1 => Right (isubst_add_state e1 x i xa)
               | Bit e1 => Bit (isubst_add_bexp e1 x i xa)
+              | ASum e1 e2 => ASum (isubst_add_bexp e1 x i xa) (isubst_add_aexp e2 x i xa)
    end
 
 with isubst_add_vari (v:vari) (x:var) i (xa: state) :=
@@ -814,6 +820,7 @@ Fixpoint subst_adds_aexp (a:aexp) (l:list vari) (xa: list vari * state) :=
               | Left e1 => Left (subst_adds_state e1 l xa)
               | Right e1 => Right (subst_adds_state e1 l xa)
               | Bit e1 => Bit (subst_adds_bexp e1 l xa)
+              | ASum e1 e2 => ASum (subst_adds_bexp e1 l xa) (subst_adds_aexp e2 l xa)
    end
 
 with subst_adds_vari (v:vari) l (xa: list vari * state) :=
@@ -901,9 +908,24 @@ Fixpoint isNor (t:list type_pred) :=
                 | _ => False
      end.
 
+Fixpoint isRealNor (t:list type_pred) :=
+     match t with [] => True
+                | ((THT n (TNor (Some b)))::xs) => isRealNor xs
+                | _ => False
+     end.
+
 Definition to_had_core (b: option (aexp * bexp)) :=
    match b with None => None
          | Some (a,b) => Some ([Bit b], 1)
+   end.
+
+Definition up_had_core (b:option (list aexp * nat)) :=
+   match b with None => Some (TH None)
+         | Some (a::al,r) => match a with Num 0 => 
+                              (if r =? 1 then Some (TNor (Some (Num 0, BFalse))) else Some (TH (Some (al,r-1))))
+                            | _ => Some (TH (Some ((Num 0)::a::al,r+1)))
+                             end
+         | _ => None
    end.
 
 
@@ -930,8 +952,134 @@ Definition x_had_core (b:option (list aexp * nat)) :=
          | Some ([],x) => None
    end.
 
+Inductive session_eq : tpred -> tpred -> Prop :=
+    session_ref : forall t, session_eq t t
+  | session_join : forall l1 t1 l2 t2 tl, session_eq ((l1,t1)::(l2,t2)::tl) ((l1++l2,t1++t2)::tl)
+  | session_comm : forall t1 t2, session_eq (t1++t2) (t2++t1).
+
+Fixpoint is_prefix (qenv: var -> nat) (l:list vari) (l1: list (var * aexp * aexp)) := 
+  match l with [] => Some nil
+           | (Var x)::xs =>  match l1 with [] => None
+                                   | ((y,a,b)::ys) => if x =? y then
+                                      match is_prefix qenv xs ys with None => None
+                                              | Some P => Some ((CState (BAnd (BEq a (Num 0)) (BEq b (Num (qenv x)))))::P)
+                                      end
+                                      else None  
+                             end
+           | (Index x [i])::xs =>  match l1 with [] => None
+                                   | ((y,a,b)::ys) => if x =? y then
+                                      match is_prefix qenv xs ys with None => None
+                                              | Some P => Some ((CState (BAnd (BGe i a) (BLt i b)))::P)
+                                      end
+                                      else None  
+                             end
+           | _ =>  None
+  end.
+
+Definition is_suffix (qenv: var -> nat) (l:list vari) (l1: list (var * aexp * aexp)) :=
+    is_prefix qenv (List.rev l) (List.rev l1).
+
+
+Inductive find_session {qenv: var -> nat} : tpred -> (list vari) -> list ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    find_session_empty : forall l, find_session nil l nil
+  | find_session_many_1 : forall x t xs l P Ps, is_prefix qenv l x = Some P
+               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps)
+  | find_session_many_2 : forall x t xs l P Ps, is_suffix qenv l x = Some P
+               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps).
+
+(*
+Inductive find_session_a {qenv: var -> nat} : tpred -> (list (var * aexp * aexp)) -> list ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    find_session_a_empty : forall l, find_session nil l nil
+  | find_session_a_many_1 : forall x t xs l P Ps, is_prefix qenv l x = Some P
+               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps)
+  | find_session_a_many_2 : forall x t xs l P Ps, is_suffix qenv l x = Some P
+               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps).
+*)
+
+Definition to_gate_type e (b:type_elem) :=
+  match e with H_gate => match b with TNor b => Some (TH (to_had_core b))
+                                    | TH ba => up_had_core ba
+                                    | _ => None
+                         end
+         | X_gate => match b with TNor ba => Some (TNor (x_nor_core ba))
+                                | TH ba => Some (TH (x_had_core ba))
+                                | _ => None
+                     end
+         | RZ_gate a => match b with TNor None => Some (TNor None)
+                              | TNor (Some (r,ba)) => Some (TNor (Some (APlus a r,ba)))
+                              | TH None => Some (TH None)
+                              | TH (Some (x::xl,r)) => Some (TH (Some ((APlus a x)::xl,r)))
+                              | _ => None
+                  end
+  end.
+
+(* an operation is either applied on  (x,0) or applying on all.  *)
+Inductive session_system {qenv: var -> nat} {env:aenv} 
+            : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    | skip_type : forall m m' T l tl t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l tl -> In t tl ->
+                   session_system m T (PSKIP) t
+    | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
+    | appu_type_1 : forall m T P e x a l t1 t2 n b b' tl, type_vari env (Index x ([a])) (Q,[Index x ([a])])
+            -> @find_session qenv T ([Index x ([a])]) tl -> In ((l,t1++([THT n b])++t2),P) tl -> to_gate_type e b = Some b' ->
+       session_system m T (AppU e (Index x ([a]))) ((l,t1++((THT a b)::(THT (Num 1) b')::(THT (AMinus n (AMinus a (Num 1))) b)::nil)++t2),
+               (CState (BAnd (BGe a (get_nums t1)) (BLt a (APlus (get_nums t1) n))))::P)
+    | seq_type : forall m env e1 e2 l1 t1 P1 l2 t2 P2, session_system m env e1 ((l1,t1),P1) 
+             -> session_system m env e2 ((l2,t2),P2)  -> session_system m env (PSeq e1 e2) ((l1++l2,t1++t2),P1++P2).
+(*
+    | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
+                 -> session_system m env (Classic e args) nil
+
+
+    | if_type_q_1 : forall m env b e1 e2 x l r tl t ta, type_bexp env b (Q,[x]) -> in_sessions_v P qenv x (l++r) = None
+       -> in_sessions_v P qenv x (l++r) = None -> session_same P qenv env l = false -> session_same P qenv env r= true 
+       -> in_sessions_v P qenv x T = Some (tl,t) -> is_had t = true -> is_nor_all (l++r) = true 
+       -> session_system Q env e1 (l++r) -> session_system Q env e2 (l++r)
+       -> merge_tc t (Num (count_tpred l)) (split_join_snd l) (acc_phase_all r) = Some ta ->
+              session_system m env (Switch x xl) ((tl++split_join_fst l,ta)::r).
+*)
+(*
+            | Classic (p:exp) (args: list (var * aexp * aexp))
+
+    | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
+                    session_system C env (IfExp b e1 e2) l1.
+
+    | if_type_cq : forall env b e1 e2 l, type_bexp env b (C,[]) -> session_system Q env e1 l -> session_system Q env e2 l ->
+                                        session_system Q env (IfExp b e1 e2) l
+*)
+
+(*
+    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
+                                                     session_system m env (IfExp b e1 e2) l
+    | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
+                 -> session_system m env (Classic e args) xl
+    | qft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (QFT x) a
+    | rqft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (RQFT x) a
+    | abort_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t -> session_system C env (Abort a x) (snd t)
+    | meas_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t-> session_system C env (Meas a x) (snd t)
+    | pmeas_type : forall env p a x t, type_vari env (Var p) (C,[]) -> type_vari env (Var a) (C,[])
+                        -> type_vari env (Var x) t -> session_system C env (PMeas p x a) (snd t)
+    | while_type : forall m env p b al, type_bexp env b (C,[]) -> session_system m env p al -> session_system m env (While b p) al
+    | qwhile_type : forall m env p al n x f b, type_aexp env n (C,[]) ->  AEnv.MapsTo x Q env
+                   -> type_aexp env f (Q,[Var x]) -> type_bexp env b (Q,[Var x]) ->
+                      session_system m env p al -> session_system m env (QWhile n x f b p) al
+    | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> session_system m env (Reflect x l) [Var x]
+*)
+
+Fixpoint sumPhase_var (x:var) (n:nat) :=
+  match n with 0 => Num 0
+         | S m => APlus (GetP (SA ([Index x ([Num m])]) nil)) (sumPhase_var x m)
+  end.
+
+Fixpoint subPhase (qenv : var -> nat) (xl:list vari) := 
+    match xl with [] => Num 0
+              | (Var x::yl) => APlus (sumPhase_var x (qenv x)) (subPhase qenv yl)
+              | (Index x (al)::yl) => APlus (GetP (SA ([Index x al]) nil)) (subPhase qenv yl)
+     end.
+
+
+
 Inductive triple {env:aenv} {qenv: var -> nat} 
-            : var -> (tpred * cpred) -> pexp -> var -> (tpred * cpred)  -> Prop :=
+            : tpred -> (var * cpred) -> pexp -> (var * cpred)  -> Prop :=
      (*| conjSep : forall e P P' Q, triple P e P' -> triple (PAnd P Q) e (PAnd P' Q). *)
 (*
      | eqs_comm : forall new T V e, triple new (T,V) e new (T,V).
@@ -943,42 +1091,47 @@ Inductive triple {env:aenv} {qenv: var -> nat}
 
      | appX_1 : forall new x lb rb t t' T P , 
         isNor t -> x_nors t t' ->
-         triple new ((([(x,lb,rb)], t))::T, 
+         triple ((([(x,lb,rb)], t))::T) (new, 
              subst_adds_cpreds P ([Var x]) ([Var x],app_X_nors x new (Num 0) (Num (qenv x))))
-              (AppU X_gate (Var x)) (fresh new) ((([(x,lb,rb)], t'))::T, 
+              (AppU X_gate (Var x)) (fresh new, 
                         (CState (BAnd (BEq lb (Num 0)) (BEq rb (Num (qenv x)))))::P)
      | appX_2 : forall new x i lb rb t1 t2 n b T P , 
-         triple new ((([(x,lb,rb)], t1++[THT n (TNor b)]++t2))::T, 
-             subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
-              (AppU X_gate (Index x [i])) (new) ((([(x,lb,rb)],
-                      t1++((THT i (TNor b))::(THT (Num 1) (TNor (x_nor_core b)))::(THT (AMinus (AMinus n i) (Num 1)) (TNor b))::nil)++t2))::T, 
+         triple ((([(x,lb,rb)], t1++[THT n (TNor b)]++t2))::T)
+            (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
+              (AppU X_gate (Index x [i])) (new,
               (CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P)
      | appX_3 : forall new x i lb rb t1 t2 n b T P , 
-         triple new ((([(x,lb,rb)], t1++[THT n (TH b)]++t2))::T, 
-             subst_adds_cpreds P ([Var x]) ([Var x],app_X_had x i))
-              (AppU X_gate (Index x [i])) (new) ((([(x,lb,rb)],
-                      t1++((THT i (TH b))::(THT (Num 1) (TH (x_had_core b)))::(THT (AMinus (AMinus n i) (Num 1)) (TH b))::nil)++t2))::T, 
-              (CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P)
+         triple ((([(x,lb,rb)], t1++[THT n (TH b)]++t2))::T) 
+           (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_had x i))
+              (AppU X_gate (Index x [i]))
+              (new,(CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P)
      | appH_1 : forall new x lb rb t t' T P , 
         isNor t -> nor_to_had t t' ->
-         triple new ((([(x,lb,rb)], t))::T, 
-             subst_adds_cpreds P ([Var x]) ([Var x],app_X_nors x new (Num 0) (Num (qenv x))))
-              (AppU H_gate (Var x)) (fresh new) ((([(x,lb,rb)], t'))::T, 
-                        (CState (BAnd (BEq lb (Num 0)) (BEq rb (Num (qenv x)))))::P)
+         triple ((([(x,lb,rb)], t))::T) 
+          (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_nors x new (Num 0) (Num (qenv x))))
+              (AppU H_gate (Var x))
+           (fresh new, (CState (BAnd (BEq lb (Num 0)) (BEq rb (Num (qenv x)))))::P)
      | appH_2 : forall new x i lb rb t1 t2 n b T P , 
-         triple new ((([(x,lb,rb)], t1++[THT n (TNor b)]++t2))::T, 
-             subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
-              (AppU H_gate (Index x [i])) (new) ((([(x,lb,rb)],
-                      t1++((THT i (TNor b))::(THT (Num 1) (TH (to_had_core b)))::(THT (AMinus (AMinus n i) (Num 1)) (TNor b))::nil)++t2))::T, 
-              (CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P).
+         triple ((([(x,lb,rb)], t1++[THT n (TNor b)]++t2))::T) 
+           (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
+            (AppU H_gate (Index x [i]))
+            (new, (CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P)
+     | if_1 : forall new T P x a x' bl xl yl tl1 tl2 t1 newP1 newP2 newP3 ph r,
+              @find_session qenv T ([Index x a]) tl1 -> In ([x'],([THT (Num 1) (TH (Some (ph,r)))]),newP1) tl1 ->
+              (forall q e, In (q,e) bl -> @session_system qenv env Q T e ((yl,t1),newP2)) ->
+              stype_pexp_list Q env (List.map (fun a => snd a) bl) (Q,xl) -> 
+              @find_session qenv T (xl) tl2 -> In ((yl,t1),newP3) tl1 -> isRealNor t1 ->
+              triple T (new,subst_adds_cpreds P ([Index x a]) (([Index x a]),SA ([Index x a]) [])) 
+                     (Switch (Index x a) bl) (new,newP1++newP2++newP3++P). 
 
+(*
      | if_1 : forall new new' new'' b e1 e2 x n y bl ba r a l T P be1 be2, type_bexp env b (Q,[Index x [a]]) -> In (ba,TH r) bl -> 
          type_system Q env e1 l -> 
          triple new (T,subst_adds_cpreds P (l,be1)) e1 new' (T,P) ->
          triple new' (T,subst_adds_cpreds P (l,be2)) e2 new'' (T,P) ->
          triple new ((([(x,n)], TITE y bl))::T, (subst_adds_cpreds P ((Index x [a])::l,
                            SPlus (Tensor ((ket b)::[be1])) (Tensor ((ket (BNeg b))::[be2])))))
-              (IfExp b e1 e2) new'' ((([(x,n)], (TAll (TH (TV (Num 0))))))::T,  (CState (subst_num_bexp ba y a))::P)
+              (Switch x l) new'' ((([(x,n)], (TAll (TH (TV (Num 0))))))::T,  (CState (subst_num_bexp ba y a))::P).
      | if_2 : forall new new' new'' b e1 e2 x n r l T P be1 be2, type_bexp env b (Q,[Var x]) -> type_system Q env e1 l -> 
          triple new (T,subst_adds_cpreds P (l,be1)) e1 new' (T,P) ->
          triple new' (T,subst_adds_cpreds P (l,be2)) e2 new'' (T,P) ->
@@ -996,52 +1149,7 @@ Inductive triple {env:aenv} {qenv: var -> nat}
               (QWhile m x f b e) new' ((([(x,n)], TAll (TH r)))::T, 
                  (CState (BNeg (subst_bexp b x m)))::[QState (SA ((Var x)::xl) []) (Sigma m x (Num 0) P)]).
 
-
-(* an operation is either applied on  (x,0) or applying on all.  *)
-Inductive session_system {P: cpred} {qenv: var -> nat} {T : tpred} 
-            : atype -> aenv -> pexp -> tpred -> cpred -> Prop :=
-    | skip_type : forall m env a l t, in_sessions P qenv a T = Some (l,t) -> session_system m env (PSKIP a) [(l,t)] []
-    | assign_type : forall env a v, type_aexp env v (C,[]) -> session_system C env (Assign a v) nil []
-    | appu_type_1 : forall m env p e x a al av num l t t', type_vari env p (Q,[Index x (a::al)])
-              -> in_sessions_v P qenv (Index x (a::al)) T = Some (l,t) -> eval_aexp P a = Some av ->
-              count_num l x av = Some num -> change_type t num e t' -> session_system m env (AppU e p) [(l,t')] [].
-    | seq_type : forall m env e1 e2 l1 l2, session_system m env e1 l1 
-             -> session_system m env e2 l2 -> session_system m env (PSeq e1 e2) (l1++l2)
-    | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
-                 -> session_system m env (Classic e args) nil
-    | if_type_q_1 : forall m env b e1 e2 x l r tl t ta, type_bexp env b (Q,[x]) -> in_sessions_v P qenv x (l++r) = None
-       -> in_sessions_v P qenv x (l++r) = None -> session_same P qenv env l = false -> session_same P qenv env r= true 
-       -> in_sessions_v P qenv x T = Some (tl,t) -> is_had t = true -> is_nor_all (l++r) = true 
-       -> session_system Q env e1 (l++r) -> session_system Q env e2 (l++r)
-       -> merge_tc t (Num (count_tpred l)) (split_join_snd l) (acc_phase_all r) = Some ta ->
-                                                     session_system m env (IfExp b e1 e2) ((tl++split_join_fst l,ta)::r).
-(*
-            | Classic (p:exp) (args: list (var * aexp * aexp))
-
-    | if_type_c : forall env b e1 e2 l1 l2, type_bexp env b (C,[]) -> session_system C env e1 l1 -> session_system C env e2 l2 ->
-                    session_system C env (IfExp b e1 e2) l1.
-
-    | if_type_cq : forall env b e1 e2 l, type_bexp env b (C,[]) -> session_system Q env e1 l -> session_system Q env e2 l ->
-                                        session_system Q env (IfExp b e1 e2) l
 *)
-
-    | if_type_q_1 : forall m env b e1 e2 x l, type_bexp env b (Q,[x]) -> session_system Q env e1 l -> session_system Q env e2 l ->
-                                                     session_system m env (IfExp b e1 e2) l
-    | classic_type : forall m env e args xl, type_vari_list env (List.map (fun arg => Var (fst (fst arg))) args) (Q,xl) 
-                 -> session_system m env (Classic e args) xl
-    | qft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (QFT x) a
-    | rqft_type : forall m env x a, type_vari env (Var x) (Q,a) -> session_system m env (RQFT x) a
-    | abort_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t -> session_system C env (Abort a x) (snd t)
-    | meas_type : forall env a x t, type_vari env (Var a) (C,[]) -> type_vari env (Var x) t-> session_system C env (Meas a x) (snd t)
-    | pmeas_type : forall env p a x t, type_vari env (Var p) (C,[]) -> type_vari env (Var a) (C,[])
-                        -> type_vari env (Var x) t -> session_system C env (PMeas p x a) (snd t)
-    | while_type : forall m env p b al, type_bexp env b (C,[]) -> session_system m env p al -> session_system m env (While b p) al
-    | qwhile_type : forall m env p al n x f b, type_aexp env n (C,[]) ->  AEnv.MapsTo x Q env
-                   -> type_aexp env f (Q,[Var x]) -> type_bexp env b (Q,[Var x]) ->
-                      session_system m env p al -> session_system m env (QWhile n x f b p) al
-    | reflect_type : forall m env x l, AEnv.MapsTo x Q env -> session_system m env (Reflect x l) [Var x].
-
-
 
 
 
@@ -1137,7 +1245,7 @@ Inductive type_system : atype -> aenv -> pexp -> list static_type -> Prop :=
 
 
 (* Definition Type predicates that will be used in triple. *)
-
+(*
 Inductive mode := Qmode (x:var) | Cmode.
 
 Definition check_mode (a:mode) (b:var) := match a with Cmode => True | Qmode x => (x <> b) end.
@@ -1168,7 +1276,7 @@ Fixpoint subst_num_bexp (b:bexp) (x:var) (a:aexp) :=
             | BNeg u => BNeg (subst_num_bexp u x a)
             | a => a
    end.
-
+*)
 (*
 Inductive qtype := QS (t:type_pred) | QC (t:type_pred).
 *)
@@ -1221,11 +1329,12 @@ Fixpoint eupdates_elem_ent (tv:type_env) (x:var) (n:nat) (p:list (var * nat)) :=
             | S m => (eupdates_elem_ent tv x m p)[(x,m) |-> change_entangle (tv (x,m)) p]
         end.
 *)
+(*
 Definition azero :=  (Num 0).
 
 Definition tazero := TV ( (Num 0)).
 
-
+*)
 
 
 (*
@@ -1237,8 +1346,10 @@ Inductive tpred_elem := Uniform (x:posi) (p:pexp_type) | Binary (x:posi) (b:bexp
    t maps from qubit variable to type *)
 
 
-Definition var_eqs := list ((var * aexp) * list (var * aexp)).
+
 (*
+Definition var_eqs := list ((var * aexp) * list (var * aexp)).
+
 Fixpoint subst_var_aexp (a:aexp) (x:var) (y:var) :=
    match a with BA b => BA (subst_var_vari b x y)
               | Num n => Num n

@@ -33,6 +33,7 @@ Inductive aexp := BA (b:vari)
            | Left (s:state)   (* in a superposition alpha |0> + beta |1>, the alpha *)
            | Right (s:state)  (* in a superposition alpha |0> + beta |1>, the beta *)
            | Bit (b:bexp)
+           | ASum (x:bexp) (y:aexp)
 
 with vari := Var(x:var) | Index (x:var) (al:list aexp)
 
@@ -98,6 +99,7 @@ Fixpoint collect_var_aexp (a:aexp) :=
               | Left s => collect_var_state s
               | Right s => collect_var_state s
               | Bit s => collect_var_bexp s
+              | ASum s y => collect_var_bexp s ++ collect_var_aexp y
 
     end
 
