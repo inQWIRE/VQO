@@ -980,12 +980,15 @@ Definition is_suffix (qenv: var -> nat) (l:list vari) (l1: list (var * aexp * ae
     is_prefix qenv (List.rev l) (List.rev l1).
 
 
-Inductive find_session {qenv: var -> nat} : tpred -> (list vari) -> list ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
-    find_session_empty : forall l, find_session nil l nil
+Inductive find_sessions {qenv: var -> nat} : tpred -> (list vari) -> list ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    find_session_empty : forall l, find_sessions nil l nil
   | find_session_many_1 : forall x t xs l P Ps, is_prefix qenv l x = Some P
-               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps)
+               -> find_sessions xs l Ps -> find_sessions ((x,t)::xs) l (((x,t),P)::Ps)
   | find_session_many_2 : forall x t xs l P Ps, is_suffix qenv l x = Some P
-               -> find_session xs l Ps -> find_session ((x,t)::xs) l (((x,t),P)::Ps).
+               -> find_sessions xs l Ps -> find_sessions ((x,t)::xs) l (((x,t),P)::Ps).
+
+Inductive find_session {qenv: var -> nat} : tpred -> (list vari) -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+   find_session_main : forall T l tl x, @find_sessions qenv T l tl  -> In x tl -> find_session T l x.
 
 (*
 Inductive find_session_a {qenv: var -> nat} : tpred -> (list (var * aexp * aexp)) -> list ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
@@ -1016,11 +1019,11 @@ Definition to_gate_type e (b:type_elem) :=
 (* an operation is either applied on  (x,0) or applying on all.  *)
 Inductive session_system {qenv: var -> nat} {env:aenv} 
             : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
-    | skip_type : forall m m' T l tl t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l tl -> In t tl ->
+    | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
                    session_system m T (PSKIP) t
     | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
-    | appu_type_1 : forall m T P e x a l t1 t2 n b b' tl, type_vari env (Index x ([a])) (Q,[Index x ([a])])
-            -> @find_session qenv T ([Index x ([a])]) tl -> In ((l,t1++([THT n b])++t2),P) tl -> to_gate_type e b = Some b' ->
+    | appu_type_1 : forall m T P e x a l t1 t2 n b b', type_vari env (Index x ([a])) (Q,[Index x ([a])])
+            -> @find_session qenv T ([Index x ([a])]) ((l,t1++([THT n b])++t2),P) -> to_gate_type e b = Some b' ->
        session_system m T (AppU e (Index x ([a]))) ((l,t1++((THT a b)::(THT (Num 1) b')::(THT (AMinus n (AMinus a (Num 1))) b)::nil)++t2),
                (CState (BAnd (BGe a (get_nums t1)) (BLt a (APlus (get_nums t1) n))))::P)
     | seq_type : forall m env e1 e2 l1 t1 P1 l2 t2 P2, session_system m env e1 ((l1,t1),P1) 
@@ -1116,13 +1119,20 @@ Inductive triple {env:aenv} {qenv: var -> nat}
            (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
             (AppU H_gate (Index x [i]))
             (new, (CState (BAnd (BGe i (get_nums t1)) (BLt (APlus (get_nums t1) n) i)))::(CState (BAnd (BGe i lb) (BLt rb i)))::P)
-     | if_1 : forall new T P x a x' bl xl yl tl1 tl2 t1 newP1 newP2 newP3 ph r,
-              @find_session qenv T ([Index x a]) tl1 -> In ([x'],([THT (Num 1) (TH (Some (ph,r)))]),newP1) tl1 ->
-              (forall q e, In (q,e) bl -> @session_system qenv env Q T e ((yl,t1),newP2)) ->
-              stype_pexp_list Q env (List.map (fun a => snd a) bl) (Q,xl) -> 
-              @find_session qenv T (xl) tl2 -> In ((yl,t1),newP3) tl1 -> isRealNor t1 ->
-              triple T (new,subst_adds_cpreds P ([Index x a]) (([Index x a]),SA ([Index x a]) [])) 
-                     (Switch (Index x a) bl) (new,newP1++newP2++newP3++P). 
+     | if_1 : forall new T P x a x' q e xl yl t1 newP1 newP2 newP3 ph r,
+              @find_session qenv T ([Index x a]) ([x'],([THT (Num 1) (TH (Some (ph,r)))]),newP1) ->
+               @session_system qenv env Q T e ((yl,t1),newP2) ->
+              stype_pexp Q env e (Q,xl) -> 
+              @find_session qenv T (xl) ((yl,t1),newP3) -> isRealNor t1 ->
+              triple T (new,subst_adds_cpreds P ([Index x a]) (([Index x a]),upP (SA ([Index x a]) []) (subPhase qenv xl))) 
+                     (Switch (Index x a) ([(q,e)])) (new,newP1++newP2++newP3++P)
+     | if_2 : forall new T P x a x' q e xl yl t1 t2 newP1 newP2 newP3 ph r,
+              @find_session qenv T ([Index x a]) ([x'],([THT (Num 1) (TH (Some (ph,r)))]),newP1) ->
+              @session_system qenv env Q T e ((yl,t2),newP2) ->
+              stype_pexp Q env e (Q,xl) -> 
+              @find_session qenv T (xl) ((yl,t1),newP3) -> isRealNor t1 -> isRealNor t2 -> t1 <> t2 ->
+              triple T (new,subst_adds_cpreds P ([Index x a]) ((Index x a)::xl,upP (SA ([Index x a]) []) (subPhase qenv xl))) 
+                     (Switch (Index x a) ([(q,e)])) (new,newP1++newP2++newP3++P). 
 
 (*
      | if_1 : forall new new' new'' b e1 e2 x n y bl ba r a l T P be1 be2, type_bexp env b (Q,[Index x [a]]) -> In (ba,TH r) bl -> 
