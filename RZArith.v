@@ -1031,7 +1031,6 @@ Proof.
   subst.
   rewrite adder_sub_seq with (B := B) (tenv:=tenv) ; try easy.
   1-3:simpl;lia.
-  Check qft_cu_sem.
   rewrite qft_cu_sem with (tenv := tenv) (size := size); try easy.
   assert ((g c) = f c). subst.
   rewrite efresh_exp_sem_irrelevant. easy.
@@ -1550,10 +1549,8 @@ Proof.
   assert (exp_scope aenv x (S size)
         (rz_adder x (S size) (nat2fb A); rz_sub x (S size) (nat2fb M))).
   constructor. apply escope_rz_adder. apply escope_rz_sub.
-  Check mod_adder_half_sem.
   specialize (mod_adder_half_sem size f x c A B M aenv tenv
               H H0 H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 H11) as eq1.
-  Check clean_hbit_sem.
   rewrite clean_hbit_sem with (tenv := tenv) (B:=((B + A) mod M)); try easy.
   rewrite get_r_qft_out by easy.
   rewrite eq1. easy. easy. lia.
@@ -1593,7 +1590,6 @@ Proof.
   Local Transparent rz_compare_half rz_adder.
   assert (A < 2 ^ S size) by (simpl;lia).
   assert (B < 2 ^ S size) by (simpl;lia).
-  Check rz_adder_full.
   assert (S size = aenv x) as X1 by easy.
   specialize (rz_adder_full (S size) f x B A aenv tenv X1 H1 H9 H13 H14 H8) as eq1.
   unfold turn_qft.
@@ -1602,7 +1598,6 @@ Proof.
   assert (get_cua
        (exp_sem aenv (rz_compare_half x (S size) c M)
           (exp_sem aenv (rz_adder x (S size) (nat2fb A)) f) c) = (B + A <? M)).
-  Check rz_compare_half_sem.
   rewrite rz_compare_half_sem with (A:=(B + A)) (tenv := tenv); try easy.
   rewrite efresh_exp_sem_irrelevant. easy.
   apply exp_WF_rz_adder; try lia.
@@ -3374,7 +3369,6 @@ Proof.
    apply rz_full_adder_well_typed; try easy.
    assert (qft_uniform aenv (Env.add x (Phi (aenv x)) tenv) gf).
    rewrite Heqgf.
-   Check qft_uniform_exp_trans.
    apply qft_uniform_exp_trans with (tenv := (Env.add x (Phi (aenv x)) tenv)); try easy.
    apply rz_full_adder_well_typed; try easy.
    assert (qft_gt aenv (Env.add x (Phi (aenv x)) tenv) gf).
@@ -3576,7 +3570,6 @@ Proof.
   symmetry in H1.
   assert (Env.MapsTo x (Phi (aenv x)) (Env.add x (Phi (aenv x)) tenv)).
   apply Env.add_1. easy.
-   Check rz_adder_full.
   specialize (rz_adder_full n g x A M aenv (Env.add x (Phi (aenv x)) tenv)
         H1 H10 H7 H0 eq3 H13) as eq4.
   Local Transparent rz_adder.
@@ -3589,7 +3582,6 @@ Proof.
    apply rz_adder_well_typed; try easy.
    assert (qft_uniform aenv (Env.add x (Phi (aenv x)) tenv) gf).
    rewrite Heqgf.
-   Check qft_uniform_exp_trans.
    apply qft_uniform_exp_trans with (tenv := (Env.add x (Phi (aenv x)) tenv)); try easy.
   unfold at_match in *.
   intros. bdestruct (x0 =? x). subst.
@@ -4105,7 +4097,6 @@ Proof.
    apply rz_full_sub_well_typed; try easy.
    assert (qft_uniform aenv (Env.add x (Phi (aenv x)) tenv) gf).
    rewrite Heqgf.
-   Check qft_uniform_exp_trans.
    apply qft_uniform_exp_trans with (tenv := (Env.add x (Phi (aenv x)) tenv)); try easy.
    apply rz_full_sub_well_typed; try easy.
    assert (qft_gt aenv (Env.add x (Phi (aenv x)) tenv) gf).
@@ -4281,7 +4272,6 @@ Proof.
   symmetry in H1.
   assert (Env.MapsTo x (Phi (aenv x)) (Env.add x (Phi (aenv x)) tenv)).
   apply Env.add_1. easy.
-   Check rz_sub_full.
   specialize (rz_sub_full n g x A M aenv (Env.add x (Phi (aenv x)) tenv)
         H1 H10 H7 H0 eq3 H13) as eq4.
   Local Transparent rz_sub.
@@ -4294,7 +4284,6 @@ Proof.
    apply rz_sub_well_typed; try easy.
    assert (qft_uniform aenv (Env.add x (Phi (aenv x)) tenv) gf).
    rewrite Heqgf.
-   Check qft_uniform_exp_trans.
    apply qft_uniform_exp_trans with (tenv := (Env.add x (Phi (aenv x)) tenv)); try easy.
   unfold at_match in *.
   intros. bdestruct (x0 =? x). subst.

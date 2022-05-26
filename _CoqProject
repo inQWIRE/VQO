@@ -12,7 +12,9 @@ externals/SQIR/SQIR/SQIR.v
 externals/SQIR/SQIR/UnitarySem.v
 externals/SQIR/SQIR/VectorStates.v
 externals/SQIR/SQIR/UnitaryOps.v
-externals/SQIR/SQIR/AltGateSet.v
+externals/SQIR/SQIR/Equivalences.v
+externals/SQIR/SQIR/GateDecompositions.v
+externals/SQIR/SQIR/ExtractionGateSet.v
 externals/SQIR/SQIR/DiscreteProb.v
 
 externals/SQIR/examples/QPE.v

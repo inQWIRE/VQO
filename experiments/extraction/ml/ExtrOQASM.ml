@@ -1,7 +1,7 @@
-open AltGateSet
 open BasicUtility
 open CLArith
 open Datatypes
+open ExtractionGateSet
 open MathSpec
 open OQASM
 open OQASMProof

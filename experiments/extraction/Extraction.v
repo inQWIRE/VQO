@@ -1,6 +1,6 @@
 Require Coq.extraction.Extraction.
 Require Import Reals.
-Require Import AltGateSet.
+Require Import ExtractionGateSet.
 Require Import OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
@@ -75,4 +75,4 @@ Separate Extraction
     ExtrOQASM.compile_chacha_sqir 
     
     (* gate decomposition pass *)
-    AltGateSet.decompose_to_voqc_gates.
+    ExtractionGateSet.decompose_to_voqc_gates.

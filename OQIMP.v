@@ -1991,7 +1991,6 @@ Proof.
   bdestruct (fl =fl= Classic).
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v (get_size size b))
            (v2:= (a_nat2fb x (get_size size b))) (f':=f) ; try easy.
   assert ((exp_sem aenv (inv_exp (init_v (get_size size b) temp x))
@@ -2069,7 +2068,6 @@ Proof.
   rewrite get_r_put_same. easy.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v (get_size size b))
            (v2:= (a_nat2fb x (get_size size b))) (f':=f) ; try easy.
   assert ((exp_sem aenv (inv_exp (init_v (get_size size b) temp x))
@@ -2187,14 +2185,12 @@ Proof.
   remember ( X (stack, sn)) as xop.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x := temp) (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))).
   simpl.
   rewrite <- put_cus_update_flip by iner_p.
   rewrite eupdate_same.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v (get_size size b))
            (v2:= (a_nat2fb x (get_size size b))) (f':=f) ; try easy.
   rewrite Heqxop.
@@ -2372,14 +2368,12 @@ Proof.
   remember ( X (stack, sn)) as xop.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x := temp) (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   bdestruct ((a_nat2fb x (get_size size b) <=? a_nat2fb v (get_size size b))).
   simpl.
   rewrite <- put_cus_update_flip by iner_p.
   rewrite eupdate_same.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v (get_size size b))
            (v2:= (a_nat2fb x (get_size size b))) (f':=f) ; try easy.
   rewrite Heqxop.
@@ -2574,7 +2568,6 @@ Proof.
   bdestruct (fl =fl= Classic).
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   assert ((exp_sem aenv (inv_exp (init_v (get_size size b) temp x))
@@ -2652,7 +2645,6 @@ Proof.
   rewrite get_r_put_same. easy.
   simpl.
   rewrite init_v_sem with (size := (get_size size b)) (tenv := tenv); try easy.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   assert ((exp_sem aenv (inv_exp (init_v (get_size size b) temp x))
@@ -2776,7 +2768,6 @@ Proof.
   simpl.
   rewrite <- put_cus_update_flip by iner_p.
   rewrite eupdate_same.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x := temp) (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   rewrite Heqxop.
@@ -2960,7 +2951,6 @@ Proof.
   simpl.
   rewrite <- put_cus_update_flip by iner_p.
   rewrite eupdate_same.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x := temp) (tenv := tenv) (v1 := a_nat2fb x (get_size size b))
            (v2:= (a_nat2fb v (get_size size b))) (f':=f) ; try easy.
   rewrite Heqxop.
@@ -3154,7 +3144,6 @@ Proof.
   intros. 
   unfold clt_circuit_two.
   bdestruct (fl =fl= Classic).
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (tenv := tenv) (v1 := a_nat2fb v2 (get_size size b))
            (v2:= (a_nat2fb v1 (get_size size b))) (f':=f) ; try easy.
   assert ((¬ (a_nat2fb v2 (get_size size b) <=? a_nat2fb v1 (get_size size b)))
@@ -3287,7 +3276,6 @@ Proof.
   bdestruct (fl =fl= Classic).
   remember ( X (stack, sn)) as xop.
   simpl.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x:=vmap y) (tenv := tenv) (v1 := a_nat2fb v2 (get_size size b))
            (v2:= (a_nat2fb v1 (get_size size b))) (f':=f) ; try easy.
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v1 (get_size size b))).
@@ -3406,7 +3394,6 @@ Proof.
   bdestruct (i <? get_size size b). lia. easy.
   remember ( X (stack, sn)) as xop.
   simpl.
-  Check comparator01_correct_1.
   rewrite comparator01_correct_1 with (x:=vmap y) (tenv := tenv) (v1 := a_nat2fb v2 (get_size size b))
            (v2:= (a_nat2fb v1 (get_size size b))) (f':=f) ; try easy.
   bdestruct ((a_nat2fb v2 (get_size size b) <=? a_nat2fb v1 (get_size size b))).
@@ -3851,7 +3838,6 @@ Proof.
   apply get_cus_small with (size := size); try easy.
   unfold get_size. bdestruct (b0 =b= Bl). lia. lia.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl y x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -3926,7 +3912,6 @@ Proof.
   easy.
   remember (aenv (get_size size b0) stack) as sl.
   assert (aenv (get_size size b0) (vmap x2) = get_size size b0) as eq8.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q, b0) x2
           size (aenv (get_size size b0)) bv smap vmap rh rl stack temp); try easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
@@ -3939,7 +3924,6 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv size rl x x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
-  Check clt_circuit_left_sem.
   rewrite clt_circuit_left_sem with (tenv := tenv) (v := x0) (sl := sl); try easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
   apply (not_eq_stack_var stack temp vmap smap
@@ -3952,7 +3936,6 @@ Proof.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
   rewrite <- eq8.
-  Check q_var_same_value.
   rewrite (q_var_same_value x x2 (Q, b0) x0 smap vmap bv size rh rl); try easy.
   rewrite eq8. apply cut_n_eq.
   apply (stored_value_typed smap rh bv size x x0 Q); try easy.
@@ -3960,7 +3943,6 @@ Proof.
   apply get_cus_small with (size := size); try easy.
   unfold get_size. bdestruct (b0 =b= Bl). lia. lia.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl x x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
@@ -4037,7 +4019,6 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv size rl y x4 x3 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
   apply hd_list_in. easy.
-  Check q_var_same_value.
   rewrite <- eq9.
   rewrite (q_var_same_value x x2 (Q, b0) x0 smap vmap bv size rh rl); try easy.
   rewrite eq9. apply cut_n_eq.
@@ -4047,13 +4028,11 @@ Proof.
   rewrite eq10. apply cut_n_eq.
   apply (stored_value_typed smap rh bv size y x1 Q); try easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl x x4 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
   apply par_find_get_var in eq8 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl y x4 x3 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -4092,7 +4071,6 @@ Proof.
   apply type_cfac_sem_value with (t := (a,b)) (rh := rh) in eq4 as X1; try easy.
   destruct X1.
   rewrite H0 in *.
-  Check type_cfac_sem_value_same.
   rewrite (type_cfac_sem_value_same x y x1 (a,b) (a0,b0) bv smap size rh rl) in H0; try easy.
   rewrite H0 in *. 
   simpl in *. inv H1.
@@ -4176,7 +4154,6 @@ Proof.
   apply get_cus_small with (size := size); try easy.
   unfold get_size. bdestruct (b0 =b= Bl). lia. lia.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl y x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -4251,7 +4228,6 @@ Proof.
   easy.
   remember (aenv (get_size size b0) stack) as sl.
   assert (aenv (get_size size b0) (vmap x2) = get_size size b0) as eq8.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q, b0) x2
           size (aenv (get_size size b0)) bv smap vmap rh rl stack temp); try easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
@@ -4264,7 +4240,6 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv size rl x x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
-  Check ceq_circuit_left_sem.
   rewrite ceq_circuit_left_sem with (tenv := tenv) (v := x0) (sl := sl); try easy.
   bdestruct ((a_nat2fb x0 (get_size size b0) =? a_nat2fb x1 (get_size size b0))).
   bdestruct ((a_nat2fb x1 (get_size size b0) =? a_nat2fb x0 (get_size size b0))).
@@ -4282,7 +4257,6 @@ Proof.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
   rewrite <- eq8.
-  Check q_var_same_value.
   rewrite (q_var_same_value x x2 (Q, b0) x0 smap vmap bv size rh rl); try easy.
   rewrite eq8. apply cut_n_eq.
   apply (stored_value_typed smap rh bv size x x0 Q); try easy.
@@ -4290,7 +4264,6 @@ Proof.
   apply get_cus_small with (size := size); try easy.
   unfold get_size. bdestruct (b0 =b= Bl). lia. lia.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl x x3 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
@@ -4367,7 +4340,6 @@ Proof.
          (get_var_cfac x ++ get_var_cfac y) bv size rl y x4 x3 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
   apply hd_list_in. easy.
-  Check q_var_same_value.
   rewrite <- eq9.
   rewrite (q_var_same_value x x2 (Q, b0) x0 smap vmap bv size rh rl); try easy.
   rewrite eq9. apply cut_n_eq.
@@ -4377,13 +4349,11 @@ Proof.
   rewrite eq10. apply cut_n_eq.
   apply (stored_value_typed smap rh bv size y x1 Q); try easy.
   apply par_find_get_var in eq7 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl x x4 x2 (Q, b0)); try easy.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy. 
   apply par_find_get_var in eq8 as X1. destruct X1.
-  Check all_nor_var.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
              bv size rl y x4 x3 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -4422,7 +4392,6 @@ Proof.
   apply type_cfac_sem_value with (t := (a,b)) (rh := rh) in eq4 as X1; try easy.
   destruct X1.
   rewrite H0 in *.
-  Check type_cfac_sem_value_same.
   rewrite (type_cfac_sem_value_same x y x1 (a,b) (a0,b0) bv smap size rh rl) in H0; try easy.
   rewrite H0 in *. 
   simpl in *. inv H1.
@@ -5745,7 +5714,6 @@ Proof.
   destruct t0. simpl in *.
   destruct (typ_factor_full bv C Nat v) eqn:eq3.
   simpl in *.
-  Check sem_factor_full_par_eval_same_c.
   rewrite (sem_factor_full_par_eval_same_c v p C Nat bv smap size rh rl) in eq2; try easy.
   rewrite eq2 in *.
   simpl in *.
@@ -5769,7 +5737,6 @@ Proof.
   destruct t0. simpl in *.
   destruct (typ_factor_full bv C Nat v) eqn:eq3.
   simpl in *.
-  Check sem_factor_full_par_eval_same_c.
   rewrite (sem_factor_full_par_eval_same_c v p C Nat bv smap size rh rl) in eq2; try easy.
   rewrite eq2 in *.
   simpl in *.
@@ -5793,7 +5760,6 @@ Proof.
   destruct t0. simpl in *.
   destruct (typ_factor_full bv C Nat v) eqn:eq3.
   simpl in *.
-  Check sem_factor_full_par_eval_same_c.
   rewrite (sem_factor_full_par_eval_same_c v p C Nat bv smap size rh rl) in eq2; try easy.
   rewrite eq2 in *.
   simpl in *.
@@ -6048,7 +6014,6 @@ Proof.
   unfold cut_n.
   bdestruct (x0 <? 1). easy. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, Bl)); try easy.
   simpl. apply in_or_app. left.
@@ -6060,7 +6025,6 @@ Proof.
   apply hd_list_in. easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,Bl) xn x_val xl); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, Bl)); try easy.
   simpl. apply in_or_app. left.
@@ -6081,7 +6045,6 @@ Proof.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, Bl)); try easy.
   simpl. apply in_or_app. left.
@@ -6094,7 +6057,6 @@ Proof.
   rewrite (aenv_match_value_cfac x (Q, Bl) xn size 
        (aenv (get_size size Bl)) bv' smap vmap rh rl stack temp); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, Bl)); try easy.
   simpl. apply in_or_app. left.
@@ -6130,7 +6092,6 @@ Proof.
   bdestruct (b =b= Bl). easy.
   bdestruct (x0 <? size).  easy. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6142,7 +6103,6 @@ Proof.
   apply hd_list_in. easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6163,7 +6123,6 @@ Proof.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6176,7 +6135,6 @@ Proof.
   rewrite (aenv_match_value_cfac x (Q, b) xn size 
        (aenv (get_size size b)) bv' smap vmap rh rl stack temp); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6205,7 +6163,6 @@ Proof.
   subst. easy. easy.
   assert (vmap xn <> stack) as V1.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6222,13 +6179,11 @@ Proof.
   apply type_nor_modes with (env := tenv);try easy.
   rewrite eq9 in *.
   assert (aenv size (vmap xn) = (get_size size (snd (Q,b)))) as V4.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q,b) xn size (aenv size) bv' smap vmap
            rh rl stack temp); try easy.
   assert (nor_modes f (vmap xn) size) as V5.
   simpl in V4. rewrite eq9 in *. rewrite <- V4.
   apply type_nor_modes with (env := tenv);try easy.
-  Check all_nor_var.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6261,18 +6216,15 @@ Proof.
   rewrite H27. clear H27.
   rewrite get_put_cus_cut_n; try easy.
   rewrite H0 in *. inv H33.
-  Check q_var_same_value.
   simpl in *. rewrite eq9 in *.
   assert ((get_cus size f (vmap xn)) = cut_n x_val size).
   rewrite <- V4.
   rewrite (q_var_same_value x xn (Q, b) x_val smap vmap bv' size rh rl); try easy.
-  Check par_find_var_store_value.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   rewrite H27.
   assert ((cut_n val size) = val).
   rewrite cut_n_eq. easy.
   rewrite <- eq9.
-  Check stored_value_typed.
   assert (b = b0).
   destruct eq8. subst.
   destruct b0. destruct b. 1-5:easy.
@@ -6289,7 +6241,6 @@ Proof.
   assert ((cut_n x_val size) = x_val).
   rewrite cut_n_eq. easy.
   rewrite <- eq9.
-  Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x
            xn x_val xl Q b); try easy.
   rewrite H32.
@@ -6325,11 +6276,9 @@ Proof.
   subst. easy. easy.
   rewrite eq9 in *.
   assert (aenv size (vmap xn) = (get_size size (snd (Q,b)))) as V1.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q,b) xn size (aenv size) bv' smap vmap
            rh rl stack temp); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6342,7 +6291,6 @@ Proof.
   assert (nor_modes f (vmap xn) size) as V2.
   simpl in V1. rewrite eq9 in *. rewrite <- V1.
   apply type_nor_modes with (env := tenv);try easy.
-  Check all_nor_var.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6357,11 +6305,9 @@ Proof.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
-  Check q_var_same_value.
   rewrite (q_var_same_value x xn (Q,b) x_val smap vmap bv' size rh rl f (aenv size)); try easy.
   apply cut_n_eq.
   rewrite V1. rewrite <- eq9.
-  Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   rewrite H30. easy.
@@ -6377,11 +6323,9 @@ Proof.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
-  Check q_var_same_value.
   rewrite (q_var_same_value x xn (Q,b) x_val smap vmap bv' size rh rl f (aenv size)); try easy.
   apply cut_n_eq.
   rewrite V1. rewrite <- eq9.
-  Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   rewrite H30. easy.
@@ -6397,11 +6341,9 @@ Proof.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
-  Check q_var_same_value.
   rewrite (q_var_same_value x xn (Q,b) x_val smap vmap bv' size rh rl f (aenv size)); try easy.
   apply cut_n_eq.
   rewrite V1. rewrite <- eq9.
-  Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   rewrite H30. easy.
@@ -6417,11 +6359,9 @@ Proof.
   simpl. unfold apply_unary.
   assert ((get_cus size f (vmap xn)) = x_val).
   rewrite <- V1.
-  Check q_var_same_value.
   rewrite (q_var_same_value x xn (Q,b) x_val smap vmap bv' size rh rl f (aenv size)); try easy.
   apply cut_n_eq.
   rewrite V1. rewrite <- eq9.
-  Check stored_value_typed_1.
   apply (stored_value_typed_1 smap rh bv' size x xn x_val xl Q b); try easy.
   apply (par_find_var_store_value smap bv' size rl rh x (Q,b) xn x_val xl); try easy.
   rewrite H30. easy.
@@ -6486,11 +6426,9 @@ Proof.
   unfold unary_circuit_two in *. inv H29.
   assert (vmap xn <> vmap x1) as V1. apply H24. easy.
   assert (aenv (get_size size b) (vmap xn) = (get_size size (snd (Q,b)))) as V2.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac x (Q,b) xn size (aenv (get_size size b)) bv' smap vmap
            rh rl stack temp); try easy.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6501,11 +6439,9 @@ Proof.
   simpl. apply in_or_app. left.
   apply hd_list_in. easy.
   assert (aenv (get_size size b) (vmap x1) = (get_size size (snd (Q,b0)))) as V5.
-  Check aenv_match_value_cfac.
   rewrite (aenv_match_value_cfac y (Q,b0) x1 size (aenv (get_size size b)) bv' smap vmap
            rh rl stack temp); try easy.
   apply par_find_get_var in eq5 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl y x0 x1 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -6518,7 +6454,6 @@ Proof.
   assert (nor_modes f (vmap xn) (get_size size b)) as V6.
   rewrite <- V2.
   apply type_nor_modes with (env := tenv);try easy.
-  Check all_nor_var.
   apply par_find_get_var in eq4 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl x x0 xn (Q,b)); try easy.
@@ -6527,7 +6462,6 @@ Proof.
   assert (nor_modes f (vmap x1) (get_size size b0)) as V7.
   rewrite <- V5.
   apply type_nor_modes with (env := tenv);try easy.
-  Check all_nor_var.
   apply par_find_get_var in eq5 as X1. destruct X1.
   apply (all_nor_var vmap smap tenv (get_var_cfac x ++ get_var_cfac y)
             bv' size rl y x0 x1 (Q,b0)); try easy.
@@ -6610,7 +6544,6 @@ Proof.
   apply type_nor_modes with (env := tenv); try easy.
   assert (vmap xn <> stack) as V9.
   apply par_find_get_var in eq4 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl x x0 xn (Q, b)); try easy.
   simpl. apply in_or_app. left.
@@ -6623,7 +6556,6 @@ Proof.
   apply hd_list_in. easy.
   assert (vmap x1 <> stack) as V11.
   apply par_find_get_var in eq5 as X1. destruct X1.
-  Check not_eq_stack_var.
   apply (not_eq_stack_var stack temp vmap smap
          ((get_var_cfac x ++ get_var_cfac y)) bv' size rl y x0 x1 (Q, b0)); try easy.
   simpl. apply in_or_app. right.
@@ -6816,7 +6748,6 @@ Proof.
   apply par_find_eval_var_same with (rh := rh) (t := (C,b)) (x2 := xn) in eq4 as V1; try easy. subst.
   exists xn. exists (x_val :: xl). exists b2. split. easy. split. easy. split. easy.
   apply Store.find_2 in eq6.
-  Check par_find_var_cstore_same.
   apply (par_find_var_cstore_same smap bv' size rl rh x b
           xn b1 x_val xl) in eq6; try easy. subst.
   unfold unary_c_value,apply_unary,is_unary,is_c_unary in *. simpl in *.
@@ -7233,9 +7164,6 @@ Definition prog_to_sqir (p:prog) (f:flag) : option (nat * nat * exp * vars * (na
         | _ => None 
    end.
 
-Check prog_to_sqir.
-
-Check trans_exp.
 
 
 

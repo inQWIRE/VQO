@@ -1,6 +1,6 @@
 open Printf
 
-open AltGateSet
+open ExtractionGateSet
 open ExtrOQASM
 open OQASM
 (*open OracleExample*)
@@ -220,6 +220,6 @@ let run_partial_eval size =
 run_modmult_experiments 173 227 255;;
 run_adders 16 38168;;
 run_multipliers 16 38168;;
-run_div_mod 16 38168;;
-run_approx 16 38168 15;;
+run_div_mod 16 65535;;
+run_approx 16 65535 15;;
 run_partial_eval 16;;

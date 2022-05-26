@@ -2024,7 +2024,6 @@ Proof.
   apply nor_mode_cus_eq.
   apply nor_mode_up. iner_p.
   apply V3. easy.
-  Check negations_aux.
   constructor. constructor. simpl in *. lia.
   apply exp_WF_negator0. simpl in *. lia. lia. easy.
   rewrite negations_aux with (r := x1); try easy.
@@ -2311,7 +2310,6 @@ Proof.
   apply nor_mode_cus_eq.
   apply nor_mode_up. iner_p.
   apply V3. easy.
-  Check negations_aux.
   constructor. constructor. simpl in *. lia.
   apply exp_WF_negator0; try lia. easy.
   rewrite negations_aux with (r := x1); try easy.
@@ -2818,7 +2816,6 @@ Proof.
   rewrite reg_push_twice_neq by iner_p.
   assert (nval true r = put_cu (f c1) true).
   rewrite eq2. easy. rewrite H15. 
-  Check adder01_correct_carry1.
   rewrite adder01_correct_carry1 with (S0 := f) (v1 := (2 ^ n - 1 - v1)) (v2:=v2)
        (S'' := reg_push (reg_push (f [c1 |-> put_cu (f c1) true])
               x (2 ^ n - 1 - v1) n) y ((2 ^ n - 1 - v1) + v2 + 1) n); try easy.

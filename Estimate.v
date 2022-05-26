@@ -4057,7 +4057,6 @@ Lemma inv_pexp_reverse_1 :
     exp_sem aenv (inv_exp e) (g[c |-> v]) = (f[c |-> v]).
 Proof.
   intros. 
-  Check inv_pexp_reverse.
   specialize (inv_pexp_reverse tenv tenv' aenv e f g H0 H1 H2 H3) as G.
   apply functional_extensionality; intros.
   bdestruct (x ==? c). rewrite H6 in *.
@@ -5329,7 +5328,6 @@ Proof.
   exists (ashift_fun g 1 n2).
   split. intros.
   unfold vsize. rewrite eq1. simpl.
-  Check shift_fun_lt.
   specialize (ashift_fun_lt g 1 n2) as eq2.
   apply eq2. intros.
   unfold vsize in Ht. 
@@ -5358,7 +5356,6 @@ Proof.
   bdestruct (x0 =? x0). clear H3. simpl.
   assert ((n2 - 1) <= n2).
   unfold vsize in H1. rewrite eq1 in H1. simpl in H1. lia.
-  Check ashift_fun_twice.
   specialize (ashift_fun_twice n0 g (n2 - 1) n2 H3 H0 Ht Hb) as eq2.
   unfold vsize in H1. rewrite eq1 in H1. simpl in H1. 
   assert ((n2 - (n2 - 1)) = 1) by lia. rewrite H4 in eq2.
@@ -5387,7 +5384,6 @@ Proof.
   exists (ashift_fun g (n2 - 1) n2).
   split. intros.
   unfold vsize. rewrite eq1. simpl.
-  Check shift_fun_lt.
   specialize (ashift_fun_lt g (n2 - 1) n2) as eq2.
   apply eq2. intros.
   unfold vsize in Ht. 
@@ -5414,7 +5410,6 @@ Proof.
   bdestruct (x0 =? x0). clear H3. simpl.
   unfold vsize in H1. rewrite eq1 in H1. simpl in H1.
   assert (1 <= n2) by lia.
-  Check ashift_fun_twice.
   specialize (ashift_fun_twice n0 g 1 n2 H3 H0 Ht Hb) as eq2.
   rewrite eq2. easy.
   easy.
@@ -5442,7 +5437,6 @@ Proof.
   exists (afbrev g n2).
   split. intros.
   unfold vsize. rewrite eq1. simpl.
-  Check afbrev_lt.
   specialize (afbrev_lt g n2) as eq2.
   apply eq2. intros.
   unfold vsize in Ht. 
@@ -5461,14 +5455,12 @@ Proof.
   unfold vmap.
   bdestruct (x0 =? x0). clear H3. simpl.
   unfold vsize in H1. rewrite eq1 in H1. simpl in H1.
-  Check afbrev_back_lt.
   specialize (afbrev_back_lt g n0 n2 Ht H0 Hf) as eq2.
   rewrite eq2. easy. easy. lia.
   intros.
   unfold vmap.
   bdestruct (x0 =? x0). clear H3. simpl.
   unfold vsize in H1. rewrite eq1 in H1. simpl in H1.
-  Check fbrev_back_lt.
   specialize (fbrev_back_lt n0 g n2 H0 Ht Hb) as eq2.
   rewrite eq2. easy.
   easy.
@@ -6315,8 +6307,6 @@ Proof.
  rewrite eq1. easy.
 Qed.
 
-Check trans_exp.
-
 Lemma list_neq {A:Type} : forall (l :list A) a, l <> (a :: l).
 Proof.
   induction l; intros.
@@ -6754,7 +6744,6 @@ Proof.
   inv H0. unfold exp_neu_trans_prop in *.
   simpl.
   rewrite inter_neu_l_rev_same_1_gen; try easy.
-  Check vars_anti_vs_same.
   specialize (vars_anti_vs_same (Lshift x) dim vs (trans_lshift vs x) avs) as eq1.
   simpl in eq1.
   apply eq1; try easy.
@@ -6772,7 +6761,6 @@ Proof.
   inv H0. unfold exp_neu_trans_prop in *.
   simpl.
   rewrite inter_neu_l_rev_same_1_gen; try easy.
-  Check vars_anti_vs_same.
   specialize (vars_anti_vs_same (Rshift x) dim vs (trans_rshift vs x) avs) as eq1.
   simpl in eq1.
   apply eq1; try easy.
@@ -6790,7 +6778,6 @@ Proof.
   inv H0. unfold exp_neu_trans_prop in *.
   simpl.
   rewrite inter_neu_l_rev_same_1_gen; try easy.
-  Check vars_anti_vs_same.
   specialize (vars_anti_vs_same (Rev x) dim vs (trans_rev vs x) avs) as eq1.
   simpl in eq1.
   apply eq1; try easy.
@@ -6819,7 +6806,6 @@ Proof.
   rewrite eq1 in IHe1.
   simpl in IHe1.
   assert (vars_anti_same v).
-  Check (vars_anti_vs_same).
   specialize (vars_anti_vs_same e1 dim vs v avs) as eq3.
   rewrite eq1 in eq3.
   apply eq3; try easy.
@@ -6938,7 +6924,6 @@ Proof.
   bdestruct ((i - start vs x <? vsize vs x)).
   simpl.
   bdestruct (fst (avs i) =? x). easy.
-  Check var_not_over_lap_1.
   specialize (var_not_over_lap_1 x (avs i) vs H2 H1) as eq1.
   apply eq1 in H7.
   destruct H7.
@@ -6953,7 +6938,6 @@ Proof.
   bdestruct ((i - start vs x <? vsize vs x)).
   simpl.
   bdestruct (fst (avs i) =? x). easy.
-  Check var_not_over_lap_1.
   specialize (var_not_over_lap_1 x (avs i) vs H2 H1) as eq1.
   apply eq1 in H7.
   destruct H7.
@@ -6968,7 +6952,6 @@ Proof.
   bdestruct ((i - start vs x <? vsize vs x)).
   simpl.
   bdestruct (fst (avs i) =? x). easy.
-  Check var_not_over_lap_1.
   specialize (var_not_over_lap_1 x (avs i) vs H2 H1) as eq1.
   apply eq1 in H7.
   destruct H7.
@@ -6983,11 +6966,9 @@ Proof.
   specialize (IHe1 vs dim avs H0 H1 H2 i H3).
   rewrite eq1 in IHe1. simpl in *.
   rewrite <- IHe1.
-  Check avs_prop_vs_same.
   specialize (avs_prop_vs_same e1 dim vs v avs p0) as X1.
   rewrite eq1 in *. simpl in *.
   apply X1 in H1 as X2 ; try easy.
-  Check vars_sparse_vs_same.
   specialize (vars_sparse_vs_same e1 dim vs v avs) as X3.
   rewrite eq1 in *. simpl in X3.
   assert (v = v) by easy. apply X3 in H4. clear X3.
@@ -7009,14 +6990,12 @@ Proof.
   bdestruct (x <? dim).
   remember (snd (fst (trans_exp vs dim e avs))) as vs'.
   remember (snd (trans_exp vs dim e avs)) as avs'.
-  Check avs_prop_vs_same.
   specialize (avs_prop_vs_same e dim vs vs' avs avs' Heqvs' Heqavs' H1 H2 H0) as eq2.
   rewrite eq1 in *.
   assert (exists i, x = find_pos vs i).
   exists (avs x).
   rewrite vs_avs_bij_r with (dim := dim); try easy.
   destruct H6. rewrite H6.
-  Check avs_prop_trans_fst_same.
   assert (fst (avs' x) = fst (avs x)).
   rewrite Heqavs'.
   apply avs_prop_trans_fst_same; try easy.
@@ -7615,9 +7594,6 @@ Proof.
   eapply exp_com_WF_vs_same. rewrite eq1. easy. easy.
 Qed.
 
-
-Check trans_qft. 
-
 Lemma Mmult_adj_add : forall {n} (A: Matrix n n) (C D:Vector n), 
         WF_Unitary A -> WF_Matrix C ->  WF_Matrix D ->
         A † × A × C = A † × D -> A × C = D.
@@ -7689,8 +7665,6 @@ Proof.
   rewrite H7.
   rewrite kron_assoc.
   assert ((I (2 ^ (j - i - 1)) ⊗ I (2 ^ S (n - (j + 1)))) = I (2 ^ (n - (i + 1)))).
-  Check @kron_n_I.
-  Check two_n_kron_n.
   rewrite <- kron_n_I.
   rewrite <- kron_n_I.
   rewrite <- two_n_kron_n.
@@ -8816,7 +8790,6 @@ Proof.
   rewrite <- H13. clear H13.
   rewrite update_twice_eq.
   replace ((start vs x + vmap vs x (m + i))) with (find_pos vs (x,m+i)) by easy.
-  Check vkron_proj_eq.
   rewrite vkron_proj_eq with (b := true) (r := Cexp (2 * PI * turn_angle r rmax)); try easy.
   unfold compile_val.
   Msimpl. easy.
@@ -8893,7 +8866,6 @@ Proof.
   apply H4. simpl. unfold size_env in *. lia. lia. lia.
   replace ((start vs x + vmap vs x (m + i))) with (find_pos vs (x,m+i)) by easy.
   replace ((start vs x + vmap vs x i)) with (find_pos vs (x,i)) by easy.
-  Check fresh_is_fresh.
   replace ((Rz (rz_ang (S m)) (find_pos vs (x, i)))) with ((fst (fst (trans_exp vs dim (RZ (S m) (x, i)) avs)))) by easy.
   apply fresh_is_fresh; try easy.
   constructor. iner_p.
