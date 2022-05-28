@@ -111,11 +111,12 @@ Inductive pexp := PSKIP | Assign (x:var) (n:aexp)
             | If (x:varia) (s1:pexp)
             | IfB (x:bexp) (s1:pexp) (s2:pexp)
             | While (b:bexp) (p:pexp)
-            | Classic (p:exp) (ph:aexp) (args : list (var * aexp * aexp))
+            | Classic (p:exp) (ph:aexp) (args : list (var * aexp))
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
                        the second arguments a is the phase of the post-state of x,
-                       the third is the state s = f(x) as |x> -> e^2pi i * a *|s>  *)
+                       the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
+                       excluding ancilla qubits  *)
             | QFT (x:var)
             | RQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
@@ -227,11 +228,6 @@ Inductive type_bexp : aenv -> bexp -> atype * list varia -> Prop :=
    | blt_type : forall env e1 e2 t1 t2 t3, type_aexp env e1 t1 -> type_aexp env e2 t2 ->
              meet_avtype t1 t2 = Some t3 -> type_bexp env (BLt e1 e2) t3
    | btest_type : forall env e1 e2 t, type_aexp env e1 (C,[]) -> type_aexp env e2 t -> type_bexp env (BTest e1 e2) t.
-
-Inductive pre_aexp_check : list (var * aexp) -> Prop :=
-   pre_aexp_check_empty : pre_aexp_check ([])
- | pre_aexp_check_many_1 : forall x xs, pre_aexp_check xs -> pre_aexp_check ((x, (BA (Var x)))::xs)
- | pre_aexp_check_many_2 : forall x n xs, pre_aexp_check xs -> pre_aexp_check ((x, (Num n))::xs).
     
 
 Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
@@ -245,10 +241,9 @@ Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
     | if_c : forall m m' env b e1 e2 xl, type_bexp env b (C,[]) -> 
                   stype_pexp m env e1 (m',xl) -> stype_pexp m env e2 (m',xl) -> stype_pexp m env (IfB b e1 e2) (m',xl)
     | class_stype : forall m env e p l xl, type_aexp env p (Q,xl) 
-       -> list_subset (get_core_vars xl) (List.map (fun a => (fst (fst a))) l)
-       -> pre_aexp_check (List.map (fun a => (fst a)) l)
-       -> type_aexp_list env (List.map (fun a => fst (fst a)) l) (List.map (fun a => snd a) l)
-       -> stype_pexp m env (Classic e p l) (Q,List.map (fun a => Var (fst (fst a))) l)
+       -> list_subset (get_core_vars xl) (List.map (fun a => ((fst a))) l)
+       -> type_aexp_list env (List.map (fun a => (fst a)) l) (List.map (fun a => snd a) l)
+       -> stype_pexp m env (Classic e p l) (Q,List.map (fun a => Var ((fst a))) l)
     | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x) (Q,[Var x])
     | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x) (Q,[Var x])
     | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
