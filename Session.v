@@ -84,14 +84,16 @@ Inductive singleGate := H_gate | X_gate | RZ_gate (f:nat) (*representing 1/2^n o
 
 Inductive aexp := BA (x:varia) | Num (n:nat) | APlus (e1:aexp) (e2:aexp).
 
-Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp).
+Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BTest (i:aexp) (a:aexp).
 
 
 (* The dynamic type system. Symbolic type. *)
 Inductive type_elem : Type := TNor (p: option nat)
              | TH (b:option (list nat * nat)) (* phase rotation and rank. *)
-             | TC (b:option (list nat * nat * type_cfac))  (*phase rank and variables that are entangled *)
+             | TC (b:option (list nat * nat)) (c: option (nat * type_cfac))  (*phase rank and variables that are entangled *)
              | DFT (b:option (list (list nat) * nat)) (* DFT space of rank n, each rank has a list of local phases for m qubits. *)
+             | TNorA (x:var) (n:nat) (a:aexp)
+             | TSum (x:var) (i:var) (n:nat) (r:aexp) (b:bexp) (l:list type_pred)
 
 with type_cfac := TLeaf (a:type_pred) | TPair (a:type_pred) (b:type_pred) | TMore (l: list type_cfac)
 
@@ -109,7 +111,7 @@ Inductive pexp := PSKIP | Assign (x:var) (n:aexp)
             | If (x:varia) (s1:pexp)
             | IfB (x:bexp) (s1:pexp) (s2:pexp)
             | While (b:bexp) (p:pexp)
-            | Classic (p:exp) (p:aexp) (args : list (var * aexp * aexp))
+            | Classic (p:exp) (ph:aexp) (args : list (var * aexp * aexp))
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
                        the second arguments a is the phase of the post-state of x,
@@ -117,7 +119,12 @@ Inductive pexp := PSKIP | Assign (x:var) (n:aexp)
             | QFT (x:var)
             | RQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
-            | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *).
+            | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
+            | QWhile (n:aexp) (x:var) (i:var) (b:bexp) (e:pexp) (l:list varia)
+            | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
+            | Reflect (x:var) (p:aexp) (a1:aexp) (a2:aexp) (* reflection on two state x=a1 and x=a2 with x=a1 happens in a probablity p, a1 <> a2  *)
+            | Distr (x:var) (al : list aexp) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
+                                               This statement basically distributes/diverges a vector x to many different vectors. *).
           (*  | CX (x:posi) (y:posi)  (* control x on to y. *)
             | CU (x:posi) (p:exp) (z:var) (args: list var) (q:aexp) (s:aexp) *)
              (* control-U on the reversible expression p from the control node x on to z. *)
@@ -198,12 +205,34 @@ Inductive type_aexp : aenv -> aexp -> atype * list varia -> Prop :=
                    type_aexp env e1 t1 -> type_aexp env e2 t2 ->  meet_avtype t1 t2 = Some t3 -> 
                      type_aexp env (APlus e1 e2) t3.
 
+Definition list_subset (al bl :list var) := (forall x, In x al -> In x bl).
+
+Definition get_var (x : varia) := match x with Var a => a | Index b y => b end.
+
+Definition get_core_vars (al : list varia) := map (fun a => match a with Var x => x | Index x xl => x end) al.
+
+
+Inductive type_aexp_list : aenv -> list var -> list aexp -> Prop :=
+     type_aexp_empty : forall env l, type_aexp_list env l []
+   | type_aexp_many : forall env l xl x xs, type_aexp env x (Q,xl) -> 
+         list_subset (get_core_vars xl) l -> type_aexp_list env l xs -> type_aexp_list env l (x::xs).
+
+Inductive type_aexp_list_c : aenv -> list aexp -> Prop :=
+     type_aexp_empty_c : forall env, type_aexp_list_c env nil
+   | type_aexp_many_c : forall env x xs, type_aexp env x (C,[]) -> type_aexp_list_c env xs -> type_aexp_list_c env (x::xs).
 
 Inductive type_bexp : aenv -> bexp -> atype * list varia -> Prop :=
    |  beq_type : forall env e1 e2 t1 t2 t3, type_aexp env e1 t1 -> type_aexp env e2 t2 ->
              meet_avtype t1 t2 = Some t3 -> type_bexp env (BEq e1 e2) t3
    | blt_type : forall env e1 e2 t1 t2 t3, type_aexp env e1 t1 -> type_aexp env e2 t2 ->
-             meet_avtype t1 t2 = Some t3 -> type_bexp env (BLt e1 e2) t3.
+             meet_avtype t1 t2 = Some t3 -> type_bexp env (BLt e1 e2) t3
+   | btest_type : forall env e1 e2 t, type_aexp env e1 (C,[]) -> type_aexp env e2 t -> type_bexp env (BTest e1 e2) t.
+
+Inductive pre_aexp_check : list (var * aexp) -> Prop :=
+   pre_aexp_check_empty : pre_aexp_check ([])
+ | pre_aexp_check_many_1 : forall x xs, pre_aexp_check xs -> pre_aexp_check ((x, (BA (Var x)))::xs)
+ | pre_aexp_check_many_2 : forall x n xs, pre_aexp_check xs -> pre_aexp_check ((x, (Num n))::xs).
+    
 
 Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
     | skip_stype_c : forall m env, stype_pexp m env (PSKIP) (C,[])
@@ -215,25 +244,39 @@ Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
                   stype_pexp Q env e (Q,xl) -> stype_pexp m env (If (Index x v) e) (Q,(Index x v)::xl)
     | if_c : forall m m' env b e1 e2 xl, type_bexp env b (C,[]) -> 
                   stype_pexp m env e1 (m',xl) -> stype_pexp m env e2 (m',xl) -> stype_pexp m env (IfB b e1 e2) (m',xl)
-    | class_stype : forall m env p l, @stype_aexp_list (map (fun a => fst (fst a)) l) env l 
-                                                   -> stype_pexp m env (Classic p l) (Q,(map (fun a => Var (fst (fst a))) l)).
+    | class_stype : forall m env e p l xl, type_aexp env p (Q,xl) 
+       -> list_subset (get_core_vars xl) (List.map (fun a => (fst (fst a))) l)
+       -> pre_aexp_check (List.map (fun a => (fst a)) l)
+       -> type_aexp_list env (List.map (fun a => fst (fst a)) l) (List.map (fun a => snd a) l)
+       -> stype_pexp m env (Classic e p l) (Q,List.map (fun a => Var (fst (fst a))) l)
+    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x) (Q,[Var x])
+    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x) (Q,[Var x])
+    | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
+              -> AEnv.MapsTo x Q env -> stype_pexp m env (PMeas p x a) (Q,[Var x])
+    | mea_stype : forall m env a x, AEnv.MapsTo a M env ->  AEnv.MapsTo x Q env -> stype_pexp m env (Meas a x) (Q,[Var x])
+    | qwhile_stype : forall m env n x x' i b e xl, stype_pexp Q env e (Q,xl) -> ~ list_subset ([x]) (get_core_vars xl) ->
+              AEnv.MapsTo x Q env -> AEnv.MapsTo i C env -> type_bexp env b (Q,[x']) -> get_var x' = x ->
+              stype_pexp m env (QWhile n x i b e xl) (Q,(Var x)::xl)
+    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n) (Q,[Var x])
+    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
+          -> type_aexp env a1 (C,[]) -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
+    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) (Q,[Var x]).
 
-Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
-              (*| InitQubit (p:posi) *) 
-              (* Ethan: Init = reset = trace out = measurement... commeneted out *)
-            | AppU (e:singleGate) (p:varia)
-            | PSeq (s1:pexp) (s2:pexp)
-            | If (x:varia) (s1:pexp)
-            | While (b:bexp) (p:pexp)
-            | Classic (p:exp) (args: list (var * (var -> nat) * (var -> nat)))
-                   (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
-                      the first argument is the list of variables of quantum to p,
-                       the second arguments a is the phase of the post-state of x,
-                       the third is the state s = f(x) as |x> -> e^2pi i * a *|s>  *)
-            | QFT (x:var)
-            | RQFT (x:var)
-            | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
-            | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *).
+Inductive state := 
+                   
+
+
+Inductive session_system {qenv: var -> nat} {env:aenv} 
+            : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
+                   session_system m T (PSKIP) t
+    | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
+    | appu_type_1 : forall m T P e x a l t1 t2 n b b', type_vari env (Index x ([a])) (Q,[Index x ([a])])
+            -> @find_session qenv T ([Index x ([a])]) ((l,t1++([THT n b])++t2),P) -> to_gate_type e b = Some b' ->
+       session_system m T (AppU e (Index x ([a]))) ((l,t1++((THT a b)::(THT (Num 1) b')::(THT (AMinus n (AMinus a (Num 1))) b)::nil)++t2),
+               (CState (BAnd (BGe a (get_nums t1)) (BLt a (APlus (get_nums t1) n))))::P)
+    | seq_type : forall m env e1 e2 l1 t1 P1 l2 t2 P2, session_system m env e1 ((l1,t1),P1) 
+             -> session_system m env e2 ((l2,t2),P2)  -> session_system m env (PSeq e1 e2) ((l1++l2,t1++t2),P1++P2).
 
 
     | assign_stype : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v) (C,[])
