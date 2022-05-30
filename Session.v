@@ -87,18 +87,6 @@ Inductive aexp := BA (x:varia) | Num (n:nat) | APlus (e1:aexp) (e2:aexp).
 Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BTest (i:aexp) (a:aexp).
 
 
-(* The dynamic type system. Symbolic type. *)
-Inductive type_elem : Type := TNor (p: option nat)
-             | TH (b:option (list nat * nat)) (* phase rotation and rank. *)
-             | TC (b:option (list nat * nat)) (c: option (nat * type_cfac))  (*phase rank and variables that are entangled *)
-             | DFT (b:option (list (list nat) * nat)) (* DFT space of rank n, each rank has a list of local phases for m qubits. *)
-             | TNorA (x:var) (n:nat) (a:aexp)
-             | TSum (x:var) (i:var) (n:nat) (r:aexp) (b:bexp) (l:list type_pred)
-
-with type_cfac := TLeaf (a:type_pred) | TPair (a:type_pred) (b:type_pred) | TMore (l: list type_cfac)
-
-with type_pred := THT (n:nat) (b:nat) (t:type_elem). (* b is the global phase. n is the number of bits in the system. *)
-
 (* Define the ground term type system 
 Inductive type_rotation := TV (b:aexp) | Infty.
 *)
@@ -111,14 +99,14 @@ Inductive pexp := PSKIP | Assign (x:var) (n:aexp)
             | If (x:varia) (s1:pexp)
             | IfB (x:bexp) (s1:pexp) (s2:pexp)
             | While (b:bexp) (p:pexp)
-            | Classic (p:exp) (ph:aexp) (args : list (var * aexp))
+            | Classic (p:exp) (args : list (varia))
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
                        the second arguments a is the phase of the post-state of x,
                        the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
                        excluding ancilla qubits  *)
-            | QFT (x:var)
-            | RQFT (x:var)
+            | PQFT (x:var)
+            | PRQFT (x:var)
             | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
             | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
             | QWhile (n:aexp) (x:var) (i:var) (b:bexp) (e:pexp) (l:list varia)
@@ -172,6 +160,9 @@ Module AEnvFacts := FMapFacts.Facts (AEnv).
 Definition aenv := AEnv.t atype.
 Definition empty_benv := @AEnv.empty atype.
 
+Definition stack := AEnv.t nat.
+Definition empty_stack := @AEnv.empty nat.
+
 (*
 Inductive static_type := SPos (x:list vari) | SNeg (x:list vari).
 *)
@@ -213,10 +204,9 @@ Definition get_var (x : varia) := match x with Var a => a | Index b y => b end.
 Definition get_core_vars (al : list varia) := map (fun a => match a with Var x => x | Index x xl => x end) al.
 
 
-Inductive type_aexp_list : aenv -> list var -> list aexp -> Prop :=
-     type_aexp_empty : forall env l, type_aexp_list env l []
-   | type_aexp_many : forall env l xl x xs, type_aexp env x (Q,xl) -> 
-         list_subset (get_core_vars xl) l -> type_aexp_list env l xs -> type_aexp_list env l (x::xs).
+Inductive type_vari_list_q : aenv -> list varia -> Prop :=
+     type_aexp_empty : forall env, type_vari_list_q env []
+   | type_aexp_many : forall env x xs, type_vari env x (Q,[x]) -> type_vari_list_q env xs -> type_vari_list_q env (x::xs).
 
 Inductive type_aexp_list_c : aenv -> list aexp -> Prop :=
      type_aexp_empty_c : forall env, type_aexp_list_c env nil
@@ -240,12 +230,9 @@ Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
                   stype_pexp Q env e (Q,xl) -> stype_pexp m env (If (Index x v) e) (Q,(Index x v)::xl)
     | if_c : forall m m' env b e1 e2 xl, type_bexp env b (C,[]) -> 
                   stype_pexp m env e1 (m',xl) -> stype_pexp m env e2 (m',xl) -> stype_pexp m env (IfB b e1 e2) (m',xl)
-    | class_stype : forall m env e p l xl, type_aexp env p (Q,xl) 
-       -> list_subset (get_core_vars xl) (List.map (fun a => ((fst a))) l)
-       -> type_aexp_list env (List.map (fun a => (fst a)) l) (List.map (fun a => snd a) l)
-       -> stype_pexp m env (Classic e p l) (Q,List.map (fun a => Var ((fst a))) l)
-    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (QFT x) (Q,[Var x])
-    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (RQFT x) (Q,[Var x])
+    | class_stype : forall m env e l, type_vari_list_q env l -> stype_pexp m env (Classic e l) (Q,l)
+    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PQFT x) (Q,[Var x])
+    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PRQFT x) (Q,[Var x])
     | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
               -> AEnv.MapsTo x Q env -> stype_pexp m env (PMeas p x a) (Q,[Var x])
     | mea_stype : forall m env a x, AEnv.MapsTo a M env ->  AEnv.MapsTo x Q env -> stype_pexp m env (Meas a x) (Q,[Var x])
@@ -257,14 +244,182 @@ Inductive stype_pexp : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
           -> type_aexp env a1 (C,[]) -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
     | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) (Q,[Var x]).
 
-Inductive state := 
-                   
+
+(* Type system for oqasm. *)
+Definition bits := list bool.
+
+Inductive otype := TNor (bs:rz_val) | TPhi (b:nat) (r:rz_val) | TDistr.
+
+Definition tenv := (var -> (rz_val * otype)). 
+
+Fixpoint vari_in (qenv: var -> nat)  (p:posi) (l:list varia) :=
+   match l with [] => False
+       | ((Var x)::xs) => if (fst p =? x) && (0 <=? snd p) && (snd p  <? (qenv x)) then True else vari_in qenv p xs
+       | ((Index x i)::xs) => if (fst p =? x) && (i =? snd p) then True else vari_in qenv p xs
+   end.
+
+Fixpoint inter_map (st: posi -> bool) (x:var) (n:nat) :=
+   match n with 0 => allfalse
+          | S m => update (inter_map st x m) m (st (x,m))
+   end.
+Definition update_nor (t:otype) (i:nat) (v:bool) :=
+   match t with TNor l => TNor (update l i v)
+               | a => a
+   end.
+
+Definition get_i_nor (t:otype) (i:nat) :=
+   match t with TNor l => Some (l i)
+               | _ => None
+   end.
+
+
+Fixpoint inter_state (qenv: var -> nat) (st: posi -> bool) (l:list varia) :=
+   match l with [] => (fun x => TNor (allfalse))
+       | (Var x)::xs => (fun y => if y =? x then TNor (inter_map st x (qenv x)) else inter_state qenv st xs x)
+       | (Index x i)::xs => (fun y => if y =? x then update_nor (inter_state qenv st xs x) i (st (x,i)) else inter_state qenv st xs x)
+   end.
+
+Definition sat_state (qenv: var -> nat) (l:list varia) (st: posi -> bool) :=
+    forall p, vari_in qenv p l \/ (~ vari_in qenv p l -> st p = false).
+
+Definition flip_i (l:rz_val) (i:nat) := update l i (negb (l i)).
+Definition exchange (env:tenv) (p:posi) :=
+    match env (fst p) with (r,TNor l) => update env (fst p) (r,TNor (flip_i l (snd p))) | _ => env end.
+
+Definition up_phase (tenv:tenv) (x:var) (q:nat) :=
+  match tenv x with (r,l) => update tenv x (rotate r q,l) end.
+
+Definition up_phase_r (tenv:tenv) (x:var) (q:nat) :=
+  match tenv x with (r,l) => update tenv x (r_rotate r q,l) end.
+
+Definition up_phase_phi (tenv:tenv) (x:var) (n:nat) :=
+  match tenv x with (r,TPhi b q) => update tenv x (r,TPhi b (rotate q n)) | _ => tenv end.
+
+Definition up_phase_phi_r (tenv:tenv) (x:var) (n:nat) :=
+  match tenv x with (r,TPhi b q) => update tenv x (r,TPhi b (r_rotate q n)) | _ => tenv end.
+
+Definition construct_phi (tenv:tenv) (x:var) (b:nat) := match tenv x with (r,TNor l) => update tenv x (r,TPhi b l) | _ => tenv end.
+
+Definition construct_nor (tenv:tenv) (x:var) := match tenv x with (r,TPhi b l) => update tenv x (r,TNor l) | _ => tenv end.
+
+Inductive oqasm_type {qenv: var -> nat} : tenv -> exp -> tenv -> Prop :=
+    skip_otype : forall tenv p, oqasm_type tenv (SKIP p) tenv
+  | x_otype : forall tenv p, oqasm_type tenv (X p) (exchange tenv p)
+  | cu_otype_1 : forall tenv p e, get_i_nor (snd (tenv (fst p))) (snd p) = Some false -> oqasm_type tenv (CU p e) tenv
+  | cu_otype_2 : forall tenv tenv' p e, get_i_nor (snd (tenv (fst p))) (snd p) = Some true
+                  -> oqasm_type tenv e tenv' -> oqasm_type tenv (CU p e) tenv'
+  | rz_otype : forall tenv q p, oqasm_type tenv (RZ q p) (up_phase tenv (fst p) q)
+  | rrz_otype : forall tenv q p, oqasm_type tenv (RRZ q p) (up_phase_r tenv (fst p) q)
+  | sr_otype : forall tenv n x, oqasm_type tenv (SR n x) (up_phase_phi tenv x (S n))
+  | srr_otype : forall tenv n x, oqasm_type tenv (SRR n x) (up_phase_phi_r tenv x (S n))
+  | qft_otype : forall tenv x b, oqasm_type tenv (QFT x b) (construct_phi tenv x b)
+  | rqft_otype : forall tenv x b, oqasm_type tenv (RQFT x b) (construct_nor tenv x)
+  | seq_otype : forall tenv tenv1 tenv2 s1 s2, oqasm_type tenv s1 tenv1 -> oqasm_type tenv s2 tenv2 -> oqasm_type tenv (Seq s1 s2) tenv2.
+
+
+(* The dynamic type system. Symbolic type. *)
+Inductive type_elem : Type := TNor (p: option nat)
+             | TH (b:option (list nat * nat)) (* phase rotation and rank. *)
+             | TC (b:option (list nat * nat)) (c: option (nat * type_cfac))  (*phase rank and variables that are entangled *)
+             | DFT (b:option (list (list nat) * nat)) (* DFT space of rank n, each rank has a list of local phases for m qubits. *)
+             | TNorA (x:var) (n:nat) (a:aexp)
+             | TSum (x:var) (i:var) (n:nat) (r:aexp) (b:bexp) (l:list type_pred)
+
+with type_cfac := TLeaf (a:type_pred) | TPair (a:type_pred) (b:type_pred) | TMore (l: list type_cfac)
+
+with type_pred := THT (n:nat) (b:nat) (t:type_elem). (* b is the global phase. n is the number of bits in the system. *)
+
+Inductive exp := SKIP (p:posi) | X (p:posi) | CU (p:posi) (e:exp)
+        | RZ (q:nat) (p:posi) (* 2 * PI * i / 2^q *)
+        | RRZ (q:nat) (p:posi) 
+        | SR (q:nat) (x:var) (* a series of RZ gates for QFT mode from q down to b. *)
+        | SRR (q:nat) (x:var) (* a series of RRZ gates for QFT mode from q down to b. *)
+        (*| HCNOT (p1:posi) (p2:posi) *)
+        | Lshift (x:var)
+        | Rshift (x:var)
+        | Rev (x:var)
+        | QFT (x:var) (b:nat) (* H on x ; CR gates on everything within (size - b). *)
+        | RQFT (x:var) (b:nat)
+       (* | H (p:posi) *)
+        | Seq (s1:exp) (s2:exp).
+
+
+
+
+Inductive bitState := Qubit (b:bits) | QPlus (r:(list rz_val)) (b:bits).
+
+Inductive state := Tensor (n:nat) (g:rz_val) (b:list bitState) 
+                   | Sum (n:nat) (f: nat -> rz_val * bitState)
+                      (* sum formula of 2^n bit for x = 0 .. 2^n, each x is x[0...n-1]. *).
+
+Definition heap : Type := list (list (var * nat * nat) * list type_pred * state).
+
+Definition c_eval_var (s:stack) (x:varia) :=
+   match x with Var x => AEnv.find x s
+             | _ => None
+    end.
+
+Fixpoint c_eval_aexp (s:stack) (x:aexp) :=
+     match x with BA a => c_eval_var s a
+                | Num n => Some n
+                | APlus e1 e2 => match c_eval_aexp s e1 with None => None
+                                            | Some v1 => match c_eval_aexp s e2 with None => None
+                                                | Some v2 => Some (v1 + v2)
+                                      end
+                                 end
+     end.
+
+Fixpoint find_var (l:list (var * nat * nat)) (x:var) (i:nat) (acc:nat) :=
+   match l with [] => None
+               | ((a,lb,rb)::al) => if (a =? x) && (lb <=? i) && (i <? rb) then Some acc else find_var al x i (acc + rb - lb)
+   end.
+
+(* Definine x_gate application. *)
+Definition type_length (t:type_pred) := match t with THT n b t => n end.
+
+Defintion flip_bit (t:option nat) := match t with 
+
+Definition to_x_type_nor (t:type_pred) (i:nat) := 
+    match t with THT n b (TNor s) => THT n b (TNor (flip s))
+
+Fixpoint to_x_types_nor (l:list type_pred) (acc:nat) (i:nat) :=
+   match l with [] => []
+           | x::xs => if acc <=? i < acc + (type_length x) then (to_x_type x i)::acc
+
+
+Definition app_X_nor (x:var) (i:aexp) := 
+  SITE (BTest ((Index x [i])))
+    (qket (GetP (SA ([(Index x [i])]) [])) BTrue)
+    (qket (GetP (SA ([(Index x [i])]) [])) BFalse).
+
+Definition app_X_nors (x:var) (i:var) (l:aexp) (r:aexp) :=
+    NTensor r i l (app_X_nor x (BA (Var i))).
+
+Definition app_X_had (x:var) (i:aexp) := 
+       upP (SA ([(Index x [i])]) []) (AMinus (Num 0) (GetP (SA ([(Index x [i])]) []))).
+
+Fixpoint find_session (h:heap) (x:var) (i:nat) :=
+   match h with [] => None
+          | ((l,t,v)::xl) => match find_var l x i i with None => find_session xl x i
+                                 | Some acc => Some (acc,t,v)
+                             end
+   end.
+
+Fixpoint to_x_type (l:list type_pred) (i:nat) :=
+   match l with [] => None
+
+
+Inductive semantics {qenv: var -> nat} {env:aenv} : stack -> heap -> pexp -> stack -> heap -> Prop :=
+    skip_sem : forall S H, semantics S H PSKIP S H
+  | cassign_sem : forall S H x e n, c_eval_aexp S e = Some n -> semantics S H (Assign x e) (AEnv.add x n S) H
+  | appx_sem : forall S H x i n d t v, AEnv.MapsTo i n S -> 
+        find_session H x i = Some (d, t,v) -> semantics S H (AppU X_gate (Index x i)) S H.
 
 
 Inductive session_system {qenv: var -> nat} {env:aenv} 
             : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
     | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
-                   session_system m T (PSKIP) t
+                   session_system m T (PSKIP) t.
     | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
     | appu_type_1 : forall m T P e x a l t1 t2 n b b', type_vari env (Index x ([a])) (Q,[Index x ([a])])
             -> @find_session qenv T ([Index x ([a])]) ((l,t1++([THT n b])++t2),P) -> to_gate_type e b = Some b' ->
@@ -296,6 +451,13 @@ Inductive session_system {qenv: var -> nat} {env:aenv}
 with stype_pexp_list : atype -> aenv -> list pexp -> atype * list vari -> Prop :=
     stype_pexp_empty : forall m env l, stype_pexp_list m env [] (Q,l)
    | stype_pexp_many : forall m env p pl l, stype_pexp m env p l -> stype_pexp_list m env pl l -> stype_pexp_list m env (p::pl) l.
+
+
+
+
+
+
+
 
 
 Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
@@ -496,12 +658,7 @@ Definition tpred := list (list (var * aexp * aexp) * type_pred).
 Inductive singleGate := H_gate | X_gate | Y_gate | RZ_gate (f:aexp) (*representing 1/2^n of RZ rotation. *).
 *)
 
-Fixpoint count_num' (l :list (var * aexp * aexp)) (x:var) acc := 
-   match l with [] => None
-         | ((y,(Num a),(Num b))::xs) => if x =? y then Some acc else count_num' xs x (acc+(b-a))
-         | a::xs => None
-   end.
-Definition count_num (l :list (var * aexp * aexp)) (x:var) (i:nat) := count_num' l x i.
+
 
 
 Inductive type_eq : list type_pred -> list type_pred -> Prop :=
