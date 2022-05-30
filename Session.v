@@ -303,18 +303,35 @@ Definition construct_phi (tenv:tenv) (x:var) (b:nat) := match tenv x with (r,TNo
 Definition construct_nor (tenv:tenv) (x:var) := match tenv x with (r,TPhi b l) => update tenv x (r,TNor l) | _ => tenv end.
 
 Inductive oqasm_type {qenv: var -> nat} : tenv -> exp -> tenv -> Prop :=
-    skip_otype : forall tenv p, oqasm_type tenv (SKIP p) tenv
-  | x_otype : forall tenv p, oqasm_type tenv (X p) (exchange tenv p)
-  | cu_otype_1 : forall tenv p e, get_i_nor (snd (tenv (fst p))) (snd p) = Some false -> oqasm_type tenv (CU p e) tenv
-  | cu_otype_2 : forall tenv tenv' p e, get_i_nor (snd (tenv (fst p))) (snd p) = Some true
+    skip_otype : forall tenv p, (snd p) < qenv (fst p) -> oqasm_type tenv (SKIP p) tenv
+  | x_otype : forall tenv p, (snd p) < qenv (fst p) -> oqasm_type tenv (X p) (exchange tenv p)
+  | cu_otype_1 : forall tenv p e, (snd p) < qenv (fst p) ->
+          get_i_nor (snd (tenv (fst p))) (snd p) = Some false -> oqasm_type tenv (CU p e) tenv
+  | cu_otype_2 : forall tenv tenv' p e, (snd p) < qenv (fst p) ->
+                    get_i_nor (snd (tenv (fst p))) (snd p) = Some true
                   -> oqasm_type tenv e tenv' -> oqasm_type tenv (CU p e) tenv'
-  | rz_otype : forall tenv q p, oqasm_type tenv (RZ q p) (up_phase tenv (fst p) q)
-  | rrz_otype : forall tenv q p, oqasm_type tenv (RRZ q p) (up_phase_r tenv (fst p) q)
-  | sr_otype : forall tenv n x, oqasm_type tenv (SR n x) (up_phase_phi tenv x (S n))
-  | srr_otype : forall tenv n x, oqasm_type tenv (SRR n x) (up_phase_phi_r tenv x (S n))
-  | qft_otype : forall tenv x b, oqasm_type tenv (QFT x b) (construct_phi tenv x b)
-  | rqft_otype : forall tenv x b, oqasm_type tenv (RQFT x b) (construct_nor tenv x)
+  | rz_otype : forall tenv q p, (snd p) < qenv (fst p) -> oqasm_type tenv (RZ q p) (up_phase tenv (fst p) q)
+  | rrz_otype : forall tenv q p, (snd p) < qenv (fst p) -> oqasm_type tenv (RRZ q p) (up_phase_r tenv (fst p) q)
+  | sr_otype : forall tenv n x r b l, tenv x = (r,TPhi b l) -> n < b <= qenv x -> oqasm_type tenv (SR n x) (up_phase_phi tenv x (S n))
+  | srr_otype : forall tenv n x r b l, tenv x = (r,TPhi b l) -> n < b <= qenv x  -> oqasm_type tenv (SRR n x) (up_phase_phi_r tenv x (S n))
+  | qft_otype : forall tenv x b, b <= qenv x -> 0 < qenv x -> oqasm_type tenv (QFT x b) (construct_phi tenv x b)
+  | rqft_otype : forall tenv x b, b <= qenv x -> 0 < qenv x -> oqasm_type tenv (RQFT x b) (construct_nor tenv x)
   | seq_otype : forall tenv tenv1 tenv2 s1 s2, oqasm_type tenv s1 tenv1 -> oqasm_type tenv s2 tenv2 -> oqasm_type tenv (Seq s1 s2) tenv2.
+
+
+Inductive well_typed_exp: env -> exp -> Prop :=
+    | skip_refl : forall env, forall p, well_typed_exp env (SKIP p)
+    | x_nor : forall env p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (X p)
+    (*| x_had : forall env p, Env.MapsTo (fst p) Had env -> well_typed_exp env (X p) *)
+    (*| cnot_had : forall env p1 p2, p1 <> p2 -> Env.MapsTo (fst p1) Had env -> Env.MapsTo (fst p2) Had env
+                         -> well_typed_exp env (HCNOT p1 p2) *)
+    | rz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (RZ q p)
+    | rrz_nor : forall env q p, Env.MapsTo (fst p) Nor env -> well_typed_exp env (RRZ q p)
+    | sr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp env (SR m x)
+    | srr_phi : forall env b m x, Env.MapsTo x (Phi b) env -> m < b -> well_typed_exp env (SRR m x)
+    | lshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Lshift x)
+    | rshift_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Rshift x)
+    | rev_nor : forall env x, Env.MapsTo x Nor env -> well_typed_exp env (Rev x).
 
 
 (* The dynamic type system. Symbolic type. *)
