@@ -413,6 +413,13 @@ Fixpoint find_env (a: (var* nat*nat)) (l:tpred) :=
    end.
 
 
+Fixpoint find_env_gen (a: (var* nat*nat)) (l:tpred) :=
+   match l with [] => None
+           | ((x,tl)::xl) => match in_session a x 0 with None => find_env_gen a xl 
+                             | Some pos => cut_type_n pos (snd a - (snd (fst a))) tl 0
+                                  end
+   end.
+
 Fixpoint n_rotate (r :rz_val) (q:rz_val) (n:nat) := 
    match n with 0 => r | S m => if q m then n_rotate (rotate r n) q m else n_rotate r q m end.
 
@@ -528,6 +535,25 @@ Fixpoint collect_gphase (t:tpred) (rmax:nat) :=
           | _ => None
    end.
 
+Definition merge_funs (a:nat -> bool) (b:nat-> bool) (pos:nat) :=
+         fun x => if x <=? pos then a x else b x.
+
+Fixpoint collect_base_aux (tl:list se_type) (pos:nat) (acc: nat -> bool) := 
+   match tl with [] => (acc,pos)
+       | (THT n b (TNor r))::xs => collect_base_aux xs (pos+n) (merge_funs acc r pos)
+       | _::xs => collect_base_aux xs pos acc
+   end.
+
+Check collect_base_aux.
+
+Fixpoint collect_bases' (t:tpred) (pos:nat) (acc:nat -> bool) := 
+   match t with [] => (acc,pos)
+        | ((x,tl)::xs) => match collect_base_aux tl pos acc with (newacc,newpos)
+               => collect_bases' xs newpos newacc 
+              end
+   end.
+Definition collect_bases t := collect_bases' t 0 allfalse.
+
 Definition level_down {A} (a :option (list A)) := match a with None => None | Some (a::l) => Some a | Some nil => None end.
 
 Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
@@ -540,7 +566,25 @@ Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
        type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S
        -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true -> find_nor_env_list (var_list T') T = Some T''
         -> eq_session T' T'' -> collect_gphase T' rmax = pa -> find_env (x,v,v+1) T = Some (tl,pos)  -> is_had tl pos
-         -> session_system m S T (If b e) S' (add_phase_env T (x,v,v+1) pa rmax).
+         -> session_system m S T (If b e) S' (add_phase_env T (x,v,v+1) pa rmax)
+    | if_q_nor_2 : forall m S T S' T' T'' b e x y v pa gp rank loc l len left_f right_f,
+       type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true
+        -> find_nor_env_list (var_list T') T = Some T'' -> is_nor (snd (List.split T'')) = true -> ~ eq_session T' T''
+         -> collect_gphase T' rmax = pa -> find_env_gen (x,v,v+1) T = Some (THT 1 gp (TH rank loc))
+          -> collect_bases T = (right_f,len) -> collect_bases T'' = (left_f,len) -> form_session qenv x v (var_list T') = Some l 
+          -> session_system m S T (If b e) S' 
+      (add_phase_env ([(l,[THT (len+1) gp (EN 1 rank (level_down loc) (TMore (left_f::(right_f::nil))))])]) (x,v,v+1) pa rmax). 
+
+Inductive type_elem : Type := TNor (p : (rz_val))
+         | TH (r:option nat) (b: option (list (list rz_val)))
+         | EN (n:nat) (r:option nat) (b: option ((list rz_val))) (t:type_cfac)
+         | DFT (r:option nat) (b: option (list (list rz_val))).
+
+Inductive se_type : Type := THT (n:nat) (r:option rz_val) (t:type_elem).
+
+Definition type_pred := list se_type.
+
+Definition tpred := list (list (var * nat * nat) * list se_type).
 
 
 (*
