@@ -347,6 +347,11 @@ Fixpoint in_session (a: (var* nat*nat)) (l:list (var*nat*nat)) (pos:nat) :=
                    else in_session a xs (pos + rb - lb)
  end.
 
+Fixpoint in_sessions (al: list (var* nat*nat)) (l:list (var*nat*nat)) :=
+  match al with [] => true
+        | b::bl => match in_session b l 0 with None => false | Some pos => in_sessions bl l end
+  end.
+
 Fixpoint find_nor_env (a: (var* nat*nat)) (l:tpred) :=
    match l with [] => None
            | ((x,[THT n p (TNor r)])::xl) => match in_session a x 0 with None => find_nor_env a xl 
@@ -474,6 +479,8 @@ Fixpoint is_had' (t:list se_type) (pos:nat) (acc:nat) :=
   end.
 Definition is_had (t:list se_type) (pos:nat) := is_had' t pos 0.
 
+Definition is_ch (t:tpred) := match t with [(a,[THT n r (EN m rb b ts)])] => True | _ => False end.
+
 (*
 Definition merge_funs (a:nat -> bool) (b:nat-> bool) (pos:nat) :=
          fun x => if x <=? pos then a x else b x.
@@ -513,6 +520,19 @@ Definition var_list (t:tpred) := List.fold_left (fun a b => a ++ fst b) t [].
 
 Definition ses_elem_eq  (x y : var * nat * nat) :=
   ((fst (fst x)) =? (fst (fst y))) && ((snd (fst x)) =? (snd (fst y))) && (snd x =? snd y).
+
+Fixpoint ses_elem_eq_list (x y: list (var * nat * nat)) (n:nat) :=
+   match n with 0 => true
+            | S m => match nth_error x m with Some a 
+                         => match nth_error y m with Some b => (ses_elem_eq a b) && (ses_elem_eq_list x y m)
+                                   | _ => false
+                            end
+                           | _ => false
+                     end
+   end.
+
+Definition ses_elem_eq_l (x y: list (var * nat * nat)) :=
+   (length x =? length y) && (ses_elem_eq_list x y (length x)).
 
 Fixpoint eq_session_elem_nor (x:var * nat * nat) (b:list se_type) (l:tpred) :=
    match l with [] => True
@@ -594,4 +614,81 @@ Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
          -> find_env_gen (x,0,qenv x) T = Some (THT 1 gp (TH rank loc)) ->
        session_system m S T (QWhile n x i (BTest (BA (Var i)) b) e) S'
           [((x,0,qenv x)::(var_list T'),[(THT (get_session_num ((x,0,qenv x)::(var_list T'))) None (EN (2^(qenv x)) None None TDistr))])].
+
+
+(* Operation semantics. *)
+Inductive cof := One | Div (n:nat) (n:nat) | CTimes (a:cof) (b:cof).
+
+
+Inductive state := NTen (n:nat) (r:rz_val) (b: nat -> bool)
+                 | HTen (n:nat) (r:rz_val) (p: nat -> rz_val)
+                 | CTen (n:nat) (r:rz_val) (m:nat) (pl:list (rz_val * (nat -> bool))).
+
+Definition heap := nat -> state.
+
+Definition tpreds := list (list (var * nat * nat) * list se_type * nat).
+
+Definition get_tpred (t:tpreds) := fst (List.split t).
+
+Fixpoint update_session (ts:tpreds) (x:list (var * nat * nat)) (v: list se_type) :=
+  match ts with [] => nil
+      | (y,m,n)::xs => if ses_elem_eq_l x y then (y,v,n)::xs else (y,m,n)::(update_session xs x v)
+  end.
+
+Fixpoint get_ses_key (ts:tpreds) (x:list (var * nat * nat)) :=
+   match ts with [] => None
+      | (y,m,n)::xs => if ses_elem_eq_l x y then Some (m,n) else (get_ses_key xs x)
+   end.
+
+Definition to_nor_state (l: list se_type) :=
+  match l with [THT n (Some r) (TNor b)] => Some (NTen n r b) | _ => None end.
+
+Definition update_nor (a:list (var * nat * nat) * list se_type) (ts:tpreds) (h:heap) :=
+    match get_ses_key ts (fst a) with None => None
+            | Some (t,n) => match to_nor_state t with None => None
+                | Some v => Some (update_session ts (fst a) (snd a), update h n v)
+                end
+    end.
+
+Fixpoint update_nor_l (al: tpred) (ts:tpreds) (h:heap) :=
+    match al with [] => Some (ts,h)
+          | (a::all) => match update_nor a ts h with None => None
+                                  | Some (ts1,h1) => update_nor_l all ts1 h1
+                       end
+    end.
+
+Fixpoint kill_sessions (t:tpreds) (l:list (var*nat*nat)) :=
+   match t with [] => []
+          | (x,tl,n)::xs => if in_sessions x l then kill_sessions xs l else (x,tl,n)::(kill_sessions xs l)
+   end.
+
+Definition gen_ch_tpreds (t:tpreds) (a:tpred) :=
+   match a with [(l,ts)] => Some ((l,ts,(list_max (snd (List.split (kill_sessions t l)))+1))::(kill_sessions t l)
+            ,(list_max (snd (List.split (kill_sessions t l)))+1),ts)
+             | _ => None
+   end.
+
+Definition update_ch_heap (ts:tpreds) (h:heap) (a:tpred) :=
+   match gen_ch_tpreds ts a with None => None
+       | Some (tsa,n,t) => 
+          match t with [THT n (Some r) (EN m (Some 1) (Some (r1::r2::nil)) (TMore (a1::a2::nil)))]
+                => Some (tsa,update h n (CTen n r m ((r1,a1)::(r2,a2)::nil)))
+             | _ => None
+         end
+   end.
+
+Inductive pexp_sem  {qenv: var -> nat} {env:aenv} {rmax:nat} :
+            atype -> tpreds -> stack -> heap -> pexp -> tpreds -> stack -> heap -> Prop :=
+   | skip_sem : forall m T S R, pexp_sem m T S R PSKIP T S R
+   | assign_sem : forall m T S S' R a v, 
+       @session_system qenv env rmax m S (get_tpred T) (Assign a v) S' nil -> pexp_sem m T S R (Assign a v) T S' R
+   | class_sem : forall m T T' S R R' e l tl, @session_system qenv env rmax m S (get_tpred T) (Classic e l) S tl -> 
+             update_nor_l tl T R = Some (T',R') -> pexp_sem m T S R (Classic e l) T' S R'
+   | if_h : forall m T T' S R R' b e ta pos tl x y v, 
+             type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S ->
+             find_env (x,v,v+1) (get_tpred T) = Some (ta,pos)  -> is_had ta pos -> is_ch tl ->
+             @session_system qenv env rmax m S (get_tpred T) (If b e) S tl -> update_ch_heap T R tl = Some (T',R') ->
+              pexp_sem m T S R (If b e) T' S R'.
+
+
 
