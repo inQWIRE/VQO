@@ -91,12 +91,28 @@ Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BTest (i:aex
 Inductive type_rotation := TV (b:aexp) | Infty.
 *)
 
+Inductive type_cfac := TMore (n:nat) (al:nat -> rz_val) | TDistr.
+
+Inductive type_phase := Infy | Uni.
+
+(*| Uni (b: nat -> rz_val) | DFT (b: nat -> rz_val). *)
+
+Inductive type_elem : Type := TNor (p : (rz_val))
+         | TH (r:type_phase)
+         | EN (r:type_phase) (t:type_cfac).
+
+Inductive se_type : Type := THT (n:nat) (t:type_elem).
+
+Definition type_pred := se_type.
+
+Definition tpred := list (list (var * nat * nat) * se_type).
+
 Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppU (e:singleGate) (p:varia)
             | PSeq (s1:pexp) (s2:pexp)
-            | If (x:bexp) (s1:pexp)
+            | If (x:bexp) (s1:pexp) (l: (list varia * se_type))
             | IfB (x:bexp) (s1:pexp) (s2:pexp)
             | While (b:bexp) (p:pexp)
             | Classic (p:exp) (args : list (varia))
@@ -112,7 +128,7 @@ Inductive pexp := PSKIP | Assign (x:var) (n:aexp)
             | QWhile (n:aexp) (x:var) (i:var) (b:bexp) (e:pexp)
             | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
             | Reflect (x:var) (p:aexp) (a1:aexp) (a2:aexp) (* reflection on two state x=a1 and x=a2 with x=a1 happens in a probablity p, a1 <> a2  *)
-            | Distr (x:var) (al : list aexp) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
+            | Distr (x:var) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
                                                This statement basically distributes/diverges a vector x to many different vectors. *).
           (*  | CX (x:posi) (y:posi)  (* control x on to y. *)
             | CU (x:posi) (p:exp) (z:var) (args: list var) (q:aexp) (s:aexp) *)
@@ -186,15 +202,15 @@ Definition meet_avtype (t1 t2: atype * list varia) :=
 Definition right_av (t1: atype * list varia) :=  match t1 with (C,xl) => length xl = 0 | (Q,xl) => length xl = 1 end.
 *)
 
-Inductive type_vari : aenv -> varia -> atype * list varia -> Prop :=
-   | var_type : forall env x t, AEnv.MapsTo x t env -> type_vari env (Var x) (t,(if t =a= Q then [Var x] else []))
-   | index_type : forall env x v, AEnv.MapsTo x Q env -> AEnv.MapsTo v C env -> type_vari env (Index x v) (Q,[Index x v]).
+Inductive type_vari : aenv -> varia -> atype -> Prop :=
+   | var_type : forall env x t, AEnv.MapsTo x t env -> type_vari env (Var x) t
+   | index_type : forall env x v, AEnv.MapsTo x Q env -> AEnv.MapsTo v C env -> type_vari env (Index x v) Q.
 
-Inductive type_aexp : aenv -> aexp -> atype * list varia -> Prop :=
+Inductive type_aexp : aenv -> aexp -> atype -> Prop :=
      ba_type : forall env b t, type_vari env b t -> type_aexp env (BA b) t
-   | num_type : forall env n, type_aexp env (Num n) (C,[])
+   | num_type : forall env n, type_aexp env (Num n) C
    | plus_type : forall env e1 e2 t1 t2 t3, 
-                   type_aexp env e1 t1 -> type_aexp env e2 t2 ->  meet_avtype t1 t2 = Some t3 -> 
+                   type_aexp env e1 t1 -> type_aexp env e2 t2 ->  meet_atype t1 t2 = Some t3 -> 
                      type_aexp env (APlus e1 e2) t3.
 
 Definition list_subset (al bl :list var) := (forall x, In x al -> In x bl).
@@ -206,52 +222,105 @@ Definition get_core_vars (al : list varia) := map (fun a => match a with Var x =
 
 Inductive type_vari_list_q : aenv -> list varia -> Prop :=
      type_aexp_empty : forall env, type_vari_list_q env []
-   | type_aexp_many : forall env x xs, type_vari env x (Q,[x]) -> type_vari_list_q env xs -> type_vari_list_q env (x::xs).
+   | type_aexp_many : forall env x xs, type_vari env x Q -> type_vari_list_q env xs -> type_vari_list_q env (x::xs).
 
 Inductive type_aexp_list_c : aenv -> list aexp -> Prop :=
      type_aexp_empty_c : forall env, type_aexp_list_c env nil
-   | type_aexp_many_c : forall env x xs, type_aexp env x (C,[]) -> type_aexp_list_c env xs -> type_aexp_list_c env (x::xs).
+   | type_aexp_many_c : forall env x xs, type_aexp env x C -> type_aexp_list_c env xs -> type_aexp_list_c env (x::xs).
 
-Inductive type_bexp : aenv -> bexp -> atype * list varia -> Prop :=
+Inductive type_bexp : aenv -> bexp -> atype  -> Prop :=
    |  beq_type : forall env e1 e2 t1 t2 t3, type_aexp env e1 t1 -> type_aexp env e2 t2 ->
-             meet_avtype t1 t2 = Some t3 -> type_bexp env (BEq e1 e2) t3
+             meet_atype t1 t2 = Some t3 -> type_bexp env (BEq e1 e2) t3
    | blt_type : forall env e1 e2 t1 t2 t3, type_aexp env e1 t1 -> type_aexp env e2 t2 ->
-             meet_avtype t1 t2 = Some t3 -> type_bexp env (BLt e1 e2) t3
-   | btest_type : forall env e1 e2 x, type_aexp env (BA (Var e1)) (C,[]) -> type_aexp env e2 (Q,[Var x]) 
-            -> type_bexp env (BTest (BA (Var e1)) e2) (Q, [Index x e1]).
+             meet_atype t1 t2 = Some t3 -> type_bexp env (BLt e1 e2) t3
+   | btest_type : forall env e1 e2, type_aexp env (BA (Var e1)) Q -> type_aexp env e2 C 
+            -> type_bexp env (BTest (BA (Var e1)) e2) Q.
 
 Definition pre_tenv (l:list var) (env:env) := forall x, In x l -> Env.MapsTo x Nor env.
-    
-Inductive stype_pexp {qenv: var -> nat} : atype -> aenv -> pexp ->  atype * list varia -> Prop :=
-    | skip_stype_c : forall m env, stype_pexp m env (PSKIP) (C,[])
-    | skip_stype_q : forall m env l, stype_pexp m env (PSKIP) (Q,l)
-    | assign_stype_c : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v) (C,[])
-    | assign_stype_m : forall env a v, AEnv.MapsTo a M env -> type_aexp env v (M,[]) -> stype_pexp C env (Assign a v) (M,[])
-    | appu_stype : forall m env e p x,  type_vari env p (Q,[x]) -> stype_pexp m env (AppU e p) (Q,[x])
-    | if_q : forall m env b x v e xl, type_bexp env b (Q,[Index x v]) -> AEnv.MapsTo v C env ->
-                  stype_pexp Q env e (Q,xl) -> stype_pexp m env (If b e) (Q,(Index x v)::xl)
-    | if_c : forall m m' env b e1 e2 xl, type_bexp env b (C,[]) -> 
-                  stype_pexp m env e1 (m',xl) -> stype_pexp m env e2 (m',xl) -> stype_pexp m env (IfB b e1 e2) (m',xl)
-    | class_stype : forall m env e l tenv, pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
-              type_vari_list_q env l -> stype_pexp m env (Classic e l) (Q,l)
-    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PQFT x) (Q,[Var x])
-    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PRQFT x) (Q,[Var x])
-    | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
-              -> AEnv.MapsTo x Q env -> stype_pexp m env (PMeas p x a) (Q,[Var x])
-    | mea_stype : forall m env a x, AEnv.MapsTo a M env ->  AEnv.MapsTo x Q env -> stype_pexp m env (Meas a x) (Q,[Var x])
-    | qwhile_stype : forall m env n x x' i b e xl, stype_pexp Q env e (Q,xl) -> ~ list_subset ([x]) (get_core_vars xl) ->
-              AEnv.MapsTo x Q env -> AEnv.MapsTo i C env -> type_bexp env b (Q,[x']) -> get_var x' = x ->
-              stype_pexp m env (QWhile n x i b e) (Q,(Var x)::xl)
-    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n) (Q,[Var x])
-    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
-          -> type_aexp env a1 (C,[]) -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
-    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) (Q,[Var x]).
+
+
+Definition join_two_ses (a:(var * nat * nat)) (b:(var*nat*nat)) :=
+   match a with (x,n1,n2) => 
+      match b with (y,m1,m2) => 
+            if x =? y then (if n1 <=? m1 then 
+                               (if n2 <? m1 then None
+                                else if n2 <? m2 then Some (x,n1,m2)
+                                else Some(x,n1,n2))
+                            else if m2 <? n1 then None
+                            else if n2 <? m2 then Some (x,m1,m2)
+                            else Some (x,m1,n2))
+            else None
+     end
+   end.
+
+Fixpoint join_ses_aux (a:(var * nat * nat)) (l:list ((var * nat * nat))) :=
+     match l with [] => ([a])
+           | (x::xs) => match join_two_ses a x with None => x::join_ses_aux a xs
+                                         | Some ax => ax::xs
+                        end
+     end.
+
+Fixpoint join_ses (l1 l2:list ((var * nat * nat))) :=
+    match l1 with [] => l2
+               | x::xs => join_ses_aux x (join_ses xs l2)
+   end.
+
+Definition varia_ses (qenv:var -> nat) (s:stack) (v:varia) :=
+   match v with Var x => Some ([(x,0,qenv x)])
+           | Index x v => match AEnv.find v s with None => None 
+                                | Some n => Some ([(x,n,n+1)])
+                          end
+   end.
+
+Fixpoint varia_sess (qenv:var -> nat) (s:stack) (vl:list varia) :=
+   match vl with [] => Some nil
+             | x::xs => match varia_ses qenv s x with None => None
+                         | Some x' =>
+                        match varia_sess qenv s xs with None => None
+                          | Some xs' => Some (x'++xs')
+                        end
+                        end
+   end.
+
+Fixpoint aexp_ses (qenv:var -> nat) (s:stack) (v:aexp) :=
+   match v with BA x => varia_ses qenv s x
+           | Num n => Some nil
+          | APlus x y => match aexp_ses qenv s x with None => None
+                                       | Some l1 =>
+                           match aexp_ses qenv s y with None => None
+                                       | Some l2 => Some (join_ses l1 l2)
+                           end
+                         end
+   end.
+
+Definition bexp_ses (qenv:var -> nat) (s:stack) (v:bexp) :=
+   match v with BEq x y => match aexp_ses qenv s x with None => None
+                                       | Some l1 =>
+                           match aexp_ses qenv s y with None => None
+                                       | Some l2 => Some (join_ses l1 l2)
+                           end
+                         end
+             | BLt x y => match aexp_ses qenv s x with None => None
+                                       | Some l1 =>
+                           match aexp_ses qenv s y with None => None
+                                       | Some l2 => Some (join_ses l1 l2)
+                           end
+                         end
+
+             | BTest x y => match aexp_ses qenv s x with None => None
+                                       | Some l1 =>
+                           match aexp_ses qenv s y with None => None
+                                       | Some l2 => Some (join_ses l1 l2)
+                           end
+                         end
+   end.
 
 
 (* Type system for oqasm. *)
 Definition bits := list bool.
 
 Definition tenv := (var -> (rz_val * rz_val)). 
+    (* varaible -> global phase rz_val : nat -> bool (nat), nat -> bool (nat) |0010101> *)
 
 
 Definition flip_i (l:rz_val) (i:nat) := update l i (negb (l i)).
@@ -285,18 +354,6 @@ Inductive oqasm_type {qenv: var -> nat} : tenv -> exp -> tenv -> Prop :=
   | seq_otype : forall tenv tenv1 tenv2 s1 s2, oqasm_type tenv s1 tenv1 -> oqasm_type tenv s2 tenv2 -> oqasm_type tenv (Seq s1 s2) tenv2.
 
 (* The dynamic type system. Symbolic type. *)
-Inductive type_cfac := TMore (al:list rz_val) | TDistr.
-
-Inductive type_elem : Type := TNor (p : (rz_val))
-         | TH (r:option nat) (b: option (list (list rz_val)))
-         | EN (n:nat) (r:option nat) (b: option ((list rz_val))) (t:type_cfac)
-         | DFT (r:option nat) (b: option (list (list rz_val))).
-
-Inductive se_type : Type := THT (n:nat) (r:option rz_val) (t:type_elem).
-
-Definition type_pred := list se_type.
-
-Definition tpred := list (list (var * nat * nat) * list se_type).
 
 Definition eval_vari_c (s:stack) (a:varia) :=
   match a with Var x => AEnv.find x s | Index x v => None end.
@@ -338,7 +395,6 @@ Fixpoint eval_varia_list (qenv: var -> nat) (s:stack) (l:list varia) :=
                           end
   end.
 
-
 Fixpoint in_session (a: (var* nat*nat)) (l:list (var*nat*nat)) (pos:nat) :=
   match l with [] => None
        | ((x,lb,rb)::xs) => 
@@ -352,9 +408,20 @@ Fixpoint in_sessions (al: list (var* nat*nat)) (l:list (var*nat*nat)) :=
         | b::bl => match in_session b l 0 with None => false | Some pos => in_sessions bl l end
   end.
 
+
+Definition atype_order (a:atype) (b:atype) :=
+   match a with C => True | M => if b =a= C then False else True | Q => if b =a= Q then True else False end.
+
+Fixpoint find_env (a: (var* nat*nat)) (l:tpred) :=
+   match l with [] => None
+           | ((x,tl)::xl) => match in_session a x 0 with None => find_env a xl 
+                                       | Some pos => Some (tl,pos)
+                                  end
+   end.
+
 Fixpoint find_nor_env (a: (var* nat*nat)) (l:tpred) :=
    match l with [] => None
-           | ((x,[THT n p (TNor r)])::xl) => match in_session a x 0 with None => find_nor_env a xl 
+           | ((x,THT n (TNor r))::xl) => match in_session a x 0 with None => find_nor_env a xl 
                                        | Some pos => Some (pos,r)
                                   end
            | (_,_)::xl => find_nor_env a xl
@@ -367,10 +434,205 @@ Fixpoint find_nor_env_list (al: list (var* nat*nat)) (l:tpred) :=
        | (a::bl) => match find_nor_env a l with None => None
                   | Some (pos,r) => 
                match find_nor_env_list bl l with None => None
-                  | Some xl => Some (([a],[THT ((snd a) - (snd (fst a))) (Some allfalse) (TNor (con_nor pos (snd a- (snd (fst a))) r))])::xl)
+                  | Some xl => Some (([a],THT ((snd a) - (snd (fst a))) (TNor (con_nor pos (snd a- (snd (fst a))) r)))::xl)
                    end
               end
     end.
+
+Definition lshift_fun_gen {A:Type} (f:nat -> A) (n:nat) := fun i => f (i+n).
+
+Definition all2false (x y : nat) := false.
+
+Definition cut_n_gen (f:nat -> nat -> bool) (n:nat) := fun i => if i <? n then f i else all2false i.
+
+Definition con_nor_phase (a:nat) (b:nat) (f:nat -> rz_val) := cut_n_gen (lshift_fun_gen f a) b.
+
+Fixpoint find_had_env (a: (var* nat*nat)) (l:tpred) :=
+   match l with [] => None
+           | ((x,THT n (TH r))::xl) => match in_session a x 0 with None => find_had_env a xl 
+                                       | Some pos => Some (pos,r)
+                                  end
+           | (_,_)::xl => find_had_env a xl
+   end.
+
+Fixpoint find_had_env_list (al: list (var* nat*nat)) (l:tpred) :=
+    match al with [] => Some nil
+       | (a::bl) => match find_had_env a l with None => None
+                  | Some (pos,Uni r) => 
+               match find_had_env_list bl l with None => None
+                  | Some xl => Some (([a],THT ((snd a) - (snd (fst a))) (TH (Uni (con_nor_phase pos (snd a- (snd (fst a))) r))))::xl)
+                   end
+                  | Some (pos,Infy) => 
+               match find_had_env_list bl l with None => None
+                  | Some xl => Some (([a],THT ((snd a) - (snd (fst a))) (TH Infy))::xl)
+                   end
+                  | Some (pos,DFT r) => 
+               match find_had_env_list bl l with None => None
+                  | Some xl => Some (([a],THT ((snd a) - (snd (fst a))) (TH (DFT (con_nor_phase pos (snd a- (snd (fst a))) r))))::xl)
+                   end
+              end
+    end.
+
+(* turn a qubit to phase. *)
+Definition turn_nor_to_had_phase (r:rz_val) := fun x => if r x then rotate allfalse 1 else allfalse.
+
+Fixpoint turn_nor_to_had (l:tpred) :=
+   match l with [] => Some nil
+           | ((x,THT n (TNor r))::xs) => 
+         match turn_nor_to_had xs with None => None
+             | Some xs' => Some ((x,THT n (TH (Uni (turn_nor_to_had_phase r))))::xs')
+         end
+          | _ => None
+   end.
+
+Fixpoint nat_recursion {A:Type} (change: (nat -> A) -> nat -> nat -> A) (f:nat -> A) (n:nat) :=
+   match n with 0 => f
+           | S m => nat_recursion change (change f m) m
+   end.
+
+Fixpoint turn_apply_x_nor (l:tpred) :=
+   match l with [] => Some nil
+           | ((x,THT n (TNor r))::xs) => 
+         match turn_apply_x_nor xs with None => None
+             | Some xs' => Some ((x,THT n (TNor (nat_recursion flip_i r n)))::xs')
+         end
+          | _ => None
+   end.
+
+Inductive th_nor_aux : (list (var * nat * nat) * se_type) ->  (list (var * nat * nat) * se_type) -> Prop :=
+   th_nor_aux_infy : forall x n, th_nor_aux (x,THT n (TH Infy)) (x,THT n (TH Infy))
+  | th_nor_aux_uni_1 : forall x n r, r = all2false -> th_nor_aux (x,THT n (TH (Uni r))) (x,THT n (TNor allfalse))
+  | th_nor_aux_uni_2 : forall x n r, r <> all2false -> th_nor_aux (x,THT n (TH (Uni r))) (x,THT n (TH Infy))
+  | th_nor_aux_dft_1 : forall x n r, r = all2false -> th_nor_aux (x,THT n (TH (DFT r))) (x,THT n (TNor allfalse))
+  | th_nor_aux_dft_2 : forall x n r, r <> all2false -> th_nor_aux (x,THT n (TH (DFT r))) (x,THT n (TH Infy)).
+
+Inductive turn_had_to_nor : tpred -> tpred -> Prop :=
+   turn_had_to_nor_empty : turn_had_to_nor nil nil
+  | turn_had_to_nor_many : forall x xs y ys, th_nor_aux x y -> turn_had_to_nor xs ys -> turn_had_to_nor (x::xs) (y::ys).
+
+Fixpoint turn_apply_x_had (l:tpred) :=
+   match l with [] => Some nil
+           | ((x,THT n (TH Infy))::xs) => 
+         match turn_apply_x_had xs with None => None
+             | Some xs' => Some ((x,THT n ((TH Infy)))::xs')
+         end
+           | ((x,THT n (TH (Uni r)))::xs) => 
+         match turn_apply_x_had xs with None => None
+             | Some xs' => Some ((x,THT n ((TH (Uni r))))::xs')
+         end
+          | _ => None
+   end.
+
+(* session type *)
+
+Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
+           : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
+    | skip_ses : forall m stack T, session_system m stack T (PSKIP) stack nil
+    | assign_ses_c : forall m a v v' stack T, AEnv.MapsTo a C env -> type_aexp env v C
+             -> eval_aexp_c stack v = Some v' -> session_system m stack T (Assign a v) (AEnv.add a v' stack) nil
+    | assign_ses_m : forall m a v stack T, AEnv.MapsTo a M env -> type_aexp env v M
+             -> session_system m stack T (Assign a v) stack nil
+    | appu_ses_h_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_nor_env_list ([a]) T = Some T' -> turn_nor_to_had T' = Some T'' 
+                  -> session_system m stack T (AppU H_gate p) stack T''
+    | appu_ses_h_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
+                  -> session_system m stack T (AppU H_gate p) stack T''
+    | appu_ses_x_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_nor_env_list ([a]) T = Some T' -> turn_apply_x_nor T' = Some T'' 
+                  -> session_system m stack T (AppU X_gate p) stack T''
+    | appu_ses_x_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
+                  -> session_system m stack T (AppU X_gate p) stack T''
+    | class_ses : forall m stack e l l' tenv, pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
+              type_vari_list_q env l -> varia_sess qenv stack l = Some l' -> type_ses_exp m stack (Classic e l) stack l'.
+    | qif_ses : forall m stack stack' b e l a, type_bexp env b Q -> type_ses_exp Q stack e stack' l
+              -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None -> type_ses_exp m stack (If b e) stack (a::l)
+    | if_ses_true : forall m stack stack' b e1 e2 l, type_bexp env b C -> eval_bexp_c stack b = Some true ->
+                type_ses_exp Q stack e1 stack' l -> type_ses_exp m stack (IfB b e1 e2) stack' l
+    | if_ses_false : forall m stack stack' b e1 e2 l, type_bexp env b C -> eval_bexp_c stack b = Some false ->
+                type_ses_exp Q stack e2 stack' l -> type_ses_exp m stack (IfB b e1 e2) stack' l
+    | if_ses_m : forall m stack stack' b e1 e2 l, type_bexp env b M -> type_ses_exp Q stack e1 stack' l ->
+                type_ses_exp Q stack e2 stack' l -> type_ses_exp m stack (IfB b e1 e2) stack' l
+    | class_ses : forall m stack e l l' tenv, pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
+              type_vari_list_q env l -> varia_sess qenv stack l = Some l' -> type_ses_exp m stack (Classic e l) stack l'
+    | qft_ses : forall m stack x, AEnv.MapsTo x Q env -> type_ses_exp m stack (PQFT x) stack ([(x,0,qenv x)])
+    | rqft_ses : forall m stack x, AEnv.MapsTo x Q env -> type_ses_exp m stack (PRQFT x) stack ([(x,0,qenv x)])
+    | pmea_ses : forall m stack q p a x, AEnv.MapsTo a q env -> AEnv.MapsTo p M env -> atype_order q M ->
+                 AEnv.MapsTo x Q env -> type_ses_exp m stack (PMeas p x a) stack ([(x,0,qenv x)])
+    | mea_ses : forall m stack a x, AEnv.MapsTo a M env ->  
+                   AEnv.MapsTo x Q env -> type_ses_exp m stack (Meas a x) stack ([(x,0,qenv x)])
+    | while_ses : forall m stack stack' b e l, type_bexp env b C -> 
+                  type_ses_exp m stack e stack' l -> type_ses_exp m stack (While b e) stack l
+    | amplify_ses : forall m stack x n, AEnv.MapsTo x Q env -> type_aexp env n C -> type_ses_exp m stack (Amplify x n) stack ([(x,0,qenv x)])
+    | reflect_ses : forall m stack x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p C
+          -> type_aexp env a1 C -> type_aexp env a2 C -> type_ses_exp m stack (Reflect x p a1 a2) stack ([(x,0,qenv x)])
+    | distr_ses : forall m stack x, AEnv.MapsTo x Q env -> type_ses_exp m stack (Distr x) stack ([(x,0,qenv x)])
+    | qwhile_stype : forall m env n x x' i b e xl, stype_pexp Q env e Q -> ~ list_subset ([x]) (get_core_vars xl) ->
+              AEnv.MapsTo x Q env -> AEnv.MapsTo i C env -> type_bexp env b (Q,[x']) -> get_var x' = x ->
+              stype_pexp m env (QWhile n x i b e) (Q,(Var x)::xl)
+    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n) (Q,[Var x])
+    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
+          -> type_aexp env a1 (C,[]) -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
+    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) (Q,[Var x]).
+
+
+Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
+            : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
+    | skip_type : forall m S T, session_system m S T PSKIP S nil
+    | assign_type : forall m S T a v v', eval_aexp_c S v = Some v' -> session_system m S T (Assign a v) (AEnv.add a v' S) nil
+    | classic_type_nor : forall m S T e l vl tl, eval_varia_list qenv S l = Some vl -> 
+                 find_nor_env_list vl T = Some tl -> session_system m S T (Classic e l) S tl
+    | if_q_nor_1 : forall m S T S' T' T'' b e x y v pa tl pos,
+       type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S
+       -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true -> find_nor_env_list (var_list T') T = Some T''
+        -> eq_session T' T'' -> collect_gphase T' rmax = pa -> find_env (x,v,v+1) T = Some (tl,pos)  -> is_had tl pos
+         -> session_system m S T (If b e) S' (add_phase_env T (x,v,v+1) pa rmax)
+    | if_q_nor_2 : forall m S T S' T' T'' b e x y v pa gp rank loc l len left_f right_f,
+       type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true
+        -> find_nor_env_list (var_list T') T = Some T'' -> is_nor (snd (List.split T'')) = true -> ~ eq_session T' T''
+         -> collect_gphase T' rmax = pa -> find_env_gen (x,v,v+1) T = Some (THT 1 gp (TH rank loc))
+          -> collect_bases T = (right_f,len) -> collect_bases T'' = (left_f,len) -> form_session qenv x v (var_list T') = Some l 
+          -> session_system m S T (If b e) S' 
+      (add_phase_env ([(l,[THT (len+1) gp (EN 2 rank (level_down loc) (TMore (left_f::(right_f::nil))))])]) (x,v,v+1) pa rmax)
+   | distr_type_1: forall m S T T' x l, find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
+           session_system m S T (Distr x l) S ([([(x,0,qenv x)],([THT (qenv x) None (EN (2^(qenv x)) None None TDistr)]))])
+   | distr_type_2: forall m S T tl pos x l, find_env ((x,0,qenv x)) T = Some (tl,pos) -> is_distr tl ->
+           session_system m S T (Distr x l) S ([([(x,0,qenv x)],([THT (qenv x) None (EN (2^(qenv x)) None None TDistr)]))])
+   | qwhile_type : forall m S S' T T' T'' n x i b e gp rank loc, type_aexp env b (Q,[Var x]) 
+        -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true
+        -> find_nor_env_list (var_list T') T = Some T'' -> is_nor (snd (List.split T'')) = true -> ~ eq_session T' T''
+         -> find_env_gen (x,0,qenv x) T = Some (THT 1 gp (TH rank loc)) ->
+       session_system m S T (QWhile n x i (BTest (BA (Var i)) b) e) S'
+          [((x,0,qenv x)::(var_list T'),[(THT (get_session_num ((x,0,qenv x)::(var_list T'))) None (EN (2^(qenv x)) None None TDistr))])].
+
+
+Inductive stype_pexp {qenv: var -> nat} : atype -> aenv -> pexp ->  atype -> Prop :=
+    | skip_stype : forall m env t, stype_pexp m env (PSKIP) t
+    | assign_stype_c : forall env a v t, AEnv.MapsTo a C env -> type_aexp env v C -> stype_pexp t env (Assign a v) C
+    | assign_stype_m : forall env a v, AEnv.MapsTo a M env -> type_aexp env v M -> stype_pexp C env (Assign a v) M
+    | appu_stype : forall m env e p,  type_vari env p Q -> stype_pexp m env (AppU e p) Q
+    | if_q : forall m env b v e, type_bexp env b Q -> AEnv.MapsTo v C env ->
+                  stype_pexp Q env e Q -> stype_pexp m env (If b e) Q
+    | if_c_true : forall m m' env b e1 e2, type_bexp env b C -> eval_bexp_c stack
+                  stype_pexp m env e1 m' -> stype_pexp m env e2 m' -> stype_pexp m env (IfB b e1 e2) m'
+    | class_stype : forall m env e l tenv, pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
+              type_vari_list_q env l -> stype_pexp m env (Classic e l) Q
+    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PQFT x) Q
+    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PRQFT x) Q
+    | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
+              -> AEnv.MapsTo x Q env -> stype_pexp m env (PMeas p x a) Q
+    | mea_stype : forall m env a x, AEnv.MapsTo a M env ->  AEnv.MapsTo x Q env -> stype_pexp m env (Meas a x) Q
+    | qwhile_stype : forall m env n x i b e, stype_pexp Q env e Q -> 
+              AEnv.MapsTo x Q env -> AEnv.MapsTo i C env -> type_bexp env b Q ->
+              stype_pexp m env (QWhile n x i b e) Q
+    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n C -> stype_pexp m env (Amplify x n) Q
+    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p C
+          -> type_aexp env a1 C -> type_aexp env a2 C -> stype_pexp m env (Reflect x p a1 a2) Q
+    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) Q.
+
+
+
 
 Fixpoint cut_n_list {A:Type} (l:list A) (n:nat) :=
   match n with 0 => []
@@ -410,12 +672,7 @@ Fixpoint cut_type_n (pos:nat) (n:nat) (l:list se_type) (i:nat) :=
        else cut_type_n pos n xs (i+m)
     end.
 
-Fixpoint find_env (a: (var* nat*nat)) (l:tpred) :=
-   match l with [] => None
-           | ((x,tl)::xl) => match in_session a x 0 with None => find_env a xl 
-                                       | Some pos => Some (tl,pos)
-                                  end
-   end.
+
 
 
 Fixpoint find_env_gen (a: (var* nat*nat)) (l:tpred) :=
@@ -585,35 +842,6 @@ Fixpoint get_session_num (l:list (var * nat * nat)) :=
  match l with [] => 0
        | (x,lb,rb)::xs => rb-lb+(get_session_num xs)
  end.
-
-Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
-            : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
-    | skip_type : forall m S T, session_system m S T PSKIP S nil
-    | assign_type : forall m S T a v v', eval_aexp_c S v = Some v' -> session_system m S T (Assign a v) (AEnv.add a v' S) nil
-    | classic_type_nor : forall m S T e l vl tl, eval_varia_list qenv S l = Some vl -> 
-                 find_nor_env_list vl T = Some tl -> session_system m S T (Classic e l) S tl
-    | if_q_nor_1 : forall m S T S' T' T'' b e x y v pa tl pos,
-       type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S
-       -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true -> find_nor_env_list (var_list T') T = Some T''
-        -> eq_session T' T'' -> collect_gphase T' rmax = pa -> find_env (x,v,v+1) T = Some (tl,pos)  -> is_had tl pos
-         -> session_system m S T (If b e) S' (add_phase_env T (x,v,v+1) pa rmax)
-    | if_q_nor_2 : forall m S T S' T' T'' b e x y v pa gp rank loc l len left_f right_f,
-       type_bexp env b (Q,[Index x y]) -> AEnv.MapsTo y v S -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true
-        -> find_nor_env_list (var_list T') T = Some T'' -> is_nor (snd (List.split T'')) = true -> ~ eq_session T' T''
-         -> collect_gphase T' rmax = pa -> find_env_gen (x,v,v+1) T = Some (THT 1 gp (TH rank loc))
-          -> collect_bases T = (right_f,len) -> collect_bases T'' = (left_f,len) -> form_session qenv x v (var_list T') = Some l 
-          -> session_system m S T (If b e) S' 
-      (add_phase_env ([(l,[THT (len+1) gp (EN 2 rank (level_down loc) (TMore (left_f::(right_f::nil))))])]) (x,v,v+1) pa rmax)
-   | distr_type_1: forall m S T T' x l, find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
-           session_system m S T (Distr x l) S ([([(x,0,qenv x)],([THT (qenv x) None (EN (2^(qenv x)) None None TDistr)]))])
-   | distr_type_2: forall m S T tl pos x l, find_env ((x,0,qenv x)) T = Some (tl,pos) -> is_distr tl ->
-           session_system m S T (Distr x l) S ([([(x,0,qenv x)],([THT (qenv x) None (EN (2^(qenv x)) None None TDistr)]))])
-   | qwhile_type : forall m S S' T T' T'' n x i b e gp rank loc, type_aexp env b (Q,[Var x]) 
-        -> session_system m S T e S' T' -> is_nor (snd (List.split T')) = true
-        -> find_nor_env_list (var_list T') T = Some T'' -> is_nor (snd (List.split T'')) = true -> ~ eq_session T' T''
-         -> find_env_gen (x,0,qenv x) T = Some (THT 1 gp (TH rank loc)) ->
-       session_system m S T (QWhile n x i (BTest (BA (Var i)) b) e) S'
-          [((x,0,qenv x)::(var_list T'),[(THT (get_session_num ((x,0,qenv x)::(var_list T'))) None (EN (2^(qenv x)) None None TDistr))])].
 
 
 (* Operation semantics. *)

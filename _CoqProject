@@ -35,4 +35,5 @@ OracleExample.v
 ArithTesting.v
 ExtrOQASM.v
 QC_state.v
+Session.v
 QC.v
