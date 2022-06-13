@@ -22,79 +22,87 @@ Delimit Scope pexp_scope with pexp.
 Local Open Scope pexp_scope.
 Local Open Scope nat_scope.
 
+Inductive state :Type :=
+             | SA (x:varia) (l:list (varia * state))
+             | qket (p:aexp) (b:bexp)
+             | upP (e:state) (a:aexp)
+             | SITE (x:bexp) (e1:state) (e2:state)
+             | Join (e1:state) (e2:state)
+            
+             | SPlus (s1:state) (s2:state)  (* Let's say that we only allow |0> + |1> first. *)
+             | Tensor (s1:list state) (* tensor of list of states, avoiding associativy definition *)
+             (* | Plus (s1:state) (s2:state) |x> + |y> state. x and y are not equal *)
+             | Sigma (n:aexp) (i:var) (b:aexp) (s:state) (* represent 1/sqrt{2^n} Sigma^n_{i=b} s *)
+             | NTensor (n:aexp) (i:var) (b:aexp) (s:state) (* represent Tensor^n_{i=b} s *).
 
+Inductive cpred_elem := PFalse | CState (b:bexp) 
+             | QState (x:state) (s:state)
+             | QIn (p:aexp) (x:aexp) (s:state) (* (p,x) \in Sigma s. *)
+             | PNot (p:cpred_elem) | CForall (xs:list var) (p1:list cpred_elem) (p2:cpred_elem)
+             | Valid (range:bexp) (b:bexp).
 
-(* an operation is either applied on  (x,0) or applying on all.  *)
-Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
-           : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
-    | skip_ses : forall m stack T, session_system m stack T (PSKIP) stack nil
-    | assign_ses_c : forall m a v v' stack T, AEnv.MapsTo a C env -> type_aexp env v C
-             -> eval_aexp_c stack v = Some v' -> session_system m stack T (Assign a v) (AEnv.add a v' stack) nil
-    | assign_ses_m : forall m a v stack T, AEnv.MapsTo a M env -> type_aexp env v M
-             -> session_system m stack T (Assign a v) stack nil
-    | appu_ses_h_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
-                 find_nor_env_list ([a]) T = Some T' -> turn_nor_to_had T' = Some T'' 
-                  -> session_system m stack T (AppU H_gate p) stack T''
-    | appu_ses_h_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
-                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
-                  -> session_system m stack T (AppU H_gate p) stack T''
-    | appu_ses_x_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
-                 find_nor_env_list ([a]) T = Some T' -> turn_apply_x_nor T' = Some T'' 
-                  -> session_system m stack T (AppU X_gate p) stack T''
-    | appu_ses_x_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
-                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
-                  -> session_system m stack T (AppU X_gate p) stack T''
-    | class_ses_nor : forall m stack e l l' tenv T T' T'' tv tv',
-          pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
-          type_vari_list_q env l -> varia_sess qenv stack l = Some l' -> find_nor_env_list l' T = Some T' 
-       -> tenv_create T' = Some tv -> @oqasm_type (update_qenv qenv l') tv e tv' -> tpred_nor_create T' tv' = Some T''
-              -> session_system m stack T (Classic e l) stack T''
-    | qif_ses_same : forall m stack stack' b e l a T t,
-         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
-         session_system Q stack T e stack' T -> find_env_had a T = Some t
-         -> session_system m stack T (If b e) stack (([a],t)::T)
-    | qif_ses : forall m stack stack' b e l a T T' T'' t,
-         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
-         session_system Q stack T e stack' T' -> is_nor T = true -> find_env_had a T = Some t -> is_nor T' = true -> T <> T'
-         -> create_ch T T' a t = Some T'' -> session_system m stack T (If b e) stack T''
-    | if_ses_true : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some true ->
-                session_system Q stack T e1 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-    | if_ses_false : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some false ->
-                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-    | if_ses_m : forall m stack stack' b e1 e2 T T', type_bexp env b M -> session_system Q stack T e1 stack' T' ->
-                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-    | pmea_ses : forall m stack q p a x T, AEnv.MapsTo a q env -> AEnv.MapsTo p M env -> atype_order q M ->
-                 AEnv.MapsTo x Q env -> session_system m stack T (PMeas p x a) stack nil
-    | mea_ses : forall m stack a x T, AEnv.MapsTo a M env ->  
-                   AEnv.MapsTo x Q env -> session_system m stack T (Meas a x) stack nil
-    | amplify_ses : forall m stack x n T T', AEnv.MapsTo x Q env -> type_aexp env n C 
-                   -> find_had_env_list ([(x,0,qenv x)]) T = Some T' ->
-                    session_system m stack T (Amplify x n) stack T'
-    | reflect_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
-        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
-        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
-        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch (qenv x) v1 v2)])
-    | distr_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
-        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
-        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
-        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch_distr (qenv x))]).
+Definition cpred := list cpred_elem.
+Definition fresh (l:nat) := l +1.
 
-Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
-            : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
-    | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
-                   session_system m T (PSKIP) t
-    | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
-    | appu_type_1 : forall m T P e x a l t1 t2 n b b', type_vari env (Index x ([a])) (Q,[Index x ([a])])
-            -> @find_session qenv T ([Index x ([a])]) ((l,t1++([THT n b])++t2),P) -> to_gate_type e b = Some b' ->
-       session_system m T (AppU e (Index x ([a]))) ((l,t1++((THT a b)::(THT (Num 1) b')::(THT (AMinus n (AMinus a (Num 1))) b)::nil)++t2),
-               (CState (BAnd (BGe a (get_nums t1)) (BLt a (APlus (get_nums t1) n))))::P)
-    | seq_type : forall m env e1 e2 l1 t1 P1 l2 t2 P2, session_system m env e1 ((l1,t1),P1) 
-             -> session_system m env e2 ((l2,t2),P2)  -> session_system m env (PSeq e1 e2) ((l1++l2,t1++t2),P1++P2).
+Fixpoint subst_adds_aexp (a:aexp) (l:list vari) (xa: list vari * state) :=
+   match a with BA b => BA (subst_adds_vari b l xa)
+              | Num n => Num n
+              | APlus e1 e2 => APlus (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+              | AMinus e1 e2 => AMinus (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+              | AMult e1 e2 => AMult (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+              | TwoTo e1 => TwoTo (subst_adds_aexp e1 l xa)
+              | App f e1 => App f (subst_adds_aexp e1 l xa)
+              | FExpI e1 => FExpI (subst_adds_aexp e1 l xa)
+              | FAddExpI e1 e2 => FAddExpI (subst_adds_bexp e1 l xa) (subst_adds_aexp e2 l xa)
+              | GetP e1 => GetP (subst_adds_state e1 l xa)
+              | Left e1 => Left (subst_adds_state e1 l xa)
+              | Right e1 => Right (subst_adds_state e1 l xa)
+              | Bit e1 => Bit (subst_adds_bexp e1 l xa)
+              | ASum e1 e2 => ASum (subst_adds_bexp e1 l xa) (subst_adds_aexp e2 l xa)
+   end
 
-Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
-            : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
+with subst_adds_vari (v:vari) l (xa: list vari * state) :=
+    match v with Var x => Var x | Index x al => Index x (map (fun a => subst_adds_aexp a l xa) al) end
 
+with subst_adds_bexp (b:bexp) l (xa: list vari * state) :=
+   match b with BFalse => BFalse | BTrue => BTrue
+          | BEq e1 e2 => BEq (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+          | BGe e1 e2 => BGe (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+          | BLt e1 e2 => BLt (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
+          | BTest e2 => BTest (subst_adds_vari e2 l xa)
+          | BXOR e1 e2 => BXOR (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
+          | BITE b e1 e2 => BITE (subst_adds_bexp b l xa) (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
+          | BNeg e1 => BNeg (subst_adds_bexp e1 l xa)
+          | BAnd e1 e2 => BAnd (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
+          | GetB e1 => GetB (subst_adds_state e1 l xa)
+   end
 
+with subst_adds_state (v:state) l (xa: list vari * state) :=
+  match v with SA xl al => if list_equal l xl  then SA xl (xa::al)
+                           else SA xl al
+             | ket b => ket (subst_adds_bexp b l xa)
+             | qket p b => qket (subst_adds_aexp p l xa) (subst_adds_bexp b l xa)
+             | SITE b e1 e2 => SITE (subst_adds_bexp b l xa) (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
+             | SPlus e1 e2 => SPlus (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
+             | Join e1 e2 => Join (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
+             | upP e1 p => upP (subst_adds_state e1 l xa) (subst_adds_aexp p l xa)
+             | Tensor el => Tensor (map (fun a => subst_adds_state a l xa) el)
+             | Sigma n i b e1 => Sigma (subst_adds_aexp n l xa) i (subst_adds_aexp b l xa) (subst_adds_state e1 l xa)
+             | NTensor n i b e1 => NTensor (subst_adds_aexp n l xa) i (subst_adds_aexp b l xa) (subst_adds_state e1 l xa)
+  end.
+
+Fixpoint subst_adds_cpred (c:cpred_elem) (l:list vari) (xa: list vari * state) :=
+   match c with PFalse => PFalse
+     | CState b => CState (subst_adds_bexp b l xa)
+     | QState e1 e2 => QState (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
+     | QIn p a e1 => QIn (subst_adds_aexp p l xa) (subst_adds_aexp a l xa) (subst_adds_state e1 l xa)
+     | PNot p => PNot (subst_adds_cpred p l xa)
+     | CForall xs p1 p2 => CForall xs (map (fun a => subst_adds_cpred a l xa) p1) (subst_adds_cpred p2 l xa)
+     | Valid r b => Valid (subst_adds_bexp r l xa) (subst_adds_bexp b l xa)
+   end.
+
+Definition  subst_adds_cpreds (c:list cpred_elem) l (xa: list vari * state) :=
+        List.map (fun a => subst_adds_cpred a l xa) c.
 
 Inductive triple {env:aenv} {qenv: var -> nat} 
             : tpred -> (var * cpred) -> pexp -> (var * cpred)  -> Prop :=
@@ -108,11 +116,10 @@ Inductive triple {env:aenv} {qenv: var -> nat}
 *)
 
      | appX_1 : forall new x lb rb t t' T P , 
-        isNor t -> x_nors t t' ->
          triple ((([(x,lb,rb)], t))::T) (new, 
              subst_adds_cpreds P ([Var x]) ([Var x],app_X_nors x new (Num 0) (Num (qenv x))))
               (AppU X_gate (Var x)) (fresh new, 
-                        (CState (BAnd (BEq lb (Num 0)) (BEq rb (Num (qenv x)))))::P)
+                        (CState (BEq lb (Num 0))) (CState (BEq rb (Num (qenv x))))::P).
      | appX_2 : forall new x i lb rb t1 t2 n b T P , 
          triple ((([(x,lb,rb)], t1++[THT n (TNor b)]++t2))::T)
             (new, subst_adds_cpreds P ([Var x]) ([Var x],app_X_nor x i))
@@ -147,7 +154,27 @@ Inductive triple {env:aenv} {qenv: var -> nat}
               stype_pexp Q env e (Q,xl) -> 
               @find_session qenv T (xl) ((yl,t1),newP3) -> isRealNor t1 -> isRealNor t2 -> t1 <> t2 ->
               triple T (new,subst_adds_cpreds P ([Index x a]) ((Index x a)::xl,upP (SA ([Index x a]) []) (subPhase qenv xl))) 
-                     (Switch (Index x a) ([(q,e)])) (new,newP1++newP2++newP3++P). 
+                     (Switch (Index x a) ([(q,e)])) (new,newP1++newP2++newP3++P). Scheme new_scheme := Induction for _ Sort _
+with _ := Induction for _ Sort _.
+
+Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
+            : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
+    | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
+                   session_system m T (PSKIP) t
+    | assign_type : forall m T a v, type_aexp env v (C,[]) -> session_system m T (Assign a v) (([],[]),[])
+    | appu_type_1 : forall m T P e x a l t1 t2 n b b', type_vari env (Index x ([a])) (Q,[Index x ([a])])
+            -> @find_session qenv T ([Index x ([a])]) ((l,t1++([THT n b])++t2),P) -> to_gate_type e b = Some b' ->
+       session_system m T (AppU e (Index x ([a]))) ((l,t1++((THT a b)::(THT (Num 1) b')::(THT (AMinus n (AMinus a (Num 1))) b)::nil)++t2),
+               (CState (BAnd (BGe a (get_nums t1)) (BLt a (APlus (get_nums t1) n))))::P)
+    | seq_type : forall m env e1 e2 l1 t1 P1 l2 t2 P2, session_system m env e1 ((l1,t1),P1) 
+             -> session_system m env e2 ((l2,t2),P2)  -> session_system m env (PSeq e1 e2) ((l1++l2,t1++t2),P1++P2).
+
+Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
+            : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
+
+
+
+
 
 
 (* Type system -- The Static Type system, and the dynamic gradual typing part will be merged with the triple rule. *)
@@ -873,65 +900,7 @@ Fixpoint vari_list_eq_dec (a b : list vari) :=
 Fixpoint list_equal (al bl : list vari) :=
   match (al,bl) with ([],[]) => true | (a::xl,b::yl) => (vari_eq_dec a b) && list_equal xl yl  | _ => false end.
 
-Fixpoint subst_adds_aexp (a:aexp) (l:list vari) (xa: list vari * state) :=
-   match a with BA b => BA (subst_adds_vari b l xa)
-              | Num n => Num n
-              | APlus e1 e2 => APlus (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-              | AMinus e1 e2 => AMinus (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-              | AMult e1 e2 => AMult (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-              | TwoTo e1 => TwoTo (subst_adds_aexp e1 l xa)
-              | App f e1 => App f (subst_adds_aexp e1 l xa)
-              | FExpI e1 => FExpI (subst_adds_aexp e1 l xa)
-              | FAddExpI e1 e2 => FAddExpI (subst_adds_bexp e1 l xa) (subst_adds_aexp e2 l xa)
-              | GetP e1 => GetP (subst_adds_state e1 l xa)
-              | Left e1 => Left (subst_adds_state e1 l xa)
-              | Right e1 => Right (subst_adds_state e1 l xa)
-              | Bit e1 => Bit (subst_adds_bexp e1 l xa)
-              | ASum e1 e2 => ASum (subst_adds_bexp e1 l xa) (subst_adds_aexp e2 l xa)
-   end
 
-with subst_adds_vari (v:vari) l (xa: list vari * state) :=
-    match v with Var x => Var x | Index x al => Index x (map (fun a => subst_adds_aexp a l xa) al) end
-
-with subst_adds_bexp (b:bexp) l (xa: list vari * state) :=
-   match b with BFalse => BFalse | BTrue => BTrue
-          | BEq e1 e2 => BEq (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-          | BGe e1 e2 => BGe (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-          | BLt e1 e2 => BLt (subst_adds_aexp e1 l xa) (subst_adds_aexp e2 l xa)
-          | BTest e2 => BTest (subst_adds_vari e2 l xa)
-          | BXOR e1 e2 => BXOR (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
-          | BITE b e1 e2 => BITE (subst_adds_bexp b l xa) (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
-          | BNeg e1 => BNeg (subst_adds_bexp e1 l xa)
-          | BAnd e1 e2 => BAnd (subst_adds_bexp e1 l xa) (subst_adds_bexp e2 l xa)
-          | GetB e1 => GetB (subst_adds_state e1 l xa)
-   end
-
-with subst_adds_state (v:state) l (xa: list vari * state) :=
-  match v with SA xl al => if list_equal l xl  then SA xl (xa::al)
-                           else SA xl al
-             | ket b => ket (subst_adds_bexp b l xa)
-             | qket p b => qket (subst_adds_aexp p l xa) (subst_adds_bexp b l xa)
-             | SITE b e1 e2 => SITE (subst_adds_bexp b l xa) (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
-             | SPlus e1 e2 => SPlus (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
-             | Join e1 e2 => Join (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
-             | upP e1 p => upP (subst_adds_state e1 l xa) (subst_adds_aexp p l xa)
-             | Tensor el => Tensor (map (fun a => subst_adds_state a l xa) el)
-             | Sigma n i b e1 => Sigma (subst_adds_aexp n l xa) i (subst_adds_aexp b l xa) (subst_adds_state e1 l xa)
-             | NTensor n i b e1 => NTensor (subst_adds_aexp n l xa) i (subst_adds_aexp b l xa) (subst_adds_state e1 l xa)
-  end.
-
-Fixpoint subst_adds_cpred (c:cpred_elem) (l:list vari) (xa: list vari * state) :=
-   match c with PFalse => PFalse
-     | CState b => CState (subst_adds_bexp b l xa)
-     | QState e1 e2 => QState (subst_adds_state e1 l xa) (subst_adds_state e2 l xa)
-     | QIn p a e1 => QIn (subst_adds_aexp p l xa) (subst_adds_aexp a l xa) (subst_adds_state e1 l xa)
-     | PNot p => PNot (subst_adds_cpred p l xa)
-     | CForall xs p1 p2 => CForall xs (map (fun a => subst_adds_cpred a l xa) p1) (subst_adds_cpred p2 l xa)
-     | Valid r b => Valid (subst_adds_bexp r l xa) (subst_adds_bexp b l xa)
-   end.
-
-Definition  subst_adds_cpreds (c:list cpred_elem) l (xa: list vari * state) :=
-        List.map (fun a => subst_adds_cpred a l xa) c.
 
 
 (* Definine had application. *)

@@ -82,7 +82,7 @@ Inductive varia := Var (x:var) | Index (x:var) (v:var).
 Inductive singleGate := H_gate | X_gate | RZ_gate (f:nat) (*representing 1/2^n of RZ rotation. *).
 
 
-Inductive aexp := BA (x:varia) | Num (n:nat) | APlus (e1:aexp) (e2:aexp).
+Inductive aexp := BA (x:varia) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | ASum (i:var) (n:aexp) (e:aexp).
 
 Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BTest (i:aexp) (a:aexp).
 
@@ -211,7 +211,10 @@ Inductive type_aexp : aenv -> aexp -> atype -> Prop :=
    | num_type : forall env n, type_aexp env (Num n) C
    | plus_type : forall env e1 e2 t1 t2 t3, 
                    type_aexp env e1 t1 -> type_aexp env e2 t2 ->  meet_atype t1 t2 = Some t3 -> 
-                     type_aexp env (APlus e1 e2) t3.
+                     type_aexp env (APlus e1 e2) t3
+   | sum_type : forall env e i n t, 
+                   type_aexp env n C -> type_aexp (AEnv.add i C env) e t -> 
+                     type_aexp env (ASum i n e) t.
 
 Definition list_subset (al bl :list var) := (forall x, In x al -> In x bl).
 
@@ -282,16 +285,29 @@ Fixpoint varia_sess (qenv:var -> nat) (s:stack) (vl:list varia) :=
                         end
    end.
 
-Fixpoint aexp_ses (qenv:var -> nat) (s:stack) (v:aexp) :=
-   match v with BA x => varia_ses qenv s x
+Fixpoint var_in_list (x:var) (l:list var) :=
+  match l with nil => false
+            | y::xs => if x =? y then true else var_in_list x xs
+  end.
+
+Fixpoint aexp_ses' (qenv:var -> nat) (l:list var) (s:stack) (v:aexp) :=
+   match v with BA (Var x) => if var_in_list x l then None else varia_ses qenv s (Var x)
+           | BA a => varia_ses qenv s a
            | Num n => Some nil
-          | APlus x y => match aexp_ses qenv s x with None => None
+          | APlus x y => match aexp_ses' qenv l s x with None => None
                                        | Some l1 =>
-                           match aexp_ses qenv s y with None => None
+                           match aexp_ses' qenv l s y with None => None
+                                       | Some l2 => Some (join_ses l1 l2)
+                           end
+                         end
+          | ASum i n y => match aexp_ses' qenv l s n with None => None
+                                       | Some l1 =>
+                           match aexp_ses' qenv (i::l) s y with None => None
                                        | Some l2 => Some (join_ses l1 l2)
                            end
                          end
    end.
+Definition aexp_ses (qenv:var -> nat) (s:stack) (v:aexp) := aexp_ses' qenv nil s v.
 
 Definition bexp_ses (qenv:var -> nat) (s:stack) (v:bexp) :=
    match v with BEq x y => match aexp_ses qenv s x with None => None
@@ -358,6 +374,8 @@ Inductive oqasm_type {qenv: var -> nat} : tenv -> exp -> tenv -> Prop :=
 Definition eval_vari_c (s:stack) (a:varia) :=
   match a with Var x => AEnv.find x s | Index x v => None end.
 
+Check Nat.recursion.
+
 Fixpoint eval_aexp_c (s:stack) (a:aexp) :=
    match a with BA x => eval_vari_c s x | Num n => Some n
     | APlus e1 e2 =>
@@ -365,7 +383,18 @@ Fixpoint eval_aexp_c (s:stack) (a:aexp) :=
             match eval_aexp_c s e2 with None => None | Some n2 => Some (n1+n2)
             end
         end
+    | ASum i n e =>
+        match eval_aexp_c s n with None => None | Some n1 => 
+             Nat.recursion (Some 0) (fun v a => match a with None => None
+                                        | Some result => 
+                                           match eval_aexp_c (AEnv.add i v s) e 
+                                  with None => None
+                                     | Some n2 => Some (result +n2)
+                                           end
+                                            end) n1 
+            end
     end.
+
 
 Definition eval_bexp_c (s:stack) (c:bexp) :=
    match c with BEq e1 e2 => match eval_aexp_c s e1 with None => None
