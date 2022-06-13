@@ -24,36 +24,61 @@ Local Open Scope nat_scope.
 
 
 
-
-
-Inductive type_ses_exp {qenv: var -> nat} {env:aenv} {rmax:nat}
-           : atype -> stack -> pexp -> stack -> list (var * nat * nat) -> Prop :=
-    | skip_ses : forall m, stype_pexp m (PSKIP) nil
-    | assign_stype_c : forall a q v, AEnv.MapsTo a q env -> type_aexp env v q -> stype_pexp C env (Assign a v) (C,[])
-
-    | assign_stype_c : forall env a v, AEnv.MapsTo a C env -> type_aexp env v (C,[]) -> stype_pexp C env (Assign a v) (C,[])
-    | assign_stype_m : forall env a v, AEnv.MapsTo a M env -> type_aexp env v (M,[]) -> stype_pexp C env (Assign a v) (M,[])
-    | appu_stype : forall m env e p x,  type_vari env p (Q,[x]) -> stype_pexp m env (AppU e p) (Q,[x])
-    | if_q : forall m env b x v e xl, type_bexp env b (Q,[Index x v]) -> AEnv.MapsTo v C env ->
-                  stype_pexp Q env e (Q,xl) -> stype_pexp m env (If b e) (Q,(Index x v)::xl)
-    | if_c : forall m m' env b e1 e2 xl, type_bexp env b (C,[]) -> 
-                  stype_pexp m env e1 (m',xl) -> stype_pexp m env e2 (m',xl) -> stype_pexp m env (IfB b e1 e2) (m',xl)
-    | class_stype : forall m env e l tenv, pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
-              type_vari_list_q env l -> stype_pexp m env (Classic e l) (Q,l)
-    | qft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PQFT x) (Q,[Var x])
-    | rqft_stype : forall m env x, AEnv.MapsTo x Q env -> stype_pexp m env (PRQFT x) (Q,[Var x])
-    | pmea_stype : forall m env p a x, AEnv.MapsTo a M env -> AEnv.MapsTo p M env
-              -> AEnv.MapsTo x Q env -> stype_pexp m env (PMeas p x a) (Q,[Var x])
-    | mea_stype : forall m env a x, AEnv.MapsTo a M env ->  AEnv.MapsTo x Q env -> stype_pexp m env (Meas a x) (Q,[Var x])
-    | qwhile_stype : forall m env n x x' i b e xl, stype_pexp Q env e (Q,xl) -> ~ list_subset ([x]) (get_core_vars xl) ->
-              AEnv.MapsTo x Q env -> AEnv.MapsTo i C env -> type_bexp env b (Q,[x']) -> get_var x' = x ->
-              stype_pexp m env (QWhile n x i b e) (Q,(Var x)::xl)
-    | amplify_stype : forall m env x n, AEnv.MapsTo x Q env -> type_aexp env n (C,[]) -> stype_pexp m env (Amplify x n) (Q,[Var x])
-    | reflect_stype : forall m env x p a1 a2, AEnv.MapsTo x Q env -> type_aexp env p (C,[]) 
-          -> type_aexp env a1 (C,[]) -> type_aexp env a2 (C,[]) -> stype_pexp m env (Reflect x p a1 a2) (Q,[Var x])
-    | distr_stype : forall m env x al, AEnv.MapsTo x Q env -> type_aexp_list_c env al -> stype_pexp m env (Distr x al) (Q,[Var x]).
-
 (* an operation is either applied on  (x,0) or applying on all.  *)
+Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
+           : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
+    | skip_ses : forall m stack T, session_system m stack T (PSKIP) stack nil
+    | assign_ses_c : forall m a v v' stack T, AEnv.MapsTo a C env -> type_aexp env v C
+             -> eval_aexp_c stack v = Some v' -> session_system m stack T (Assign a v) (AEnv.add a v' stack) nil
+    | assign_ses_m : forall m a v stack T, AEnv.MapsTo a M env -> type_aexp env v M
+             -> session_system m stack T (Assign a v) stack nil
+    | appu_ses_h_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_nor_env_list ([a]) T = Some T' -> turn_nor_to_had T' = Some T'' 
+                  -> session_system m stack T (AppU H_gate p) stack T''
+    | appu_ses_h_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
+                  -> session_system m stack T (AppU H_gate p) stack T''
+    | appu_ses_x_nor : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_nor_env_list ([a]) T = Some T' -> turn_apply_x_nor T' = Some T'' 
+                  -> session_system m stack T (AppU X_gate p) stack T''
+    | appu_ses_x_had : forall m env p stack a T T' T'',  type_vari env p Q -> varia_ses qenv stack p = Some ([a]) ->
+                 find_had_env_list ([a]) T = Some T' -> turn_had_to_nor T' T'' 
+                  -> session_system m stack T (AppU X_gate p) stack T''
+    | class_ses_nor : forall m stack e l l' tenv T T' T'' tv tv',
+          pre_tenv (get_vars e) tenv -> well_typed_oexp qenv tenv e tenv ->  exp_WF qenv e ->
+          type_vari_list_q env l -> varia_sess qenv stack l = Some l' -> find_nor_env_list l' T = Some T' 
+       -> tenv_create T' = Some tv -> @oqasm_type (update_qenv qenv l') tv e tv' -> tpred_nor_create T' tv' = Some T''
+              -> session_system m stack T (Classic e l) stack T''
+    | qif_ses_same : forall m stack stack' b e l a T t,
+         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
+         session_system Q stack T e stack' T -> find_env_had a T = Some t
+         -> session_system m stack T (If b e) stack (([a],t)::T)
+    | qif_ses : forall m stack stack' b e l a T T' T'' t,
+         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
+         session_system Q stack T e stack' T' -> is_nor T = true -> find_env_had a T = Some t -> is_nor T' = true -> T <> T'
+         -> create_ch T T' a t = Some T'' -> session_system m stack T (If b e) stack T''
+    | if_ses_true : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some true ->
+                session_system Q stack T e1 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
+    | if_ses_false : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some false ->
+                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
+    | if_ses_m : forall m stack stack' b e1 e2 T T', type_bexp env b M -> session_system Q stack T e1 stack' T' ->
+                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
+    | pmea_ses : forall m stack q p a x T, AEnv.MapsTo a q env -> AEnv.MapsTo p M env -> atype_order q M ->
+                 AEnv.MapsTo x Q env -> session_system m stack T (PMeas p x a) stack nil
+    | mea_ses : forall m stack a x T, AEnv.MapsTo a M env ->  
+                   AEnv.MapsTo x Q env -> session_system m stack T (Meas a x) stack nil
+    | amplify_ses : forall m stack x n T T', AEnv.MapsTo x Q env -> type_aexp env n C 
+                   -> find_had_env_list ([(x,0,qenv x)]) T = Some T' ->
+                    session_system m stack T (Amplify x n) stack T'
+    | reflect_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
+        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
+        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
+        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch (qenv x) v1 v2)])
+    | distr_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
+        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
+        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
+        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch_distr (qenv x))]).
+
 Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat} 
             : atype -> tpred -> pexp -> ((list (var * aexp * aexp) * list type_pred) * cpred) -> Prop :=
     | skip_type : forall m m' T l t, stype_pexp m env PSKIP (m', l) -> @find_session qenv T l t ->
