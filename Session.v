@@ -659,7 +659,7 @@ Definition is_ch (t:tpred) := match t with [(a,[THT n r (EN m rb b ts)])] => Tru
 *)
 (* session type *)
 
-Inductive session_system {qenv: var -> nat} {env:aenv} {rmax:nat}
+Inductive session_system {qenv: var -> nat} {env:aenv}
            : atype -> stack -> tpred -> pexp -> stack -> tpred -> Prop :=
     | skip_ses : forall m stack T, session_system m stack T (PSKIP) stack nil
     | assign_ses_c : forall m a v v' stack T, AEnv.MapsTo a C env -> type_aexp env v C
