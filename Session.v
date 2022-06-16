@@ -22,12 +22,10 @@ Local Open Scope nat_scope.
 
 (* This will be replaced by PQASM. *)
 
-
 (* Classical State including variable relations that may be quantum *)
 
 (* we want to include all the single qubit gates here in the U below. *)
 Inductive atype := C : atype | Q : atype | M :atype.
-
 
 Definition aty_eq  (t1 t2:atype) : bool := 
    match t1 with C => match t2 with C  => true
@@ -41,8 +39,15 @@ Definition aty_eq  (t1 t2:atype) : bool :=
                         end
    end.
 
+(* Ethan: above can be automatically generated as follows: *)
+Scheme Equality for atype.
+Print atype_beq.
+Check atype_eq_dec.
+
 Notation "i '=a=' j" := (aty_eq i j) (at level 50).
 
+(* Ethan: I think a couple of these lemmas aren't necessary...
+ * We can just use atype_eq_dec, right? *)
 Lemma aty_eqb_eq : forall a b, a =a= b = true -> a = b.
 Proof.
  intros. unfold aty_eq in H.
@@ -105,6 +110,7 @@ Inductive se_type : Type := THT (n:nat) (t:type_elem).
 
 Definition type_pred := se_type.
 
+(* Ethan: I don't remember what is this tuple... *)
 Definition tpred := list (list (var * nat * nat) * se_type).
 
 Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
@@ -187,10 +193,25 @@ Definition vari_eq (x y: varia) :=
             | Index n i => match y with Index m j => (n =? m) && (i =? j) | _ => false end
   end.
 
+(* Ethan: Maybe same deal as before? *)
+Scheme Equality for varia.
+Print varia_eq_dec.
+
+(* Ethan: This looks suspicious *)
 Fixpoint merge_var (x: varia) (yl:list varia) :=
    match yl with [] => []
            | a::al => if vari_eq x a then a::al else a::(merge_var x al)
    end.
+
+(* Ethan: Let's see... *)
+Lemma bad : forall x y, merge_var x y = y.
+Proof.
+  induction y.
+  + reflexivity.
+  + case_eq (vari_eq x a); simpl.
+    - intro H; rewrite H; reflexivity.
+    - intro H; rewrite H; rewrite IHy; reflexivity.
+Qed.
 
 Definition merge_vars (xl yl: list varia) := List.fold_left (fun acc b => merge_var b acc) xl yl.
 
@@ -222,6 +243,16 @@ Definition get_var (x : varia) := match x with Var a => a | Index b y => b end.
 
 Definition get_core_vars (al : list varia) := map (fun a => match a with Var x => x | Index x xl => x end) al.
 
+(* Ethan: Why not just this? *)
+Definition get_core_vars' (al : list varia) := map get_var al.
+
+(* Ethan: Sanity check *)
+Lemma get_core_vars'_correct : get_core_vars = get_core_vars'.
+Proof.
+  apply functional_extensionality.
+  intro al.
+  unfold get_core_vars, get_core_vars', get_var; reflexivity.
+Qed.
 
 Inductive type_vari_list_q : aenv -> list varia -> Prop :=
      type_aexp_empty : forall env, type_vari_list_q env []
