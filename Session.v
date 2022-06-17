@@ -321,6 +321,29 @@ Fixpoint var_in_list (x:var) (l:list var) :=
             | y::xs => if x =? y then true else var_in_list x xs
   end.
 
+(* Ethan: Maybe this? *)
+Definition var_in_list' (x : var) (l : list var) := in_dec Nat.eq_dec x l.
+Check var_in_list'.
+
+(* Ethan: Sanity check *)
+Lemma var_in_list'_correct :
+  forall x l, (if var_in_list' x l then true else false) = var_in_list x l.
+Proof.
+  intros x l.
+  induction l; simpl.
+  + reflexivity.
+  + destruct Nat.eq_dec.
+    - subst.
+      rewrite Nat.eqb_refl; trivial.
+    - rewrite <- IHl.
+      assert (x =? a = false) as x_neqa. {
+        rewrite Nat.eqb_sym.
+        rewrite Nat.eqb_neq.
+        assumption.
+      }
+      destruct (var_in_list' x l); rewrite x_neqa; trivial.
+Qed.
+
 Fixpoint aexp_ses' (qenv:var -> nat) (l:list var) (s:stack) (v:aexp) :=
    match v with BA (Var x) => if var_in_list x l then None else varia_ses qenv s (Var x)
            | BA a => varia_ses qenv s a
