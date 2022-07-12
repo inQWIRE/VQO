@@ -22,7 +22,3 @@ mv ExtractionGateSet.ml BasicUtility.ml Bool.ml CLArith.ml Datatypes.ml \
    ExtrOQASM.ml FMapList.ml Factorial.ml List0.ml MathSpec.ml \
    OracleExample.ml Order* OQASM* OQIMP.ml PeanoNat.ml Prelim.ml RZArith.ml \
    ml
-
-# Build extracted code.
-echo "Building extracted code..."
-dune build run_vqo.exe

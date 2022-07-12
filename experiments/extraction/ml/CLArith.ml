@@ -168,7 +168,7 @@ let vars_for_cl' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_cl size x =
-  if (=) x c_var
+  if Nat.eqb x c_var
   then ((((( * ) size (succ (succ (succ (succ 0))))), (succ 0)), id_nat),
          id_nat)
   else vars_for_cl' size x
@@ -188,7 +188,7 @@ let vars_for_adder01' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_adder01 size x =
-  if (=) x z_var
+  if Nat.eqb x z_var
   then ((((( * ) size (succ (succ 0))), (succ 0)), id_nat), id_nat)
   else vars_for_adder01' size x
 
@@ -264,7 +264,7 @@ let vars_for_cl_nat_m' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_cl_nat_m size x =
-  if (=) x z_var
+  if Nat.eqb x z_var
   then ((((( * ) size (succ (succ 0))), (succ 0)), id_nat), id_nat)
   else vars_for_cl_nat_m' size x
 
@@ -320,7 +320,7 @@ let vars_for_cl_nat_full_m' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_cl_nat_full_m size x =
-  if (=) x s_var
+  if Nat.eqb x s_var
   then ((((( * ) size (succ (succ (succ 0)))), (succ 0)), id_nat), id_nat)
   else vars_for_cl_nat_full_m' size x
 
@@ -363,7 +363,7 @@ let vars_for_cl_nat_full_out_place_m' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_cl_nat_full_out_place_m size x =
-  if (=) x c_var
+  if Nat.eqb x c_var
   then ((((( * ) size (succ (succ (succ (succ 0))))), (succ 0)), id_nat),
          id_nat)
   else vars_for_cl_nat_full_out_place_m' size x
@@ -461,7 +461,7 @@ let vars_for_cl_div_mod' size =
     int -> int -> ((int * int) * (int -> int)) * (int -> int) **)
 
 let vars_for_cl_div_mod size x =
-  if (=) x s_var
+  if Nat.eqb x s_var
   then ((((( * ) size (succ (succ (succ 0)))), (succ 0)), id_nat), id_nat)
   else vars_for_cl_div_mod' size x
 

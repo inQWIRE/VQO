@@ -2,10 +2,9 @@ open Printf
 
 open ExtractionGateSet
 open ExtrOQASM
-open OQASM
-(*open OracleExample*)
 
-(* print an OQASM program (for debugging) *)
+(* print an OQASM program (used for debugging) *)
+(*
 let rec print_exp' (e:exp) indent =
   let tabs = String.make indent '\t' in
   match e with
@@ -22,8 +21,8 @@ let rec print_exp' (e:exp) indent =
   | QFT (x,n) -> printf "%sQFT %d %d\n" tabs n x
   | RQFT (x,n) -> printf "%sRQFT %d %d\n" tabs n x
   | Seq (e1,e2) -> (print_exp' e1 indent ; print_exp' e2 indent)
-
 let print_exp e = print_exp' e 0
+*)
 
 (* find max qubit value used (hacky) *)
 let rec get_dim_aux (u : coq_U ucom) acc =
@@ -52,21 +51,14 @@ let rec sqir_to_qasm oc (u : coq_U ucom) k =
   (* badly typed case (e.g. App2 of U_H) *)
   | _ -> failwith "ERROR: Failed to write qasm file"
 
-(* insert measurements to get simulation results *)
-let rec write_measurements oc dim =
-  if dim = 0 then ()
-  else (write_measurements oc (dim - 1) ; fprintf oc "measure q[%d] -> c[%d];\n" (dim - 1) (dim - 1))
-
 let write_qasm_file fname (u : coq_U ucom) =
   let dim = get_dim u in
   let oc = open_out fname in
   (fprintf oc "OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\n";
    fprintf oc "qreg q[%d];\n" dim;
-   (*fprintf oc "creg c[%d];\n" dim;*)
    fprintf oc "\n";
    ignore(sqir_to_qasm oc (decompose_to_voqc_gates u) (fun _ -> ()));
-   (*ignore(write_measurements oc dim);*)
-   ignore(fprintf oc "\n"); (* ddsim is fussy about having a newline at the end *)
+   ignore(fprintf oc "\n");
    close_out oc)
 
 (* function to count gates 

@@ -55,7 +55,7 @@ let trans_lshift f x i =
   let (p, ag) = f x in
   let (p0, g) = p in
   let (start0, size) = p0 in
-  if (=) i x
+  if Nat.eqb i x
   then (((start0, size),
          (shift_fun g ((fun x y -> max 0 (x-y)) size (succ 0)) size)),
          (ashift_fun ag (succ 0) size))
@@ -68,7 +68,7 @@ let trans_rshift f x i =
   let (p, ag) = f x in
   let (p0, g) = p in
   let (start0, size) = p0 in
-  if (=) i x
+  if Nat.eqb i x
   then (((start0, size), (shift_fun g (succ 0) size)),
          (ashift_fun ag ((fun x y -> max 0 (x-y)) size (succ 0)) size))
   else f i
@@ -100,7 +100,7 @@ let trans_rev f x i =
   let (p, ag) = f x in
   let (p0, g) = p in
   let (start0, size) = p0 in
-  if (=) i x
+  if Nat.eqb i x
   then (((start0, size), (fbrev size g)), (afbrev ag size))
   else f i
 
@@ -146,7 +146,7 @@ let rec gen_vars' size l start0 x =
   match l with
   | [] -> (((0, 0), id_nat), id_nat)
   | x0 :: xl ->
-    if (=) x0 x
+    if Nat.eqb x0 x
     then (((start0, size), id_nat), id_nat)
     else gen_vars' size xl ((+) start0 size) x
 

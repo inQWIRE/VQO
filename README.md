@@ -10,7 +10,7 @@ This repository contains the code used in our draft "Verified Compilation of Qua
 
 ## Setup
 
-To compile VQO, you will need [Coq](https://coq.inria.fr/) and [QuickChick](https://github.com/QuickChick/QuickChick). We strongly recommend using [opam](https://opam.ocaml.org/doc/Install.html) to install Coq and `opam switch` to manage Coq versions. We currently support Coq **versions 8.12-8.14**.
+To compile VQO, you will need [Coq](https://coq.inria.fr/) and [QuickChick](https://github.com/QuickChick/QuickChick). We strongly recommend using [opam](https://opam.ocaml.org/doc/Install.html) to install Coq and `opam switch` to manage Coq versions. We currently support Coq **versions 8.13-8.14**.
 
 Assuming you have opam installed (following the instructions in the link above), follow the steps below to set up your environment.
 ```
@@ -31,7 +31,7 @@ opam install coq-quickchick
 
 *Notes*:
 * Depending on your system, you may need to replace 4.12.0 in the instructions above with something like "ocaml-base-compiler.4.12.0". Any recent version of OCaml should be fine. 
-* We require Coq version >= 8.12. We have tested compilation with 8.12.2, 8.13.2, and 8.14.0.
+* We have tested compilation with Coq versions 8.13.2 and 8.14.1.
 * opam error messages and warnings are typically informative, so if you run into trouble then make sure you read the console output.
 
 ## Compiling & Running VQO

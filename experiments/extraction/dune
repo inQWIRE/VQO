@@ -1,3 +1,9 @@
 (executable
-  (name run_vqo)
+  (name generate_circuits)
+  (modules generate_circuits)
   (libraries ml unix))
+
+(executable
+  (name run_voqc)
+  (modules run_voqc)
+  (libraries voqc))

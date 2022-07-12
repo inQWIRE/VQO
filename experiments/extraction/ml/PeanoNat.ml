@@ -13,6 +13,10 @@ module Nat =
 
   let rec sub = (-)
 
+  (** val eqb : int -> int -> bool **)
+
+  let rec eqb = (=)
+
   (** val ltb : int -> int -> bool **)
 
   let ltb n m =
