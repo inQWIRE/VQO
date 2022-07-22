@@ -1,0 +1,702 @@
+\newcommand{\comm}[3][\color{red}]{{#1{[{#2}: {#3}]}}}
+%\newcommand{\comm}[3][\color{red}]{}
+%\newcommand{\mwh}[1]{\comm[\color{blue}]{Mike}{#1}}
+
+%\input{prooftree}
+
+\newcommand{\ignore}[1]{{}}
+\newcommand{\CTLK}{\textbf{CTLK}\xspace}
+\newcommand{\TransK}{\textbf{TransK}\xspace}
+\newcommand{\IsaK}{\textbf{IsaK}\xspace}
+\newcommand{\IsaKa}{\textbf{IsaK+}\xspace}
+\def\mcirc{\mathord{\scalebox{1.5}[1]{\scalerel*{\circ}{\strut}}}}
+\def\msquare{\mathord{\scalerel*{\Box}{gX}}}
+%\newcommand{\K}{\ensuremath{\mathbb{K}}\xspace}
+\newcommand{\core}{\textbf{CORE}\xspace}
+%\newcommand{\syntax}{\textbf{SYNTAX}\xspace}
+\newcommand{\syntaxConstr}{\textbf{Syntax}\xspace}
+\newcommand{\tokenConstr}{\textbf{Token}\xspace}
+\newcommand{\subsortConstr}{\textbf{Subsort}\xspace}
+\newcommand{\listSyntaxConstr}{\textbf{ListSyntax}\xspace}
+\newcommand{\terminalConstr}{\textbf{Terminal}\xspace}
+\newcommand{\nonterminalConstr}{\textbf{NonTerminal}\xspace}
+\newcommand{\getStackType}{\texttt{getStackType}\xspace}
+\newcommand{\gtop}{\texttt{top}\xspace}
+\newcommand{\pick}{\texttt{pick}\xspace}
+\newcommand{\match}{\texttt{match}\xspace}
+\newcommand{\subst}{\texttt{subst}\xspace}
+%\newcommand{\norm}{\texttt{norm}\xspace}
+\newcommand{\typed}{\texttt{typed}\xspace}
+\newcommand{\nelist}{\texttt{nelist}\xspace}
+\newcommand{\genList}{\texttt{list}\xspace}
+\newcommand{\genSet}{\texttt{set}\xspace}
+\newcommand{\genLists}{\texttt{lists}\xspace}
+\newcommand{\astring}{\texttt{string}\xspace}
+\newcommand{\regex}{\texttt{regex}\xspace}
+\newcommand{\theSymbol}{\texttt{symbol}\xspace}
+\newcommand{\sortId}{\texttt{sortId}\xspace}
+\newcommand{\cellId}{\texttt{cellId}\xspace}
+\newcommand{\metaId}{\texttt{metaId}\xspace}
+\newcommand{\labelId}{\texttt{labelId}\xspace}
+\newcommand{\ir}{\textbf{IR}\xspace}
+\newcommand{\cool}{\texttt{cool}\xspace}
+\newcommand{\forname}{\constant{forname}\;}
+\newcommand{\kif}{\constant{if}\;}
+\newcommand{\kthen}{\constant{then}\;}
+\newcommand{\kelse}{\constant{else}\;}
+\newcommand{\kskip}{\constant{skip}\;}
+\newcommand{\loopin}{\constant{in}\;}
+\newcommand{\heat}{\texttt{heat}\xspace}
+\newcommand{\kCell}{\texttt{kCell}\xspace}
+\newcommand{\KResult}{\texttt{KResult}\xspace}
+\newcommand{\kSyntax}{\texttt{kSyntax}\xspace}
+\newcommand{\syntaxDef}[3]{\rulebox{%
+\syntaxKeyword$#1\mathrel{::=}{#2}$ \ifthenelse{\equal{#3}{}}{}{[#3]}%
+}%
+}
+\newcommand{\kvariable}[2]{\variable{#1}:\variable{#2}}
+\newcommand{\kRule}{\texttt{kRule}\xspace}
+\newcommand{\kRules}{\texttt{kRules}\xspace}
+\newcommand{\irKRule}{\texttt{irKRule}\xspace}
+\newcommand{\irKRules}{\texttt{irKRules}\xspace}
+\newcommand{\kFile}{\texttt{kFile}\xspace}
+\makeatletter
+\newcommand{\shorteq}{%
+  \settowidth{\@tempdima}{-}% Width of hyphen
+  \resizebox{\@tempdima}{\height}{=}%
+}
+\makeatother
+
+
+\newcommand{\RuleLabel}{\textit{RuleLabel}\xspace}
+\newcommand{\RuleLabels}{\textit{RuleLabels}\xspace}
+\newcommand{\QuestionKey}{\mathbf{?}\xspace}
+\newcommand{\StarKey}{\mathbf{*}\xspace}
+\newcommand{\Stream}{\textbf{Stream}\xspace}
+\newcommand{\stdWord}{\texttt{std}\xspace}
+\newcommand{\Multiplicity}{\textbf{Multiplicity}\xspace}
+\newcommand{\keyWord}{\texttt{key}\xspace}
+\newcommand{\feature}{\texttt{feature}\xspace}
+\newcommand{\Context}{\textbf{Context}\xspace}
+\newcommand{\Fun}{\textbf{Fun}\xspace}
+\newcommand{\FunRule}{\textbf{FunRule}\xspace}
+\newcommand{\FunRules}{\textbf{FunRules}\xspace}
+\newcommand{\Macro}{\textbf{Macro}\xspace}
+\newcommand{\MacroRule}{\textbf{MacroRule}\xspace}
+\newcommand{\MacroRules}{\textbf{MacroRules}\xspace}
+\newcommand{\Anywhere}{\textbf{Anywhere}\xspace}
+\newcommand{\AnywhereRule}{\textbf{AnywhereRule}\xspace}
+\newcommand{\AnywhereRules}{\textbf{AnywhereRules}\xspace}
+\newcommand{\KNormal}{\textbf{KNormal}\xspace}
+\newcommand{\KNormalRule}{\textbf{KNormalRule}\xspace}
+\newcommand{\KNormalRules}{\textbf{KNormalRules}\xspace}
+\newcommand{\BagNormal}{\textbf{BagNormal}\xspace}
+\newcommand{\BagNormalRule}{\textbf{BagNormalRule}\xspace}
+\newcommand{\BagNormalRules}{\textbf{BagNormalRules}\xspace}
+\newcommand{\synAttr}{\texttt{synAttrib}\xspace}
+\newcommand{\ruleAttr}{\texttt{ruleAttrib}\xspace}
+\newcommand{\synAttrs}{\texttt{synAttribs}\xspace}
+\newcommand{\ruleAttrs}{\texttt{ruleAttribs}\xspace}
+\newcommand{\Strict}{\texttt{Strict}\xspace}
+\newcommand{\productions}{\texttt{productions}\xspace}
+\newcommand*{\Leadsto}{\ensuremath{\leadsto}\xspace}
+\newcommand{\bigK}{\texttt{bigK}\xspace}
+\newcommand{\bigKBag}{\texttt{bigKBag}\xspace}
+\newcommand{\constType}{\texttt{const}\xspace}
+\newcommand{\kLabel}{\texttt{kLabel}\xspace}
+\newcommand{\kLabels}{\texttt{kLabels}\xspace}
+\newcommand{\irPat}{\texttt{irFunPat}\xspace}
+\newcommand{\irFunApp}{\texttt{irFunApp}\xspace}
+\newcommand{\funApp}{\texttt{funApp}\xspace}
+\newcommand{\irKLabel}{\texttt{irKLabel}\xspace}
+\newcommand{\irKLabels}{\texttt{irKLabels}\xspace}
+\newcommand{\kItem}{\texttt{kItem}\xspace}
+\newcommand{\kItems}{\texttt{kItems}\xspace}
+\newcommand{\irKItem}{\texttt{irKItem}\xspace}
+\newcommand{\irKItems}{\texttt{irKItems}\xspace}
+\newcommand{\irBigKBag}{\texttt{irBigKBag}\xspace}
+\newcommand{\irBigKBagLabel}{\texttt{irBigKBagLabel}\xspace}
+\newcommand{\kList}{\texttt{kList}\xspace}
+\newcommand{\kLists}{\texttt{kLists}\xspace}
+\newcommand{\irKListElem}{\texttt{irKListElem}\xspace}
+\newcommand{\irKList}{(\texttt{irKListElem\;\genList})\xspace}
+\newcommand{\irKLists}{(\texttt{irKListElem\;\genLists})\xspace}
+\newcommand{\ak}{\texttt{k}\xspace}
+\newcommand{\aks}{\texttt{ks}\xspace}
+\newcommand{\irKElem}{\texttt{irKElem}\xspace}
+\newcommand{\irK}{(\texttt{irKElem\;\genList})\xspace}
+\newcommand{\irKs}{(\texttt{irKElem\;\genLists})\xspace}
+\newcommand{\alist}{\texttt{aList}\xspace}
+\newcommand{\alists}{\texttt{aLists}\xspace}
+\newcommand{\irListElem}{\texttt{irListElem}\xspace}
+\newcommand{\irList}{(\texttt{irListElem\xspace\genList})\xspace}
+\newcommand{\irLists}{(\texttt{irListElem\xspace\genLists})\xspace}
+\newcommand{\set}{\texttt{set}\xspace}
+\newcommand{\sets}{\texttt{sets}\xspace}
+\newcommand{\irSetElem}{\texttt{irSetElem}\xspace}
+\newcommand{\irSet}{(\texttt{irSetElem\;\genList})\xspace}
+\newcommand{\irSets}{(\texttt{irSetElem\;\genLists})\xspace}
+\newcommand{\map}{\texttt{map}\xspace}
+\newcommand{\maps}{\texttt{maps}\xspace}
+\newcommand{\irMapElem}{\texttt{irMapElem}\xspace}
+\newcommand{\irMap}{(\texttt{irMapElem\;\genList})\xspace}
+\newcommand{\irMaps}{(\texttt{irMapElem\;\genLists})\xspace}
+\newcommand{\cell}{\texttt{cell}\xspace}
+\newcommand{\cells}{\texttt{cells}\xspace}
+\newcommand{\bag}{\texttt{bag}\xspace}
+\newcommand{\bags}{\texttt{bags}\xspace}
+\newcommand{\irBagElem}{\texttt{irBagElem}\xspace}
+\newcommand{\irBag}{(\texttt{irBagElem\;\genList})\xspace}
+\newcommand{\irBags}{(\texttt{irBagElem\;\genLists})\xspace}
+\newcommand{\rewrite}{\texttt{rewrite}\xspace}
+\newcommand{\rewriteConstr}{\textbf{Rewrite}\xspace}
+\newcommand{\rewriteConstrs}{\textbf{Rewrites}\xspace}
+\newcommand{\program}{\texttt{program}\xspace}
+\newcommand{\kompile}{\textbf{\textit{kompile}}\xspace}
+\newcommand{\krun}{\textbf{\textit{krun}}\xspace}
+\newcommand{\ksearch}{\textbf{\textit{ksearch}}\xspace}
+\newcommand{\ktheory}{\ensuremath{\mathbb{K}}\texttt{\_theory}\xspace}
+
+\newcommand{\genKLabel}{\texttt{genKLabel}\xspace}
+\newcommand{\regexPar}{\texttt{regexPar}\xspace}
+
+\newcommand{\kLabelSort}{\texttt{KLabel}\xspace}
+\newcommand{\kItemSort}{\texttt{KItem}\xspace}
+\newcommand{\kListSort}{\texttt{KList}\xspace}
+\newcommand{\kSort}{\texttt{K}\xspace}
+\newcommand{\listSort}{\texttt{List}\xspace}
+\newcommand{\setSort}{\texttt{Set}\xspace}
+\newcommand{\mapSort}{\texttt{Map}\xspace}
+\newcommand{\bagSort}{\texttt{Bag}\xspace}
+
+\newcommand{\topSort}{\texttt{topSort}\xspace}
+\newcommand{\KItemIR}{\textbf{KItemIR}\xspace}
+\newcommand{\IdKItemIR}{\textbf{IdKItemIR}\xspace}
+\newcommand{\HOLEIR}{\textbf{HOLEIR}\xspace}
+\newcommand{\KListElemIR}{\textbf{KListElemIR}\xspace}
+\newcommand{\KListIdIR}{\textbf{KListIdIR}\xspace}
+\newcommand{\strict}{\texttt{strict}\xspace}
+\newcommand{\seqstrict}{\texttt{seqstrict}\xspace}
+%\newcommand{\function}{\texttt{function}\xspace}
+\newcommand{\klabelAttr}{\textbf{Klabel}\xspace}
+\newcommand{\macroAttr}{\texttt{macro}\xspace}
+\newcommand{\anywhereAttr}{\texttt{anywhere}\xspace}
+\newcommand{\owiseAttr}{\textbf{Owise}\xspace}
+\newcommand{\Transition}{\texttt{Transition}\xspace}
+\newcommand{\transition}{\texttt{transition}\xspace}
+\newcommand{\add}{\texttt{add}\xspace}
+\newcommand{\hasFunTerm}{\texttt{hasFunTerm}\xspace}
+\newcommand{\funMatch}{\texttt{funMatch}\xspace}
+\newcommand{\kNormMatch}{\texttt{kNormMatch}\xspace}
+\newcommand{\bagNormMatch}{\texttt{bagNormMatch}\xspace}
+\newcommand{\anywhereMatch}{\texttt{anywhereMatch}\xspace}
+\newcommand{\macroMatch}{\texttt{macroMatch}\xspace}
+\newcommand{\sortAdjust}{\texttt{sortAdjust}\xspace}
+\newcommand{\validMacroRules}{\texttt{validMacroRules}\xspace}
+\newcommand{\getKLabel}{\texttt{getKLabel}\xspace}
+\newcommand{\isFunLabel}{\texttt{isFunLabel}\xspace}
+\newcommand{\cut}{\texttt{split}\xspace}
+\newcommand{\compile}{\texttt{compile}\xspace}
+\newcommand{\sortOf}{\texttt{sortOf}\xspace}
+\newcommand{\argSortsOf}{\texttt{argSortsOf}\xspace}
+\newcommand{\smallestSort}{\texttt{smallestSort}\xspace}
+%\newcommand{\send}[3]{\textsf{!}[#1|#2]\to#3}
+
+\newcommand{\letin}[3]{{\ensuremath{\textsf{let}\;{#1}={#2}\;\textsf{in}\;{#3}}}}
+%[|(#2,#3)|#4|]#5
+%% \newcommand{\bigparallels}[5]{{\ensuremath{
+%% \begin{array}[t]{l}
+%% #1\\
+%%  |\![\!\{#2.#3|#4\}\!]\!|\\
+%% #5
+%% \end{array}}}}
+\newcommand{\bigparallels}[5]{{\ensuremath{#1 |\![\!\{#2.#3|#4\}\!]\!|#5}}}
+\newcommand{\seque}[2]{#1;#2}
+\newcommand{\extchoices}[2]{#1\Box#2}
+%\newcommand{\intchoices}[2]{#1|\sim|#2}
+\newcommand{\intchoices}[2]{#1\sqcap#2}
+\newcommand{\hiding}[4]{#1\setminus\{#2.#3|#4\}}
+\newcommand{\rename}[6]{#1\;\ensuremath{[\![\!\{((#2.#3),(#4.#5))|#6\}\!]\!]}}
+\newcommand{\WT}[1]{\textsf{Wf}(\textsf{#1})}
+
+\newcommand{\LOGICAND}{{\textsf{Conjunction}}}
+\newcommand{\LOGICOR}{{\textsf{Disjunction}}}
+\newcommand{\LOGICNOT}{{\textsf{Negation}}}
+\newcommand{\WELLTYPE}{{\textsf{Well-formed}}}
+\newcommand{\EQUALITY}{{\textsf{Equality}}}
+\newcommand{\WEAKENLOGICOR}{{\textsf{Strong-disjunction}}}
+\newcommand{\WEAKENLOGICNOT}{{\textsf{Strong-negation}}}
+
+
+\newcommand{\reglai}[3]{
+    \prooftree
+         #1
+    \justifies  
+         #2
+    \thickness=0.05em
+    \using
+        #3
+    \endprooftree}
+
+\newcommand{\reglaii}[4]{
+    \prooftree
+         #1\quad
+         #2
+    \justifies  
+         #3
+    \thickness=0.05em
+    \using
+        #4
+    \endprooftree}
+
+\newcommand{\sreglai}[3]{
+    \prooftree
+\begin{array}{c}
+         #1
+\end{array}
+    \justifies  
+         #2
+    \thickness=0.05em
+    \using
+        #3
+    \endprooftree}
+
+
+\newcommand{\sreglaii}[4]{
+    \prooftree
+\begin{array}{c}
+         #1\\
+         #2
+\end{array}
+    \justifies  
+         #3
+    \thickness=0.05em
+    \using
+        #4
+    \endprooftree}
+
+\newcommand{\sreglaiii}[5]{
+    \prooftree
+\begin{array}{c}
+         #1\\
+         #2\\
+	 #3
+\end{array}
+    \justifies  
+         #4
+    \thickness=0.05em
+    \using
+        #5
+    \endprooftree}
+
+\newcommand{\ssregla}[6]{
+    \prooftree
+\begin{array}{c}
+         #1\\[-.7em]
+         #2\\[-.7em]
+	 #3\\[-.7em]
+	 #4
+\end{array}
+    \justifies  
+         #5
+    \thickness=0.05em
+    \using
+        #6
+    \endprooftree}
+
+
+\newcommand{\reglaiii}[5]{
+    \prooftree
+         #1\quad
+         #2\quad
+         #3
+    \justifies  
+         #4
+    \thickness=0.05em
+    \using
+        #5
+    \endprooftree}
+
+\newcommand{\reglaiv}[6]{
+    \prooftree
+         #1\quad
+         #2\quad
+         #3\quad
+         #4
+    \justifies  
+         #5
+    \thickness=0.05em
+    \using
+        #6
+    \endprooftree}
+
+
+\newcommand{\pist}{\ensuremath{\mathsf{Iris}}}
+
+% Process terms
+\newcommand{\chIn}[3]{\ensuremath{#1?(#2)\ \texttt{in}\ #3}}
+\newcommand{\chOut}[2]{\ensuremath{#1![#2]}}
+\newcommand{\palel}[2]{#1\ensuremath{|}\,#2}
+\newcommand{\branch}{\ensuremath{\rhd}\,}
+\newcommand{\select}{\ensuremath{\lhd}\,}
+\newcommand{\new}[2]{\ensuremath{(\nu #1)#2}}
+\newcommand{\inicioAss}[1]{\ensuremath{\texttt{begin}\ #1}}
+\newcommand{\finAss}[1]{\ensuremath{\texttt{end}\ #1}}
+\newcommand{\accept}[2]{\ensuremath{\texttt{accept}\ #1\ \texttt{in}\ #2}}
+\newcommand{\request}[2]{\ensuremath{\texttt{request}\ #1\ \texttt{in}\ #2}}
+\newcommand{\throw}[2]{\ensuremath{\texttt{throw}\ #1[#2]}}
+\newcommand{\catch}[3]{\ensuremath{\texttt{catch}\ #1(#2)\ \texttt{in}\ #3}}
+\newcommand{\defin}[2]{\ensuremath{\texttt{def}\ #1\ \texttt{in}\ #2}}
+%\newcommand{\zero}{\ensuremath{\texttt{stop}}}
+\newcommand{\callProc}[2]{\ensuremath{#1[#2]}}
+\newcommand{\declProc}[3]{\ensuremath{#1[#2]=#3}}
+
+
+% ATM example
+\newcommand{\Atm}{\ensuremath{\textsf{ATM}}}
+\newcommand{\Atmi}{\ensuremath{\textsf{ATM'}}}
+\newcommand{\Atmii}{\ensuremath{\textsf{ATM''}}}
+\newcommand{\Bank}{\ensuremath{\textsf{Bank}}}
+\newcommand{\Client}{\ensuremath{\textsf{Client}}}
+\newcommand{\Clienti}{\ensuremath{\textsf{Client'}}}
+\newcommand{\Banki}{\ensuremath{\textsf{Bank'}}}
+\newcommand{\atmDef}[1]{\ensuremath{\textsf{ATM}(#1)}}
+\newcommand{\atmCall}[1]{\ensuremath{\textsf{ATM}[#1]}}
+\newcommand{\bankDef}[1]{\ensuremath{\textsf{Bank}(#1)}}
+\newcommand{\bankCall}[1]{\ensuremath{\textsf{Bank}[#1]}}
+\newcommand{\clientDef}[1]{\ensuremath{\textsf{Client}(#1)}}
+\newcommand{\clientCall}[1]{\ensuremath{\textsf{Client}[#1]}}
+
+% Auction example
+\newcommand{\Auctioneer}{\ensuremath{\textsf{Auctioneer}}}
+\newcommand{\InitAuctioneer}{\ensuremath{\textsf{InitAuctioneer}}}
+\newcommand{\Buyer}{\ensuremath{\textsf{Buyer}}}
+\newcommand{\InitBuyerManager}{\ensuremath{\textsf{InitBuyerManager}}}
+\newcommand{\BuyerManager}{\ensuremath{\textsf{BuyerManager}}}
+\newcommand{\Seller}{\ensuremath{\textsf{Seller}}}
+\newcommand{\InitSellerManager}{\ensuremath{\textsf{InitSellerManager}}}
+\newcommand{\SellerManager}{\ensuremath{\textsf{SellerManager}}}
+\newcommand{\BuyerDef}[3]{\ensuremath{\textsf{Buyer}(#1,#2,#3)}}
+\newcommand{\SellerDef}[3]{\ensuremath{\textsf{Seller}(#1,#2,#3)}}
+\newcommand{\AuctioneerDef}[3]{\ensuremath{\textsf{Auctioneer}(#1,#2,#3)}}
+\newcommand{\InitAuctioneerDef}[3]{\ensuremath{\textsf{InitAuctioneer}(#1,#2,#3)}}
+\newcommand{\InitBuyerManagerDef}[2]{\ensuremath{\textsf{InitBuyerManager}(#1,#2)}}
+\newcommand{\BuyerManagerDef}[4]{\ensuremath{\textsf{BuyerManager}(#1,#2,#3,#4)}}
+\newcommand{\InitSellerManagerDef}[2]{\ensuremath{\textsf{InitSellerManager}(#1,#2)}}
+\newcommand{\SellerManagerDef}[2]{\ensuremath{\textsf{SellerManager}(#1,#2)}}
+\newcommand{\BuyerCall}[3]{\ensuremath{\textsf{Buyer}[#1,#2,#3]}}
+\newcommand{\SellerCall}[3]{\ensuremath{\textsf{Seller}[#1,#2,#3]}}
+\newcommand{\AuctioneerCall}[3]{\ensuremath{\textsf{Auctioneer}[#1,#2,#3]}}
+\newcommand{\InitAuctioneerCall}[3]{\ensuremath{\textsf{InitAuctioneer}[#1,#2,#3]}}
+\newcommand{\InitBuyerManagerCall}[2]{\ensuremath{\textsf{InitBuyerManager}[#1,#2]}}
+\newcommand{\BuyerManagerCall}[4]{\ensuremath{\textsf{BuyerManager}[#1,#2,#3,#4]}}
+\newcommand{\InitSellerManagerCall}[2]{\ensuremath{\textsf{InitSellerManager}[#1,#2]}}
+\newcommand{\SellerManagerCall}[2]{\ensuremath{\textsf{SellerManager}[#1,#2]}}
+
+
+% Types
+
+%\newcommand{\name}{\mathbf{Name}}
+\newcommand{\intType}{\ensuremath{\mathbf{Int}}}
+\newcommand{\msg}[1]{\ensuremath{\langle #1\rangle}}   % message
+\newcommand{\branchType}[2]{\ensuremath{\&\{#1\}#2}}     % branch type
+\newcommand{\selectType}[2]{\ensuremath{\oplus\{#1\}#2}} % select type
+\newcommand{\effects}[1]{\ensuremath{(\!\mid\!#1\!\mid\!)}}  % mult-set effects
+\newcommand{\labl}[1]{\ensuremath{\langle #1\rangle}}
+
+\newcommand{\chInType}[2]{\ensuremath{\downarrow[#1]#2}}
+\newcommand{\chOutType}[2]{\ensuremath{\uparrow[#1]#2}}
+\newcommand{\chInOutType}[2]{\ensuremath{\updownarrow[#1]#2}}
+\newcommand{\dual}[1]{\ensuremath{\overline{#1}}}
+\newcommand{\sessType}[1]{\ensuremath{\sigma(#1)}}
+%\newcommand{\noConnection}{\ensuremath{\mathbf{\perp}}}
+\newcommand{\noConnection}[1]{\ensuremath{\mathbf{\perp}_{#1}}}
+
+\newcommand{\finConnection}{\ensuremath{\mathbf{1}}}
+\newcommand{\recType}[2]{\ensuremath{\mu #1.#2}}
+
+
+% Semantics
+
+\newcommand{\congr}{\ensuremath{\equiv}}
+%\newcommand{\redAc}[1]{\ensuremath{\stackrel{{\footnotesize #1}}{\longrightarrow}}}
+\newcommand{\redAc}[1]{\ensuremath{\stackrel{{
+\mbox{\footnotesize\ensuremath{#1} } }}{\longrightarrow}}}
+\newcommand{\silent}{\ensuremath{\tau}}
+\newcommand{\gen}[1]{\ensuremath{\mathtt{res}(#1)}}
+\newcommand{\inicios}[1]{\ensuremath{\texttt{begins}(#1)}}
+\newcommand{\fins}[1]{\ensuremath{\texttt{ends}(#1)}}
+\newcommand{\genaction}{\psi}
+
+% Wf types and channels - Rule Names
+
+\newcommand{\wfNilEnv}{\ensuremath{\textsf{Wf Env Nil}}}
+\newcommand{\wfConsTypeEnv}{\ensuremath{\textsf{Wf Env ConsT}}}
+\newcommand{\wfConsChanEnv}{\ensuremath{\textsf{Wf Env ConsChT}}}
+
+\newcommand{\wfBranch}{\ensuremath{\textsf{Wf Brnch}}}
+\newcommand{\wfSelect}{\ensuremath{\textsf{Wf Sel}}}
+\newcommand{\wfInOutType}{\ensuremath{\textsf{Wf In/Out}}}
+\newcommand{\wfInOutChType}{\ensuremath{\textsf{Wf Ch In/Out}}}
+
+\newcommand{\wfNilEffect}{\ensuremath{\textsf{Wf Eff Nil}}}
+\newcommand{\wfConsEffect}{\ensuremath{\textsf{Wf Eff Cons}}}
+\newcommand{\wfTypeVar}{\ensuremath{\textsf{Wf Env TVar}}}
+\newcommand{\wfChanTypeVar}{\ensuremath{\textsf{Wf Env ChTVar}}}
+\newcommand{\wfRecType}{\ensuremath{\textsf{Wf Rec Type}}}
+\newcommand{\wfRecChan}{\ensuremath{\textsf{Wf Rec Chan}}}
+\newcommand{\wfProcessVar}{\ensuremath{\textsf{Wf PVar}}}
+
+\newcommand{\wfIntType}{\ensuremath{\textsf{Wf Int Type}}}
+\newcommand{\wfUnitChannel}{\ensuremath{\textsf{Wf Unit ChT}}}
+\newcommand{\wfEndChannel}{\ensuremath{\textsf{Wf End ChT}}}
+\newcommand{\wfBulletChannel}{\ensuremath{\textsf{Wf No Comm}}}
+\newcommand{\wfSessionType}{\ensuremath{\textsf{Wf Sess Type}}}
+
+
+\newcommand{\wfProcessParamNil}{\ensuremath{\textsf{Wf PP Nil}}}
+\newcommand{\wfProcessParamCons}{\ensuremath{\textsf{Wf PP Cons}}}
+
+% Type System - Rule Names
+
+
+\newcommand{\typeChan}{\ensuremath{\textsf{Type Chan}}}
+\newcommand{\typeAccept}{\ensuremath{\textsf{Type Acpt}}}
+\newcommand{\typeRequest}{\ensuremath{\textsf{Type Requ}}}
+\newcommand{\typeSubsum}{\ensuremath{\textsf{Type Subsum}}}
+\newcommand{\typeSend}{\ensuremath{\textsf{Type Snd}}}
+\newcommand{\typeReceive}{\ensuremath{\textsf{Type Rcv}}}
+\newcommand{\typeSelect}{\ensuremath{\textsf{Type Sel}}}
+\newcommand{\typeBranch}{\ensuremath{\textsf{Type Brnch}}}
+\newcommand{\typePar}{\ensuremath{\textsf{Type Par}}}
+\newcommand{\typeThrow}{\ensuremath{\textsf{Type Thr}}}
+\newcommand{\typeCatch}{\ensuremath{\textsf{Type Cat}}}
+\newcommand{\typeBegin}{\ensuremath{\textsf{Type Bgn}}}
+\newcommand{\typeEnd}{\ensuremath{\textsf{Type End}}}
+\newcommand{\typeNameRes}{\ensuremath{\textsf{Type NRes}}}
+\newcommand{\typeChanRes}{\ensuremath{\textsf{Type CRes}}}
+\newcommand{\typeStop}{\ensuremath{\textsf{Type Stop}}}
+\newcommand{\typeMsgNil}{\ensuremath{\textsf{Msg Nil}}}
+\newcommand{\typeMsgCons}{\ensuremath{\textsf{Msg Cons}}}
+
+\newcommand{\wfValueName}{\ensuremath{\textsf{Wf Val EName}}}
+\newcommand{\wfValueInt}{\ensuremath{\textsf{Wf Val Int}}}
+
+\newcommand{\typeProcessVar}{\ensuremath{\textsf{Type PVar}}}
+\newcommand{\typeDefinition}{\ensuremath{\textsf{Type Def}}}
+
+% Semantics - Structural Congruence
+
+\newcommand{\scRefl}{\ensuremath{\textsf{SC Refl}}}
+\newcommand{\scSymm}{\ensuremath{\textsf{SC Symm}}}
+\newcommand{\scTrans}{\ensuremath{\textsf{SC Trans}}}
+\newcommand{\scStop}{\ensuremath{\textsf{SC Stop}}}
+\newcommand{\scPar}{\ensuremath{\textsf{SC Par}}}
+\newcommand{\scParComm}{\ensuremath{\textsf{SC Par Comm}}}
+\newcommand{\scParAsoc}{\ensuremath{\textsf{SC Par Asoc}}}
+\newcommand{\scNewName}{\ensuremath{\textsf{SC New Name}}}
+\newcommand{\scNewChan}{\ensuremath{\textsf{SC New Chan}}}
+\newcommand{\scNewNameChan}{\ensuremath{\textsf{SC New Name/Chan}}}
+\newcommand{\scInCh}{\ensuremath{\textsf{SC Rcv}}}
+\newcommand{\scOutCh}{\ensuremath{\textsf{SC Send}}}
+\newcommand{\scAccept}{\ensuremath{\textsf{SC Acpt}}}
+\newcommand{\scRequest}{\ensuremath{\textsf{SC Requ}}}
+\newcommand{\scThrow}{\ensuremath{\textsf{SC Thr}}}
+\newcommand{\scCatch}{\ensuremath{\textsf{SC Cat}}}
+\newcommand{\scSelect}{\ensuremath{\textsf{SC Sel}}}
+\newcommand{\scBranch}{\ensuremath{\textsf{SC Brnch}}}
+\newcommand{\scBegin}{\ensuremath{\textsf{SC Begin}}}
+\newcommand{\scEnd}{\ensuremath{\textsf{SC End}}}
+\newcommand{\scDef}{\ensuremath{\textsf{SC Def}}}
+\newcommand{\scResZero}{\ensuremath{\textsf{SC Res Inact}}}
+\newcommand{\scResRes}{\ensuremath{\textsf{SC Res Res}}}
+\newcommand{\scResPar}{\ensuremath{\textsf{SC Res Par}}}
+\newcommand{\scResDef}{\ensuremath{\textsf{SC Res Def}}}
+\newcommand{\scDefPar}{\ensuremath{\textsf{SC Def Par}}}
+\newcommand{\scDefAnd}{\ensuremath{\textsf{SC Def And}}}
+
+\newcommand{\tagg}{\mathsf{Tag}}
+\newcommand{\idch}{\mathsf{RFIDChan}}
+%\newcommand{\pat}{\mathsf{Pat}}
+\newcommand{\dev}{\mathsf{Dev}}
+\newcommand{\threep}{\, |\! |\!|\,}
+\newcommand{\capture}{\mathsf{Capture}}
+\newcommand{\takeread}{\mathsf{TakeReading}}
+\newcommand{\getread}{\mathsf{GetReading}}
+\newcommand{\takeid}{\mathsf{TakeID}}
+\newcommand{\takepid}{\mathsf{TakePatID}}
+\newcommand{\takedid}{\mathsf{TakeDevID}}
+\newcommand{\resptor}{\mathsf{RespToReader}}
+\newcommand{\resptomm}{\mathsf{RespToMM}}
+\newcommand{\getid}{\mathsf{GetID}}
+\newcommand{\getp}{\mathsf{GetName}}
+\newcommand{\getdev}{\mathsf{GetDev}}
+\newcommand{\myif}{{\,\mathsf{if}}\, }
+\newcommand{\mythen}{{\,\mathsf{then}}\, }
+\newcommand{\myelse}{{\,\mathsf{else}}\, }
+\newcommand{\rtom}{\mathsf{ReaderCh}}
+\newcommand{\readch}{\mathsf{ReadingChan}}
+\newcommand{\synchon}[1]{|\![\!\{#1\}\!]\!|}
+\newcommand{\paron}[1]{\displaystyle{\mathop{\threep}_{#1}}}
+\newcommand{\MM}{\mathsf{MobMed}}
+\newcommand{\mmchan}{\mathsf{MMChan}}
+\newcommand{\nursechan}{\mathsf{NurseChan}}
+\newcommand{\nurse}{\mathsf{Nurse}}
+\newcommand{\yes}{\mathsf{Yes}}
+\newcommand{\no}{\mathsf{No}}
+\newcommand{\reset}{\mathsf{Reset}}
+\newcommand{\env}{\mathsf{Environment}}
+\newcommand{\xlate}{\mathsf{Interpret}}
+\newcommand{\xlatestore}{\mathsf{Interpret}}
+\newcommand{\store}{\mathsf{Store}}
+%\newcommand{\discard}{\mathsf{Discard}}
+\newcommand{\idnum}{\mathsf{IDnum}}
+\newcommand{\emit}{\mathsf{Emit}}
+\newcommand{\iddev}{\mathsf{ID\_Device}}
+\newcommand{\collread}{\mathsf{TakeCkReading}}
+\newcommand{\reqread}{\mathsf{ReqReader}}
+\newcommand{\reqdev}{\mathsf{ReqDevice}}
+\newcommand{\reader}{\mathsf{Reader}}
+\newcommand{\mediator}{\mathsf{Med}}
+\newcommand{\myok}{\mathsf{OK}}
+\newcommand{\device}{\mathsf{Device}}
+\newcommand{\dtom}{\mathsf{DevToMM}}
+\newcommand{\db}{\mathsf{EHR}}
+\newcommand{\dbint}{\mathsf{EHRInterface}}
+\newcommand{\dbch}{\mathsf{EHRCh}}
+\newcommand{\btadr}{\mathsf{BTAddr}}
+\newcommand{\dbsch}{\mathsf{EHRSCh}}
+\newcommand{\dbbe}{\mathsf{EHRBackEnd}}
+\newcommand{\dbbech}{\mathsf{EHRBECh}}
+\newcommand{\pstop}{\mathsf{Stop}}
+\newcommand{\sendName}{\mathsf{Send}}
+\newcommand{\auth}{\mathsf{Auth}}
+\newcommand{\exchoice}[1]{\displaystyle{\mathop{\square}_{#1}}}
+\newcommand{\intchoice}[1]{\displaystyle{\mathop{\sqcap}_{#1}}}
+\newcommand{\sendtodb}{\mathsf{SendToDB}}
+\newcommand{\ntom}{\mathsf{HCI}}
+\newcommand{\err}{\mathsf{Error}}
+\newcommand{\viewdata}{\mathsf{ViewData}}
+\newcommand{\btch}{\mathsf{BTScan}}
+\newcommand{\btdev}{\mathsf{BTDev}}
+\newcommand{\allbtd}{\mathsf{BTDevices}}
+\newcommand{\scdev}{\mathsf{ScanDev}}
+\newcommand{\scpat}{\mathsf{ScanPat}}
+\newcommand{\seeid}{\mathsf{SeeID}}
+\newcommand{\pname}{\mathsf{Name}}
+\newcommand{\myenv}{\mathsf{Env}}
+\newcommand{\system}{\mathsf{System}}
+\newcommand{\safety}{\mathsf{Safety}}
+\newcommand{\given}{\mathsf{Given}}
+%\newcommand{\etal}{{\it et al}}
+\newcommand{\trainee}{\mathsf{NursePE}}
+\newcommand{\traces}{\mathsf{traces}}
+\newcommand{\failures}{\mathsf{failures}}
+\newcommand{\DF}{\mathsf{LIVE}}
+\newcommand{\medread}{{\mathsf{MedRead}}}
+\newcommand{\btdevs}{{\mathsf{BTDevs}}}
+\newcommand{\mygiven}{{\mathsf{Given}}}
+\newcommand{\clicker}{\mathsf{Clicker}}
+\newcommand{\broadcast}{\mathsf{Broadcast}}
+\newcommand{\room}{\mathsf{Room}}
+\newcommand{\censs}{\mathsf{Center}}
+\newcommand{\incard}{\mathsf{Incard}}
+\newcommand{\atma}{\mathsf{ATM1}}
+\newcommand{\atmb}{\mathsf{ATM2}}
+\newcommand{\pin}{\mathsf{PIN}}
+\newcommand{\req}{\mathsf{Req}}
+\newcommand{\dispense}{\mathsf{Dispense}}
+\newcommand{\outcard}{\mathsf{Outcard}}
+\newcommand{\refuse}{\mathsf{Refuse}}
+\newcommand{\kout}{\mathsf{Out}}
+
+% Semantics - Unlabelled Transitions
+
+\newcommand{\opSemLink}{\ensuremath{\textsf{OS Link}}}
+\newcommand{\opSemComm}{\ensuremath{\textsf{OS Comm}}}
+\newcommand{\opSemBranch}{\ensuremath{\textsf{OS Brnch}}}
+\newcommand{\opSemCatch}{\ensuremath{\textsf{OS Catch}}}
+\newcommand{\opSemDef}{\ensuremath{\textsf{OS Def1}}}
+\newcommand{\opSemBelowDef}{\ensuremath{\textsf{OS Def2}}}
+\newcommand{\opSemBegin}{\ensuremath{\textsf{OS Begin}}}
+\newcommand{\opSemEnd}{\ensuremath{\textsf{OS End}}}
+\newcommand{\opSemPar}{\ensuremath{\textsf{OS Par}}}
+\newcommand{\opSemCongr}{\ensuremath{\textsf{OS \congr}}}
+\newcommand{\opSemNew}{\ensuremath{\textsf{OS Res}}}
+
+
+% Semantics - Labelled Transitions
+
+\newcommand{\transLink}{\ensuremath{\textsf{Trans Link}}}
+\newcommand{\transComm}{\ensuremath{\textsf{Trans Comm}}}
+\newcommand{\transBranch}{\ensuremath{\textsf{Trans Brnch}}}
+\newcommand{\transCatch}{\ensuremath{\textsf{Trans Catch}}}
+\newcommand{\transDef}{\ensuremath{\textsf{Trans Def1}}}
+\newcommand{\transBegin}{\ensuremath{\textsf{Trans Begin}}}
+\newcommand{\transEnd}{\ensuremath{\textsf{Trans End}}}
+\newcommand{\transPar}{\ensuremath{\textsf{Trans Par}}}
+\newcommand{\transCongr}{\ensuremath{\textsf{Trans \congr}}}
+\newcommand{\transNewName}{\ensuremath{\textsf{Trans ResN}}}
+\newcommand{\transNewChannel}{\ensuremath{\textsf{Trans ResCh}}}
+\newcommand{\transBelowDef}{\ensuremath{\textsf{Trans Def2}}}
+
+% Semantics - Transitions
+\newcommand{\traceCongr}{\ensuremath{\textsf{Trace \congr}}}
+\newcommand{\traceAction}{\ensuremath{\textsf{Trace Action}}}
+
+% Semantics - Actions
+\newcommand{\defAc}[1]{\ensuremath{\mathtt{def}(#1)}}
+
+
+% Miscel
+
+\newcommand{\linea}{\figrule}
+\newcommand{\y}{\ensuremath{\cdot}}   % Append to context
+\newcommand{\impsubs}[3]{\ensuremath{#1\{#2\leftarrow #3\}}}
+\newcommand{\judge}[2]{\ensuremath{#1 \rhd #2}} %Generic/with defs
+\newcommand{\transit}[3]{\ensuremath{#1\;#2 \longrightarrow #3}} %Generic/with defs
+\newcommand{\transitStar}[3]{\ensuremath{#1\;#2 \longrightarrow^* #3}} %Generic/with defs
+\newcommand{\transitLabel}[4]{\ensuremath{#1\;#2 \overset{#3}{\longrightarrow} #4}} %Generic/with defs
+\newcommand{\transitLabelStar}[4]{\ensuremath{#1\;#2 \overset{#3}{\longrightarrow^*} #4}} %Generic/with defs
+%\newcommand{\judge}[3]{\ensuremath{#1\vdash #2}} % Generic/no defs
+\newcommand{\judgeEf}[4]{\ensuremath{#1\vdash_{#4} #2:#3}} % Effects/ with defs
+%\newcommand{\judgeEf}[4]{\ensuremath{#1\vdash #2:#3}} %Effects/no defs
+\newcommand{\judgeS}[3]{\ensuremath{#1\vdash #2\blacktriangleright #3}}
+\newcommand{\judgeMsg}[4]{\ensuremath{#1\vdash #2:#3\blacktriangleright #4}}  % Messages
+%\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\dom}[1]{\ensuremath{\mathtt{dom}(#1)}}
+\newcommand{\domChan}[1]{\ensuremath{\mathtt{domCh}(#1)}}
+\newcommand{\domPlain}[1]{\ensuremath{\mathtt{domPl}(#1)}}
+\newcommand{\ran}[1]{\ensuremath{\mathtt{ran}(#1)}}
+\newcommand{\ranChan}[1]{\ensuremath{\mathtt{ranCh}(#1)}}
+\newcommand{\channel}[1]{\ensuremath{\mathtt{chan}(#1)}}
+\newcommand{\fn}[1]{\ensuremath{\mathtt{fn}(#1)}}
+\newcommand{\gn}[1]{\ensuremath{\mathtt{gn}(#1)}}
+\newcommand{\fpv}[1]{\ensuremath{\mathtt{fpv}(#1)}} % free process variables
+\newcommand{\fnMult}[1]{\ensuremath{\mathtt{fnEff}(#1)}}
+
+\newcommand{\integer}{\ensuremath{\mathbf{Z}}}
+\newcommand{\comentario}[1]{{\Large \texttt{#1}}}
+\newcommand{\judgement}{\ensuremath{{\cal J}}}
+\newcommand{\proofSize}[1]{{\small #1}}
+\newcommand{\compat}{\ensuremath{\asymp}}
+\newcommand{\compose}{\ensuremath{\circ}}
+\newcommand{\processParam}[2]{\ensuremath{(#1):(#2)}}
+\newcommand{\minus}{\ensuremath{\setminus}}
+\newcommand{\Deltaxv}{\ensuremath{\Delta_x^v}}
+\newcommand{\Deltaav}{\ensuremath{\Delta_a^v}}
+\newcommand{\Pxv}{\ensuremath{P_x^v}}
+\newcommand{\exv}{\ensuremath{e_x^v}}
+\newcommand{\Pav}{\ensuremath{P_a^v}}
+\newcommand{\eav}{\ensuremath{e_a^v}}
+\newcommand{\judgementav}{\ensuremath{\judgement_a^v}}
+\newcommand{\linCondition}{\ensuremath{\textbf{C1}}}
+\newcommand{\cycCondition}{\ensuremath{\textbf{C2}}}
+
+%%%%  Added by Elsa, needs to be changed:
+
+
+\newcommand{\simulator}{\textsc{HSim}}
+\newcommand{\modcheck}{\textsc{HMC}}
+
+

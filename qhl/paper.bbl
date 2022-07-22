@@ -1,0 +1,258 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{15}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[\protect\citeauthoryear{Beauregard}{Beauregard}{2003}]%
+        {qft-adder}
+\bibfield{author}{\bibinfo{person}{Stephane Beauregard}.}
+  \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Circuit for Shor's Algorithm Using 2n+3 Qubits}.
+\newblock \bibinfo{journal}{\emph{Quantum Info. Comput.}} \bibinfo{volume}{3},
+  \bibinfo{number}{2} (\bibinfo{date}{March} \bibinfo{year}{2003}),
+  \bibinfo{pages}{175–185}.
+\newblock
+\showISSN{1533-7146}
+
+
+\bibitem[\protect\citeauthoryear{Burgholzer, Bauer, and Wille}{Burgholzer
+  et~al\mbox{.}}{2021}]%
+        {ddsim}
+\bibfield{author}{\bibinfo{person}{Lukas Burgholzer}, \bibinfo{person}{Hartwig
+  Bauer}, {and} \bibinfo{person}{Robert Wille}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{Hybrid Schr\"odinger-Feynman Simulation of Quantum
+  Circuits With Decision Diagrams}.
+\newblock
+\newblock
+\showeprint[arxiv]{2105.07045}~[quant-ph]
+
+
+\bibitem[\protect\citeauthoryear{{Chareton}, {Bardin}, {Bobot}, {Perrelle}, and
+  {Valiron}}{{Chareton} et~al\mbox{.}}{2020}]%
+        {qbricks}
+\bibfield{author}{\bibinfo{person}{Christophe {Chareton}},
+  \bibinfo{person}{S{\'e}bastien {Bardin}}, \bibinfo{person}{Fran{\c{c}}ois
+  {Bobot}}, \bibinfo{person}{Valentin {Perrelle}}, {and}
+  \bibinfo{person}{Benoit {Valiron}}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{Toward Certified Quantum Programming}}.
+\newblock \bibinfo{journal}{\emph{arXiv e-prints}} (\bibinfo{year}{2020}).
+\newblock
+\showeprint[arxiv]{2003.05841}~[cs.PL]
+
+
+\bibitem[\protect\citeauthoryear{Childs, Reichardt, Spalek, and Zhang}{Childs
+  et~al\mbox{.}}{2007}]%
+        {ChildsNAND}
+\bibfield{author}{\bibinfo{person}{Andrew Childs}, \bibinfo{person}{Ben
+  Reichardt}, \bibinfo{person}{Robert Spalek}, {and} \bibinfo{person}{Shengyu
+  Zhang}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{{Every NAND formula of size N can be evaluated in
+  time $N^{1/2+o(1)}$ on a Quantum Computer}}.
+\newblock  (\bibinfo{date}{03} \bibinfo{year}{2007}).
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Grover}{Grover}{1996}]%
+        {grover1996}
+\bibfield{author}{\bibinfo{person}{Lov~K. Grover}.}
+  \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{A Fast Quantum Mechanical Algorithm for Database
+  Search}. In \bibinfo{booktitle}{\emph{Proceedings of the Twenty-Eighth Annual
+  ACM Symposium on Theory of Computing}} (Philadelphia, Pennsylvania, USA)
+  \emph{(\bibinfo{series}{STOC '96})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{212–219}.
+\newblock
+\showISBNx{0897917855}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/237814.237866}
+\showDOI{\tempurl}
+\showeprint[arxiv]{quant-ph/9605043}
+
+
+\bibitem[\protect\citeauthoryear{Grover}{Grover}{1997}]%
+        {grover1997}
+\bibfield{author}{\bibinfo{person}{Lov~K. Grover}.}
+  \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Quantum Mechanics Helps in Searching for a Needle
+  in a Haystack}.
+\newblock \bibinfo{journal}{\emph{Phys. Rev. Lett.}}  \bibinfo{volume}{79}
+  (\bibinfo{date}{July} \bibinfo{year}{1997}), \bibinfo{pages}{325--328}.
+\newblock
+Issue 2.
+\urldef\tempurl%
+\url{https://doi.org/10.1103/PhysRevLett.79.325}
+\showDOI{\tempurl}
+\showeprint[arxiv]{quant-ph/9706033}
+
+
+\bibitem[\protect\citeauthoryear{Hietala, Rand, Hung, Li, and Hicks}{Hietala
+  et~al\mbox{.}}{2021a}]%
+        {PQPC}
+\bibfield{author}{\bibinfo{person}{Kesha Hietala}, \bibinfo{person}{Robert
+  Rand}, \bibinfo{person}{Shih-Han Hung}, \bibinfo{person}{Liyi Li}, {and}
+  \bibinfo{person}{Michael Hicks}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{Proving Quantum Programs Correct}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the Conference on Interative Theorem
+  Proving (ITP)}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Hietala, Rand, Hung, Wu, and Hicks}{Hietala
+  et~al\mbox{.}}{2021b}]%
+        {VOQC}
+\bibfield{author}{\bibinfo{person}{Kesha Hietala}, \bibinfo{person}{Robert
+  Rand}, \bibinfo{person}{Shih-Han Hung}, \bibinfo{person}{Xiaodi Wu}, {and}
+  \bibinfo{person}{Michael Hicks}.} \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{A Verified Optimizer for Quantum Circuits}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the {ACM} Conference on Principles
+  of Programming Languages (POPL)}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Le, Lin, Sun, and Sanan}{Le
+  et~al\mbox{.}}{2022}]%
+        {quantumseparation}
+\bibfield{author}{\bibinfo{person}{Xuan-Bach Le}, \bibinfo{person}{Shang-Wei
+  Lin}, \bibinfo{person}{Jun Sun}, {and} \bibinfo{person}{David Sanan}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{A Quantum Interpretation of Separating Conjunction
+  for Local Reasoning of Quantum Programs Based on Separation Logic}}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{6}, \bibinfo{number}{POPL}, Article \bibinfo{articleno}{36}
+  (\bibinfo{date}{jan} \bibinfo{year}{2022}), \bibinfo{numpages}{27}~pages.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3498697}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Low and Chuang}{Low and Chuang}{2017}]%
+        {Low_2017}
+\bibfield{author}{\bibinfo{person}{Guang~Hao Low} {and}
+  \bibinfo{person}{Isaac~L. Chuang}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{Optimal Hamiltonian Simulation by Quantum Signal
+  Processing}}.
+\newblock \bibinfo{journal}{\emph{Physical Review Letters}}
+  \bibinfo{volume}{118}, \bibinfo{number}{1} (\bibinfo{date}{Jan}
+  \bibinfo{year}{2017}).
+\newblock
+\showISSN{1079-7114}
+
+
+\bibitem[\protect\citeauthoryear{Peng, Hietala, Tao, Li, Rand, Hicks, and
+  Wu}{Peng et~al\mbox{.}}{2022}]%
+        {shorsprove}
+\bibfield{author}{\bibinfo{person}{Yuxiang Peng}, \bibinfo{person}{Kesha
+  Hietala}, \bibinfo{person}{Runzhou Tao}, \bibinfo{person}{Liyi Li},
+  \bibinfo{person}{Robert Rand}, \bibinfo{person}{Michael Hicks}, {and}
+  \bibinfo{person}{Xiaodi Wu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{A Formally Certified End-to-End Implementation of
+  Shor's Factorization Algorithm}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/ARXIV.2204.07112}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Qiu, Garg, Stefanescu, and Madhusudan}{Qiu
+  et~al\mbox{.}}{2013}]%
+        {DBLP:conf/pldi/Qiu0SM13}
+\bibfield{author}{\bibinfo{person}{Xiaokang Qiu}, \bibinfo{person}{Pranav
+  Garg}, \bibinfo{person}{Andrei Stefanescu}, {and}
+  \bibinfo{person}{Parthasarathy Madhusudan}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Natural proofs for structure, data, and
+  separation}. In \bibinfo{booktitle}{\emph{{ACM} {SIGPLAN} Conference on
+  Programming Language Design and Implementation, {PLDI} '13, Seattle, WA, USA,
+  June 16-19, 2013}}, \bibfield{editor}{\bibinfo{person}{Hans{-}Juergen Boehm}
+  {and} \bibinfo{person}{Cormac Flanagan}} (Eds.). \bibinfo{publisher}{{ACM}},
+  \bibinfo{pages}{231--242}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2491956.2462169}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Shor}{Shor}{1994}]%
+        {shors}
+\bibfield{author}{\bibinfo{person}{P.W. Shor}.}
+  \bibinfo{year}{1994}\natexlab{}.
+\newblock \showarticletitle{Algorithms for quantum computation: discrete
+  logarithms and factoring}. In \bibinfo{booktitle}{\emph{Proceedings 35th
+  Annual Symposium on Foundations of Computer Science}}.
+  \bibinfo{pages}{124--134}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SFCS.1994.365700}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Ying}{Ying}{2012}]%
+        {qhoare}
+\bibfield{author}{\bibinfo{person}{Mingsheng Ying}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Floyd--Hoare Logic for Quantum Programs}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Program. Lang. Syst.}}
+  \bibinfo{volume}{33}, \bibinfo{number}{6}, Article \bibinfo{articleno}{19}
+  (\bibinfo{date}{Jan.} \bibinfo{year}{2012}), \bibinfo{numpages}{49}~pages.
+\newblock
+\showISSN{0164-0925}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2049706.2049708}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Yu and Palsberg}{Yu and Palsberg}{2021}]%
+        {10.1145/3453483.3454061}
+\bibfield{author}{\bibinfo{person}{Nengkun Yu} {and} \bibinfo{person}{Jens
+  Palsberg}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Quantum Abstract Interpretation}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 42nd ACM SIGPLAN International
+  Conference on Programming Language Design and Implementation}} (Virtual,
+  Canada) \emph{(\bibinfo{series}{PLDI 2021})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{542–558}.
+\newblock
+\showISBNx{9781450383912}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3453483.3454061}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

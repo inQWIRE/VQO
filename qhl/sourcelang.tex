@@ -1,0 +1,299 @@
+
+
+% \liyi{Outline starts:}
+
+% 1. describing the syntax of \vqimp by using a small graph with a smart way of representing different operations in one chunck. Mainly, we will talk about while,condition operations.
+
+% a. list the syntax figure of \vqimp. \url{https://github.com/inQWIRE/SQIR/blob/rcir-plus/SQIR/MiniQASM.v#L458}
+
+% b. introduce the idea of static-time determinable and dynamic computation determinable. This are useful concepts for doing dynamic constant prorogation in \vqimp. 
+
+% c. focus on the features of \vqimp.
+% \begin{itemize}
+%    \item function calls and an extra \texttt{inv} operations for reversible computation. 
+
+%    \item difference between constant operations and operations involving quantum qubits. 
+%    \item in the for-loop, the iterator is a constant value, so the number of iteration in for-loop is dynamically determinable (meaning that without the involvement of quantum computations).
+% \end{itemize}
+
+% 2. Pick an operation to describe its behaviors by using an example. Constructing an example function with only two operations, one for constant expression and the other for quantum expression. Showing that a function call on expression $e$ first happens by evaluating the constants in the expression, and then we construct a circuit as e'; copy ret to x ; inv e'.
+
+% 3. Show type rules for important concepts. Why we need type rules? What is good for? We show some rules with some examples (maybe from overview section). 
+
+% \begin{itemize}
+%    \item Describe the type system. \url{https://github.com/inQWIRE/SQIR/blob/rcir-plus/SQIR/MiniQASM.v#L696}. The type system is to discover if a variable is constant/quantum-value in a program. It will traverse every expression in a program and compute the meet type of the input-variables and then determine the type of the output of an expression.
+
+%    \item The second static analysis is to ensure a simplified form of SSA. The SSA is to ensure that for every expression, the output variable is not the same as any of the input arguments. \url{https://github.com/inQWIRE/SQIR/blob/rcir-plus/SQIR/MiniQASM.v#L1176}.
+%    \item The third static analysis is to perform on \texttt{inv} expressions. In \vqimp, we allow for single instruction inverse operation. The operation will take in a single expression and reverse the effect of the expression. For simplicity, we require in the region between the expression and its \texttt{inv}, there is no updates of any of the arguments/output of the expression. The way of handling this is to keep a scratch space. The scratch space is empty in the beginning and it is required to be empty after the static analysis process. It will traverse the expressions in a program, and then inserts the expression one at a time. Once it hits an \texttt{inv} expression ($\texttt{inv}\;e$), we pop out expression in the scratch space until it hits the same expression $e$. \url{https://github.com/inQWIRE/SQIR/blob/rcir-plus/SQIR/MiniQASM.v#L1332}.
+% \end{itemize}
+
+% \mwh{Changes to make in the body that follows}
+% \begin{enumerate}
+% \item Use the new syntax given in
+%   Figure~\ref{fig:syntax}. Changes from the old syntax figure include:
+%   \begin{itemize}
+%   \item $t \in n\_ty$ is now ``base type'' $\omega$ and $vt \in
+%     var\_ty$ is now ``type'' $\tau$. The formatting of these things
+%     has been changed somewhat.
+%   \item ``factor'' is now ``value'' with literals expressed in cast notation
+%   \item ``qvar'' is now ``lvalue''
+%   \item $b$ is a bitstring. In the text, it refers to the
+%     function-implementation of bitsrings as maps from nats to bools;
+%     this detail can get dropped.
+%   \item $cexp$ is now ``boolean expr'' $e$
+%   \item operators have been replaced with their mathematical symbols;
+%     we overload $\times$ to be both (what was) \texttt{fmul} and
+%     \texttt{nmul}, etc.
+%   \item  $exp$ (which was not actually an expression) is statement
+%     $s$. The \texttt{cast\_Q} expression form has been dropped; it's
+%     not needed. The $inv$ form now takes an l-value, rather than a
+%     statement. 
+%   \item Functions have been extended to have explicit parameter
+%     lists. These should always be classical. The $init$ form has been
+%     dropped (it was also misnamed, since there initialization is
+%     implicit); declarations are now written directly, with overbar
+%     notation and the preferred type given, for both function
+%     parameters and local variables. It is assumed that all local
+%     variables are initialized to 0.
+%   \item Programs have a list of declared global variables followed by
+%     a sequence of function definitions. We assume (and should say in
+%     the text) that the last function definition acts as ``main'' and
+%     should have no parameters, so that it can just be run directly.
+%     \end{itemize} \liyi{finished}
+%   \item We have a ``front end'' that compiles to the language given in
+%     the figure, but I don't think we need to talk about that here. It
+%     can come in the overview section. So don't mention this as the
+%     ``backend'' language. \liyi{finished}
+%   \item After describing the syntax, we should go right into the type
+%     rules.   The mention of mode C and Q should mention that these are
+%     lattice ordered, $C \sqsubset Q$. Comes up in the typing rules
+%     with the LUB computation. \liyi{finished}
+%  \item The well formedness of \texttt{inv} discussion should come
+%     after typing. When introducing the syntax, just mention that
+%     there's a well formedness check. Also worth mentioning: The local
+%     \texttt{inv} form is never really needed, since uncomputation is
+%     done automatically at the end of a function call. The local form
+%     is just an optimization. Ideally, this well formedness discussion
+%     could get formalized as a judgment. \liyi{finished}
+%   \item The discussion about negative numbers should get dropped from
+%     this section; what's new/notable in it should get incorporated
+%     into section 2. The reader can simply be reminded that we don't
+%     need/want negative numbers. \liyi{finished}
+%   \item We don't need the max scratch space index for the operational
+%     semantics. \liyi{We don't need scratch space index in operational semantics either. finished}
+%   \item The operational semantics should be presented as a step
+%     relation. For example, we can define a runtime configuration $C$
+%     as a pair $\langle n, \sigma\rangle$, where $n$ is the scratch
+%     space index and $\sigma$ is the store (a map from variables to
+%     values). Then the semantics has the form $F \vdash_n C;s
+%     \longrightarrow C'$, where $F$ is the map from function names to
+%     function bodies, and $n$ is the number of bits to use for
+%     numbers. I have dropped the ``max scratch space index'' because I
+%     don't think we need that. \liyi{finished}
+
+% \item Probably there should be some sort of soundness theorem, i.e.,
+%   that all well-typed programs have a proper meaning, i.e., don't get
+%   stuck looking up variables etc. \liyi{finished}
+%   \end{enumerate}
+    
+% \liyi{Here starts body:}
+
+  % \mwh{TODO: For the operational semantics and type rules, use the
+  %   mathpartir library, or something like that. Looks better. E.g.,
+  %   see}
+  %   \url{https://github.com/plum-umd/checkedc-atc/blob/master/post2019/paper.tex#L754}
+
+  %   The most prominent feature of \vqimp is the division between the classical ($C$) and quantum ($Q$) variables. If a \vqimp expression contains quantum variables ($Q$), a quantum circuit is generated for it; otherwise, we partially evaluate the expression to a constant value and create a circuit directly for initializing the value (using \coqe{X} gates to give a list of $\ket{0}$ qubits to the same binary format as the value's). 
+% Another feature is \vqimp provides reverse operations. All functions in \vqimp are automatically reversible. If a function $f$ has the form: $e; \texttt{return}\;a$, and a function-call ($x=\texttt{call}\;f$) is applied, its semantics is that we evaluate the function $f$, and assigns the value of $a$ to $x$, and discards other side-effects of $f$.
+% Users are also able to manually uncompute a $Q$-mode variable by using the \texttt{inv} operation, but this is only valid for uncomputing an expression that outputs a $Q$-mode value.
+% We have a well-formedness check for \texttt{inv} operations. 
+% Since every function in \vqimp is automatically reversible, \texttt{inv} operations are not necessary for users to implement. However, it serves as an optimization strategy to optimize the total qubit usage. For example, in Fig.~\ref{fig:sine-impl}, the statement $\sinv{z}$ is not needed. It is there because we can now reuse the quantum variable $z$ to store the computation result for a loop-step; otherwise, every time when a loop-step is called, we create a new instance of $z$ during compilation.
+
+
+\subsection{Data Representations: Rationale}
+\label{sec:data-rationale}
+
+\qvm's representations---that numbers are nonnegative, and real
+numbers are limited to the range $[0,1)$---aim to save resources over
+common alternatives.  Upon examining a variety of quantum algorithms,
+we found that negative arithmetic computations have no significant
+use. When quantum algorithms might involve subtractions, the expected
+result is usually greater than zero, or made so by the computation
+$a+2^n-b$ if $b$ is less than $a$ and $n$ is the bit-width, such as subtractions
+in Shor's algorithm.  As such, we eschewed 1s or 2s complement
+representations of integers, as used in prior work, for natural
+numbers (represented as bitstrings), to save both gates and qubits.
+% The problem with one's complement representation is that it has two different representations of $0$, To add two numbers $x$ and $y$, one needs to compare the sign-bits to see if $x$ and $y$ are negative numbers or not; and the circuits constructed for the comparison of positive and negative values are different. In particular, every time users perform an addition, the circuit requires an ancillary qubit for comparison, which is definitely unacceptable. Two's complement representation may be a better choice, but it is still expensive. In doing subtraction, the circuit in two's complement needs to negate the result and then add $1$ only to get the negative number, so it means that a subtraction needs to double the size of a circuit. This is expensive. 
+% This is why we choose not to allow negative numbers, so that we can
+% save as many qubits/gates in computing arithmetic operations as
+% possible.
+
+We also save qubits by limiting real numbers to the range $[0,1)$, but
+at the cost of added size of the computation and complexity for the
+programmer. In the near term, researchers are willing to increase
+quantum gate counts by a square-root factor to reduce qubit
+usage by 20\% \cite{ccx-adder}, so we believe that our design choice makes
+sense.
+%
+Most prior schemes represent real numbers with
+fixed precision, preallocating bits to each side of the decimal point;
+e.g., Quipper~\cite{10.1145/2491956.2462177} uses 64 bits with 32 on
+either side of the decimal point. This can lead to wasted qubits. 
+%
+For example, when input $x$ has the range $[0,\frac{\pi}{2}]$, then
+$0\le\sin{x}\le 1$, which means almost half of the bits in Quipper's
+format are wasted. $\sin{x}$ can be computed for other values of $x$
+efficiently via equivalence formulas (as Quipper does, itself).
+
+For computing with larger numbers, \qvm allows the programmer to
+specify, for a $\tfixed$ number $x$, a compiler parameter $\eta$ to
+indicate the number should be interpreted as in range
+$[0,2^\eta)$. The compiler will insert necessary left- and
+right-shifts to support this interpretation. For example, when
+assigning a literal $i$ to $x$, the compiler would assign
+$\frac{i}{2^{\eta}}$ instead. To compute $\texttt{sin}(1)$ in
+Fig.~\ref{fig:sine-impl}, a user could set $\eta$ of $x$ to $1$ so
+that the logical literal $1$ is represented as
+$\frac{1}{2^1}$ as an input.
+For an output value, we re-assign the decimal point in the value so that the output $\frac{1}{2^1}$ is interpreted as $1$.
+The computation itself operates on numbers in the range $[0,1)$.
+When computing $\texttt{sin}(x)$, the input $x$ is represented as $\frac{x}{2}$
+We want to compute the output of $\frac{\texttt{sin}(x)}{2}$, because we know it is interpreted as $\texttt{sin}(x)$ in the end.
+Fig.~\ref{fig:sine-impl} shows the computation of sine via such an adjusted Taylor expansion.
+
+The sine example has an output in the range $[0,1)$.
+But consider computing $\texttt{arcsin}(x)$, whose input is in $[0,1)$
+but whose output is in the range $[0,2)$. To accommodate it, we set $\eta$ to be $1$.
+We know the input $x$ is represented as $\frac{x}{2}$,
+so we want to compute $\frac{\texttt{arcsin}(x)}{2}$. 
+We then rewrite the standard Taylor series for computing arcsine as: $\frac{\texttt{arcsin}(x)}{2}=\frac{x}{2}+\frac{1}{2}\frac{2^2*\frac{x}{2}^3}{3}+(\frac{1}{2}\frac{3}{4})\frac{2^4*\frac{x}{2}^5}{5}...=\Sigma^{\infty}_{n=0}\frac{(2n-1)!!}{2n!!}\frac{2^{2n}*\frac{x}{2}^{2n+1}}{2n+1}$.
+
+\ignore{\mwh{In essence, we are supporting different fixed-point
+  representations---should we have different tfixed types, indicating
+  the range of numbers allowed by those types, and conversions as
+  well? This could be future work; would be nice to verify that it's correct.}}
+
+\subsection{Semantics, Typing, Soundness}\label{sec:qimp-sem}
+
+We define a big-step operational semantics for \vqimp, which is
+essentially standard. The main judgment has the form
+$\Xi \vdash \sigma; s \steps r$ which states that under function
+environment $\Xi$ and input store $\sigma$, statement $s$ evaluates to
+result $r$. Here, $\Xi$ is a partial map from function variables $f$
+to their definitions, and $\sigma$ is a partial map from lvalues $x$
+and $\eindex{x}{n}$ to a \emph{history} of literal
+values $\overline{\econst{\omega}{b}}$. A read of an lvalue $l$
+returns the topmost element of the history.
+An assignment ($\sassign{l}{op}{v_1}{v_2}$) computes the result of the rhs $v_1\;op\;v_2$,
+looks up the most recent value ($v$) of $l$, and pushes $v\oplus (v_1\;op\;v_2)$ to $l$'s history.
+Uncomputation (by
+$\sinv{x}$ or a return from a function) pops the topmost
+element. A result $r$ is either an output store $\sigma'$ or a run-time failure
+\texttt{Error}, which arises due to an out-of-bounds index or a
+division by zero. Further details are given in \Cref{sec:source-semantics}.
+
+We define a type system for \vqimp whose main judgment has the form
+$\Xi;\Gamma; q \vdash s$, which states that under function environment
+$\Xi$, variable environment $\Gamma$, and computation label $q$,
+statement $s$ is well formed. The type system treats modes $q$ on base
+types like information flow labels \cite{Sabelfeld-flow},
+implementing a kind of \emph{binding time analysis} \cite{Core_Calculus}: $Q$-mode data may not
+flow into $C$-mode data, but the reverse is allowed; i.e.,
+$C \sqsubset Q$. These restrictions are needed
+to ensure that partial evaluation during compilation will work
+out.  The computation label $q$ is like the \emph{program counter
+  label} in information flow type systems,
+and is used to prevent implicit flows from $Q$-mode conditional guards
+to $C$-mode variables via assignments in the branches. In
+\Cref{fig:sine-impl}, the conditional is allowed because the guard has
+mode $C$ and the branches are mode $Q$. Further details are given in \Cref{sec:source-typing}.
+
+\vqimp enjoys a standard type soundness result. In sum: If \vqimp
+program $P$ type checks, then evaluating that program in an empty
+store will produce a final result of the expected type, or else will
+terminate with an \texttt{Error}. Proof is by progress and
+preservation, as usual. Further details are given in \Cref{app:source-soundness}.
+
+\subsection{Compilation from \vqimp to \vqir}\label{sec:vqimp-vqir}
+
+
+\begin{figure}[h]
+{\footnotesize
+\begin{tabular}{c}
+\begin{minipage}{.5\textwidth}
+\begin{coq}
+Fixpoint rz_adder_c' (a) (b:nat -> bool) (n:nat) (size:nat) :=
+  match n with 
+  | 0 => ID (a,0)
+  | S m => rz_adder_c' a b m size
+           ; if b m then SR (size - n) a else ID (a,m)
+  end.
+\end{coq}
+\end{minipage} 
+\\
+\begin{minipage}{.4\textwidth}
+\begin{coq}
+Definition rz_adder_c (a:var)
+                      (b:nat -> bool) (n:nat) := 
+  Rev a ; $QFT$ a ;
+  rz_adder_c' a b n n;
+  $QFT^{-1}$ a; Rev a.
+\end{coq}
+\end{minipage}
+\end{tabular}
+}
+\caption{Adding a \vqimp variable to a constant, in \vqir}
+\label{fig:circuit-example2}
+\end{figure}
+
+\qvm compiles a core \vqimp program by evaluating its $C$-mode
+components, storing the results in a store $\sigma$, and at the same
+time using these results while translating its $Q$-mode components
+into \vqir code. For example, when compiling the \texttt{for} loop in
+\Cref{fig:sine-impl}(b), the compiler will look up the value of
+loop-bound variable $n$ in the store and update $i$'s value in that
+store, for each iteration. When compiling the loop-body statement
+$n_1 \leftarrow i + 1$, variable $n_1$ will simply be updated in the
+store, and no code generated whereas when compiling statement
+$x_z \leftarrow \texttt{pow}^{x/2} (n_4)$, the fact that $x_z$ has
+mode $Q$ means that \vqir code must be generated. Each iteration will
+compile the non $C$-mode aspects of the body, essentially inlining the
+loop (as illustrated at the end of \Cref{sec:partial-eval}, but in
+terms of \vqir code, not \vqimp code).
+
+Each \vqimp arithmetic operator is associated with a handful of Coq
+functions that generate the appropriate \vqir code. For example, for
+addition the compiler uses \coqe{rz_adder} from
+\Cref{fig:circuit-example} when adding two variables $x$ and $y$: for
+a statement $\sassign{x}{+}{y}{z}$, \qvm will invoke \coqe{rz_adder}
+on $y~z~n$ (where $n$ is the bitwidth of $x$ and $y$} to generate the
+addition circuit, and then emit some additional code to connect its
+output wire $x$. Operators also have functions for operating on
+constants; e.g., \Cref{fig:circuit-example2} shows \coqe{rz_adder_c},
+which adds a variable to a constant (represented as a bitstring of
+type \coqe{nat -> bool}). 
+
+We have partially verified the compilation from core \vqir to \sqir is
+correct, in Coq. Details are presented in
+\Cref{sec:source-compilation-correctness}. The proof proceeds by
+induction on the compilation judgment. All cases are fully proved
+except for those involving some arithmetic expressions. Proofs for
+assignment statements are parameterized by correctness statements
+about the involved operators.  Each Coq operator function has a
+correctness statement associated with it, e.g., that \vqir code
+produced by compiling an addition operation corresponds to addition at
+the \vqimp level. Mechanized proofs of operator correctness can be
+tedious, so these are not all completed. Fortunately, because \vqir is
+efficiently simulatable, we can use randomized testing to provide some
+assurance that operators are implemented correctly. We tabulate which
+operators we have fully verified and which we have randomly tested in
+\Cref{sec:arith-circuits}.
+
+The compiler from frontend \vqimp to core \vqimp is not verified, and
+is provided as a convenience. It applies standard techniques for
+breaking down compound expressions into simpler ones, and also
+performs the shifting operations mentioned in
+\Cref{sec:data-rationale}. We consider this part of \qvm a work in
+progress and at present, we always inspect, and sometimes modify, the
+output core \vqimp to ensure it is correct.
+

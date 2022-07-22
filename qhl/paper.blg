@@ -1,0 +1,73 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: reference.bib
+Repeated entry---line 2857 of file reference.bib
+ : @article{grover1997
+ :                    ,
+I'm skipping whatever remains of this entry
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--no number and no volume in qbricks
+Warning--page numbers missing in both pages and numpages fields in qbricks
+Warning--no journal in ChildsNAND
+Warning--no number and no volume in ChildsNAND
+Warning--empty publisher in PQPC
+Warning--empty address in PQPC
+Warning--page numbers missing in both pages and numpages fields in PQPC
+Warning--empty publisher in VOQC
+Warning--empty address in VOQC
+Warning--page numbers missing in both pages and numpages fields in VOQC
+Warning--page numbers missing in both pages and numpages fields in Low_2017
+Warning--empty address in DBLP:conf/pldi/Qiu0SM13
+Warning--empty publisher in shors
+Warning--empty address in shors
+You've used 15 entries,
+            5959 wiz_defined-function locations,
+            1453 strings with 18006 characters,
+and the built_in function-call counts, 17438 in all, are:
+= -- 2166
+> -- 654
+< -- 0
++ -- 216
+- -- 222
+* -- 1271
+:= -- 1755
+add.period$ -- 73
+call.type$ -- 15
+change.case$ -- 110
+chr.to.int$ -- 14
+cite$ -- 29
+duplicate$ -- 1538
+empty$ -- 1073
+format.name$ -- 261
+if$ -- 4186
+int.to.chr$ -- 3
+int.to.str$ -- 1
+missing$ -- 56
+newline$ -- 188
+num.names$ -- 121
+pop$ -- 572
+preamble$ -- 1
+purify$ -- 239
+quote$ -- 0
+skip$ -- 552
+stack$ -- 0
+substring$ -- 1176
+swap$ -- 163
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 346
+warning$ -- 14
+while$ -- 100
+width$ -- 0
+write$ -- 323
+(There was 1 error message)

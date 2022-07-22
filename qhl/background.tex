@@ -1,0 +1,98 @@
+\section{Background}
+\label{sec:background}
+
+We begin with some background on quantum computing and quantum algorithms. 
+
+\myparagraph{Quantum States} A quantum state consists of one or more quantum bits (\emph{qubits}). A qubit can be expressed as a two dimensional vector $\begin{psmallmatrix} \alpha \\ \beta \end{psmallmatrix}$ where $\alpha,\beta$ are complex numbers such that $|\alpha|^2 + |\beta|^2 = 1$.  The $\alpha$ and $\beta$ are called \emph{amplitudes}. 
+%
+We frequently write the qubit vector as $\alpha\ket{0} + \beta\ket{1}$ where $\ket{0} = \begin{psmallmatrix} 1 \\ 0 \end{psmallmatrix}$ and $\ket{1} = \begin{psmallmatrix} 0 \\ 1 \end{psmallmatrix}$ are \emph{computational basis states}. When both $\alpha$ and $\beta$ are non-zero, we can think of the qubit as being ``both 0 and 1 at once,'' a.k.a. a \emph{superposition}. For example, $\frac{1}{\sqrt{2}}(\ket{0} + \ket{1})$ is an equal superposition of $\ket{0}$ and $\ket{1}$. 
+
+We can join multiple qubits together to form a larger quantum state with the \emph{tensor product} ($\otimes$) from linear algebra. For example, the two-qubit state $\ket{0} \otimes \ket{1}$ (also written as $\ket{01}$) corresponds to vector $[~0~1~0~0~]^T$. 
+Sometimes a multi-qubit state cannot be expressed as the tensor of individual states; such states are called \emph{entangled}. One example is the state $\frac{1}{\sqrt{2}}(\ket{00} + \ket{11})$, known as a \emph{Bell pair}.
+Entangled states lead to exponential blowup: A general $n$-qubit state must be described with a $2^n$-length vector, rather than $n$ vectors of length two. The latter is possible for unentangled states like $\ket{0} \otimes \ket{1}$; \vqir's type system guarantees that qubits remain unentangled.
+
+\begin{figure}[t]
+  \centering
+\begin{tabular}{c@{$\quad\qquad$}c}
+\begin{minipage}[b]{\textwidth}
+  \Small
+  \Qcircuit @C=0.5em @R=0.5em {
+    \lstick{} & \gate{H} & \gate{R_2} & \gate{R_3} & \gate{R_4} & \qw        & \qw            & \qw     &\qw   & \qw &\qw &\qw\\
+    \lstick{} & \qw        & \ctrl{-1}       & \qw   &\qw         & \gate{H} & \gate{R_2} & \gate{R_3}      & \qw  & \qw &\qw&\qw\\
+    \lstick{} & \qw        & \qw            & \ctrl{-2}       & \qw      &\qw   & \ctrl{-1}      &\qw & \gate{H} & \gate{R_2} &\qw&\qw\\
+    \lstick{} & \qw        & \qw           &\qw & \ctrl{-3}       & \qw    &\qw     & \ctrl{-2}      & \qw & \ctrl{-1} & \gate{H} & \qw 
+    }
+\end{minipage}
+&
+\begin{minipage}[b]{\textwidth}
+  \Small
+  \Qcircuit @C=0.5em @R=0.5em {
+    \lstick{} & \gate{H} & \gate{R_2} & \gate{R_3} & \qw & \qw        & \qw            & \qw     &\qw   & \qw &\qw &\qw\\
+    \lstick{} & \qw        & \ctrl{-1}       & \qw   &\qw         & \gate{H} & \gate{R_2} & \qw      & \qw  & \qw &\qw&\qw\\
+    \lstick{} & \qw        & \qw            & \ctrl{-2}       & \qw      &\qw   & \ctrl{-1}      &\qw & \gate{H} & \qw &\qw&\qw\\
+    \lstick{} & \qw        & \qw           &\qw & \qw       & \qw    &\qw     & \qw      & \qw & \qw & \gate{H} & \qw 
+    }
+\end{minipage}
+\end{tabular}
+\caption{Example quantum circuits: QFT over 4 qubits (left) and approximate QFT with 3 qubit precision (right). $R_m$ is a $z$-axis rotation by $2\pi / 2^m$.}
+\label{fig:background-circuit-example}
+\end{figure}
+
+\myparagraph{Quantum Circuits} 
+Quantum programs are commonly expressed as \emph{circuits}, like those shown in \Cref{fig:background-circuit-example}. In these circuits, each horizontal wire represents a qubit, and boxes on these wires indicate quantum operations, or \emph{gates}. Gates may be \emph{controlled} by a particular qubit, as indicated by a filled circle and connecting vertical line. The circuits in  \Cref{fig:background-circuit-example} use four qubits and apply 10 (left) or 7 (right) gates: four \emph{Hadamard} ($H$) gates and several controlled $z$-axis rotation (``phase'') gates.
+%
+When programming, circuits are often built by meta-programs embedded in a host language, e.g., Python (for Qiskit~\cite{Qiskit}, Cirq~\cite{cirq}, PyQuil~\cite{PyQuil}, and others), Haskell (for Quipper~\cite{Green2013}), or Coq (for \sqir and our work).
+
+\myparagraph{Quantum Fourier Transform}
+The quantum Fourier transform (QFT) is the quantum analogue of the discrete Fourier transform.
+It is used in many quantum algorithms, including the phase estimation portion of Shor's factoring algorithm~\cite{shors}.
+The standard implementation of a QFT circuit (for 4 qubits) is shown on the left of \Cref{fig:background-circuit-example}; an \emph{approximate QFT} (AQFT) circuit can be constructed by removing select controlled phase gates~\cite{ApproximateQFT,appox-qft2,appox-qft1}.
+This produces a cheaper circuit that implements an operation mathematically similar to the QFT.\@
+The AQFT circuit we use in \name (for 4 qubits) is shown on the right of \Cref{fig:background-circuit-example}. 
+When it is appropriate to use AQFT in place of QFT is an open research problem, and one that is partially addressed by our work on \oqasm, which allows efficient testing of the effect of AQFT inside of oracles.
+
+\myparagraph{Computational and QFT Bases}
+The computational basis is just one possible basis for the underlying vector space.
+Another basis is the \emph{Hadamard basis},  written as a tensor product of $\{\ket{+}, \ket{-}\}$, obtained by applying a \emph{Hadamard transform} to elements of the computational basis, where $\ket{+}=\frac{1}{\sqrt{2}}(\ket{0}+\ket{1})$ and  $\ket{-}=\frac{1}{\sqrt{2}}(\ket{0}-\ket{1})$.
+A third useful basis is the \emph{Fourier (or QFT) basis}, obtained by applying a \emph{quantum Fourier transform} (QFT) to elements of the computational basis.
+
+% Analogous to the position and momentum representations in Schrodinger's picture of quantum mechanics, there are also two commonly used special bases in the finitely dimensional Hilbert space studied in quantum information. The computational basis refers to classical bit strings written as the tensor product of $\{\ket{0}, \ket{1}\}$, while the dual basis, or the Fourier basis, is obtained by applying \emph{quantum Fourier transformation} (QFT) on the computational basis. The computational space refers to the space spanned by the computational basis, and similarly to the dual space, although the computational and dual spaces are isomorphic to each other.  As shown by~\citet{qft-adder}, arithmetic on the computational basis can sometimes be more efficiently carried in the dual basis, which leads to the use of quantum operations in optimizing circuits with classical functionalities. 
+
+
+\ignore{
+Applying a gate to a state \emph{evolves} the state. The semantics of doing so is expressed by multiplying the state vector by the gate's corresponding matrix representation; single-qubit gates are 2-by-2 matrices, and two-qubit gates are 4-by-4 matrices. A gate's matrix must be \emph{unitary}, ensuring that it preserves the unitarity invariant of quantum states' amplitudes. An entire circuit can be expressed as a matrix by composing its constituent gates.
+}
+
+\myparagraph{Measurement} A special, non-unitary \emph{measurement} operation extracts classical information from a quantum state, typically when a computation completes. Measurement collapses the state to a basis states with a probability related to the state's amplitudes. For example, measuring $\frac{1}{\sqrt{2}}(\ket{0} + \ket{1})$ in the computational basis will collapse the state to $\ket{0}$ with probability $\frac{1}{2}$ and likewise for $\ket{1}$, returning classical value 0 or 1, respectively. In all the programs discussed in this paper, we leave the final measurement operation implicit.
+
+\myparagraph{Quantum Algorithms and Oracles}
+
+Quantum algorithms manipulate input information encoded in ``oracles,'' which are callable black box circuits. For example, Grover's algorithm for unstructured quantum search \cite{grover1996,grover1997} is a general approach for searching a quantum ``database,''  which is encoded in an oracle for a function $f : \{0, 1\}^n \to \{0, 1\}$. Grover's finds an element $x \in \{0, 1\}^n$ such that $f(x) = 1$ using $O(2^{n/2})$ queries, a quadratic speedup over the best possible classical algorithm, which requires $\Omega(2^n)$ queries.
+% Another famous example is Shor's prime factoring algorithm \cite{shors}, which uses an oracle that performs modular exponentiation. Oracles can dominate the size of the overall quantum program: In the implementation of Shor's, more than 90\% of gates are in the oracle~\cite{Gidney2021howtofactorbit}.
+An oracle can be constructed for an arbitrary function $f$ simply by constructing a reversible classical logic circuit implementing $f$ and then replacing classical logic gates with corresponding quantum gates, e.g.,
+\texttt{X} for ``not,'' \texttt{CNOT} for ``xor,'' and \texttt{CCNOT} (aka \emph{Toffoli}) for ``and.'' However, this approach does not always produce the most efficient circuits; for example, quantum circuits for arithmetic can be made more space-efficient using the quantum Fourier transform \cite{2000quant}.
+
+%\paragraph{Uncomputation}
+
+% When quantum algorithms are applied to solve classical problems, the oracle $f$ is inherently classical. 
+% Programming oracles requires transforming a (potentially large) classical expression into a reversible classical circuit, and then into a quantum circuit.
+Transforming an irreversible computation into a quantum circuit often requires introducing ancillary qubits, or \emph{ancillae}, to store intermediate information \cite[Chapter 3.2]{mike-and-ike}.
+Oracle algorithms typically assume that the oracle circuit is reversible, so any data in ancillae must be \emph{uncomputed} by inverting the circuit that produced it.
+Failing to uncompute this information leaves it entangled with the rest of the state, potentially leading to incorrect program behavior.
+To make this uncomputation more efficient and less error-prone, recent programming languages such as Silq \cite{sliqlanguage} have developed notions of \emph{implicit} uncomputation.
+We have similar motivations in developing \name: we aim to make it easier for programmers to write efficient quantum oracles, and to assure, through verification and randomized testing, that they are correct.
+
+
+
+% Writing a quantum algorithm now, with SQIR (but likewise with Quipper, Pyquil, Circ, etc.). Example: Shor’s
+% Write quantum parts (QPE) 
+% Classical parts via library functions in meta-language (Modular multiplier)
+% Refer to particular quipper functions, e.g., for adding, subtraction, etc.
+% https://www.mathstat.dal.ca/~selinger/quipper/doc/Quipper-Libraries-QFTAdd.html qft_add_in_place :: QDInt -> QDInt -> Circ (QDInt, QDInt), Add one QDInt onto a second, in place; i.e. (x,y) ↦ (x,x+y). Arguments are assumed to be of equal size. This implementation follows the implementation in Thomas G. Draper's paper "Addition on a Quantum Computer" which doesn't require the use of any ancilla qubits through a clever use of the quantum Fourier transform.
+% Mention Q# too
+% https://github.com/microsoft/QuantumLibraries/tree/main/Numerics/src
+% Maybe Scaffold:
+% Write oracles via “RKQC intrinsic” functions (see sec 4.1 of https://iopscience.iop.org/article/10.1088/2058-9565/ab8c2c/pdf). The intrinsics they talk about here are super simple (swap two registers or add two registers together)
+% Quipper: Write in Haskell, build_circuit, is better
+% Problems to solve: Efficient compilation, verification of that compilation
+% Verification: Prior work with ReverC, but only classical gates

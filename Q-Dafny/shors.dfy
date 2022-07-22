@@ -1,31 +1,31 @@
-method Shor ( a : int, N : nat, n : nat, yv : int, x : Q[n], y : Q[n] ) returns ( xv: int )
-requires (n > 0)
-requires ( forall i, i >= 0 && i < n ==> y[i] == q0) 
-ensures (a^xv mod N == yv)
+method Shor ( a : nat, N : nat, n : nat, x : Q[n], y : Q[n] )
+ requires (n > 0)
+ requires (1 < a < N)
+ requires (N < 2^(n-1))
+ requires (gcd(a, N) == 1)
+ requires ( type(x) = Tensor n (Nor 0))
+ requires ( type(y) = Tensor n (Nor 0))
+ ensures (a^xv mod N == yv)
+ ensures (gcd(q, t) == 1)
+ ensures (is_even(t))
+ ensures (a^(t/2) + 1 divides N || a^(t/2) - 1 divides N)
+ //ensures (r.pos > (4 * e^(-2) / PI ^ 2) / (Nat.log2 N)^4)
 {
-x *= H ;
-y[0] *= X;
-for (int i = 0; i < n; x[i]; i ++)
-invariant (i <= n)
-invariant (1 < N)
-invariant (saturation(x[0..i]))
-invariant (type(x[0..i],y) = ch (2^i) (\lambda k. (k,a^k mod N))))
-invariant ((x[0..i],y) == psum(k=0,2^i,(k,a^k mod N)))
-{
-  classic(a^(2^i) * y mod N);
+  x *= H ;
+  y *= cl(y+1); //cl might be omitted.
+  for (int i = 0; i < n; x[i]; i ++)
+    invariant (0 <= i <= n)
+    invariant (saturation(x[0..i]))
+    invariant (type(x[0..i],y) = Tensor n (ch (2^i) {k | j baseof x[0..i] && k = (j,a^j mod N)}))
+    invariant ((x[0..i],y) == psum(k=0,2^i,1,(k,a^k mod N))) //psum(k=b,M,p(k),b(k)) = sum_{k=b}^M p(k)*b(k)
+  {
+    y *= cl(a^(2^i) * y mod N);
+  }
+
+ M z := measure(y);//forall x in x[0..n), valid(x) ==> z.base = a^(x.base) mod N
+ x *= RQFT;
+ M r := measure(x); //r is r.pos and r.base
+ int t := conFrac(r); //continued fraction of r.base and maintain r.pos (probability)
+ 
 }
 
-pmeasure(y,yv);
-x *= RQFT;
-float p =0;
-(p,xv)= measure(x);
-}
-
-//need lib theory:
-//f(y,f(x,b)) = f(x+y,b)
-//saturation(x[0..i]) ==> saturation(x[i+1]) 
-// ==> if x[i+1] then psum(k=0,2^(i+1),(k+2^i,f(2^i,f(k,b))) else psum(k=0,2^i,(k,f(k,b))) = psum(k=0,2^(i+1),f(k,b))
-
-//saturation(x[0..i]) ==> saturation(x[i+1]) 
-// ==> if x[i+1] then ch (2^(i+1)) (\lambda k. (k+2^i,f(2^i,f(k,b))) 
-//   else ch (2^i) (\lambda k. (k,f(k,b)) = ch (2^(i+1)) (\lambda k. (k,f(k,b))

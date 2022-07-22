@@ -1,0 +1,5 @@
+\section{Conclusion}
+
+We present \name, a framework for expressing, testing, and verifying quantum oracles. The key component of \name is \vqir, the oracle quantum assembly language, which can express a restricted class of quantum programs that are efficiently simulatable (and hence testable) and are useful for implementing quantum oracles. 
+We have verified the translator from \vqir to \sqir and have verified (or randomly tested) many arithmetic circuits written in \vqir.
+We also present \vqimp, a high-level imperative language, and compiler from \vqimp to \vqir (framework verified and arithmetic operations randomly tested). We have used \name to implement oracles and oracle components useful in quantum programming, like modular multiplication and sine, and showed that our performance is comparable to the state-of-the-art (unverified) framework Quipper. We also demonstrated the benefit of partial evaluation in \vqimp, showing that partial evaluation results in our implementation of sine using just 7\% of the qubits used in Quipper's implementation.

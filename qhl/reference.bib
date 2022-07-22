@@ -1,0 +1,2993 @@
+\RequirePackage{filecontents}
+\begin{filecontents}{reference.bib}
+
+@inproceedings{10.1145/351240.351266,
+author = {Claessen, Koen and Hughes, John},
+title = {QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs},
+year = {2000},
+isbn = {1581132026},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/351240.351266},
+doi = {10.1145/351240.351266},
+abstract = {Quick Check is a tool which aids the Haskell programmer in formulating and testing properties of programs. Properties are described as Haskell functions, and can be automatically tested on random input, but it is also possible to define custom test data generators. We present a number of case studies, in which the tool was successfully used, and also point out some pitfalls to avoid. Random testing is especially suitable for functional programs because properties can be stated at a fine grain. When a function is built from separately tested components, then random testing suffices to obtain good coverage of the definition under test.},
+booktitle = {Proceedings of the Fifth ACM SIGPLAN International Conference on Functional Programming},
+pages = {268–279},
+numpages = {12},
+series = {ICFP '00}
+}
+
+@misc{shorsprove,
+  doi = {10.48550/ARXIV.2204.07112},
+  
+  url = {https://arxiv.org/abs/2204.07112},
+  
+  author = {Peng, Yuxiang and Hietala, Kesha and Tao, Runzhou and Li, Liyi and Rand, Robert and Hicks, Michael and Wu, Xiaodi},
+  
+  keywords = {Programming Languages (cs.PL), Quantum Physics (quant-ph), FOS: Computer and information sciences, FOS: Computer and information sciences, FOS: Physical sciences, FOS: Physical sciences},
+  
+  title = {A Formally Certified End-to-End Implementation of Shor's Factorization Algorithm},
+  
+  publisher = {arXiv},
+  
+  year = {2022},
+  
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+
+
+@article{grover1997,
+  title = {Quantum Mechanics Helps in Searching for a Needle in a Haystack},
+  author = {Grover, Lov K.},
+  journal = {Phys. Rev. Lett.},
+  volume = {79},
+  issue = {2},
+  pages = {325--328},
+  year = 1997,
+  month = jul,
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.79.325},
+  eprint={quant-ph/9706033},
+  archivePrefix={arXiv}
+}
+
+@misc{chareton2021formal,
+      title={Formal Methods for Quantum Programs: A Survey}, 
+      author={Christophe Chareton and Sébastien Bardin and Dongho Lee and Benoît Valiron and Renaud Vilmart and Zhaowei Xu},
+      year={2021},
+      eprint={2109.06493},
+      archivePrefix={arXiv},
+      primaryClass={cs.PL}
+}
+
+@misc{kitaev1995quantum,
+      title={Quantum measurements and the Abelian Stabilizer Problem}, 
+      author={A. Yu. Kitaev},
+      year={1995},
+      eprint={quant-ph/9511026},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@article{entanglementdetection,
+   title={Detecting quantum entanglement with unsupervised learning},
+   volume={7},
+   ISSN={2058-9565},
+   url={http://dx.doi.org/10.1088/2058-9565/ac310f},
+   DOI={10.1088/2058-9565/ac310f},
+   number={1},
+   journal={Quantum Science and Technology},
+   publisher={IOP Publishing},
+   author={Chen, Yiwei and Pan, Yu and Zhang, Guofeng and Cheng, Shuming},
+   year={2021},
+   month={Nov},
+   pages={015005} }
+
+@misc{coppersmith2002approximate,
+      title={{An approximate Fourier transform useful in quantum factoring}}, 
+      author={D. Coppersmith},
+      year={2002},
+      eprint={quant-ph/0201067},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@article{ApproximateQFT,
+   title={{Approximate quantum Fourier transform and decoherence}},
+   volume={54},
+   ISSN={1094-1622},
+   url={http://dx.doi.org/10.1103/PhysRevA.54.139},
+   DOI={10.1103/physreva.54.139},
+   number={1},
+   journal={Physical Review A},
+   publisher={American Physical Society (APS)},
+   author={Barenco, Adriano and Ekert, Artur and Suominen, Kalle-Antti and Törmä, Päivi},
+   year={1996},
+   month={Jul},
+   pages={139–146} }
+
+@article{quantumseparation,
+author = {Le, Xuan-Bach and Lin, Shang-Wei and Sun, Jun and Sanan, David},
+title = {{A Quantum Interpretation of Separating Conjunction for Local Reasoning of Quantum Programs Based on Separation Logic}},
+year = {2022},
+issue_date = {January 2022},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {6},
+number = {POPL},
+url = {https://doi.org/10.1145/3498697},
+doi = {10.1145/3498697},
+abstract = {It is well-known that quantum programs are not only complicated to design but also challenging to verify because the quantum states can have exponential size and require sophisticated mathematics to encode and manipulate. To tackle the state-space explosion problem for quantum reasoning, we propose a Hoare-style inference framework that supports local reasoning for quantum programs. By providing a quantum interpretation of the separating conjunction, we are able to infuse separation logic into our framework and apply local reasoning using a quantum frame rule that is similar to the classical frame rule. For evaluation, we apply our framework to verify various quantum programs including Deutsch–Jozsa’s algorithm and Grover's algorithm.},
+journal = {Proc. ACM Program. Lang.},
+month = {jan},
+articleno = {36},
+numpages = {27},
+keywords = {Verification, Formal Semantics, Quantum Computing}
+}
+
+@article{GROENEWOLD1946405,
+title = {On the principles of elementary quantum mechanics},
+journal = {Physica},
+volume = {12},
+number = {7},
+pages = {405-460},
+year = {1946},
+issn = {0031-8914},
+doi = {https://doi.org/10.1016/S0031-8914(46)80059-4},
+url = {https://www.sciencedirect.com/science/article/pii/S0031891446800594},
+author = {H.J. Groenewold},
+}
+
+@article{templatehaskell,
+author = {Sheard, Tim and {Peyton Jones}, Simon},
+title = {Template Meta-Programming for Haskell},
+year = {2002},
+issue_date = {December 2002},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {37},
+number = {12},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/636517.636528},
+doi = {10.1145/636517.636528},
+journal = {SIGPLAN Not.},
+month = dec,
+pages = {60–75},
+numpages = {16},
+keywords = {templates, Meta programming}
+}
+
+
+@inproceedings{PQPC,
+  title = {Proving Quantum Programs Correct},
+  booktitle = {Proceedings of the Conference on Interative Theorem Proving (ITP)},
+  author = {Kesha Hietala and Robert Rand and Shih-Han Hung and Liyi Li and Michael Hicks},
+  year = 2021,
+  month = jun
+}
+
+@phdthesis{Quantumcircuitdesign,
+    title    = {{Quantum circuit design for quantum walks}},
+    school   = {the University of Western Australia},
+    author   = {Loke, Thomas},
+    year     = {2017}
+}
+
+@inproceedings{10.1145/1706299.1706337,
+author = {Srivastava, Saurabh and Gulwani, Sumit and Foster, Jeffrey S.},
+title = {From Program Verification to Program Synthesis},
+year = {2010},
+isbn = {9781605584799},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1706299.1706337},
+doi = {10.1145/1706299.1706337},
+abstract = {This paper describes a novel technique for the synthesis of imperative programs. Automated program synthesis has the potential to make programming and the design of systems easier by allowing programs to be specified at a higher-level than executable code. In our approach, which we call proof-theoretic synthesis, the user provides an input-output functional specification, a description of the atomic operations in the programming language, and a specification of the synthesized program's looping structure, allowed stack space, and bound on usage of certain operations. Our technique synthesizes a program, if there exists one, that meets the input-output specification and uses only the given resources.The insight behind our approach is to interpret program synthesis as generalized program verification, which allows us to bring verification tools and techniques to program synthesis. Our synthesis algorithm works by creating a program with unknown statements, guards, inductive invariants, and ranking functions. It then generates constraints that relate the unknowns and enforces three kinds of requirements: partial correctness, loop termination, and well-formedness conditions on program guards. We formalize the requirements that program verification tools must meet to solve these constraint and use tools from prior work as our synthesizers.We demonstrate the feasibility of the proposed approach by synthesizing programs in three different domains: arithmetic, sorting, and dynamic programming. Using verification tools that we previously built in the VS3 project we are able to synthesize programs for complicated arithmetic algorithms including Strassen's matrix multiplication and Bresenham's line drawing; several sorting algorithms; and several dynamic programming algorithms. For these programs, the median time for synthesis is 14 seconds, and the ratio of synthesis to verification time ranges between 1x to 92x (with an median of 7x), illustrating the potential of the approach.},
+booktitle = {Proceedings of the 37th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {313–326},
+numpages = {14},
+keywords = {verification, proof-theoretic program synthesis},
+location = {Madrid, Spain},
+series = {POPL '10}
+}
+
+@inproceedings{DBLP:conf/pldi/Qiu0SM13,
+  author    = {Xiaokang Qiu and
+               Pranav Garg and
+               Andrei Stefanescu and
+               Parthasarathy Madhusudan},
+  editor    = {Hans{-}Juergen Boehm and
+               Cormac Flanagan},
+  title     = {Natural proofs for structure, data, and separation},
+  booktitle = {{ACM} {SIGPLAN} Conference on Programming Language Design and Implementation,
+               {PLDI} '13, Seattle, WA, USA, June 16-19, 2013},
+  pages     = {231--242},
+  publisher = {{ACM}},
+  year      = {2013},
+  url       = {https://doi.org/10.1145/2491956.2462169},
+  doi       = {10.1145/2491956.2462169},
+  timestamp = {Sun, 25 Oct 2020 22:43:28 +0100},
+  biburl    = {https://dblp.org/rec/conf/pldi/Qiu0SM13.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{10.1145/1993316.1993557,
+author = {Srivastava, Saurabh and Gulwani, Sumit and Chaudhuri, Swarat and Foster, Jeffrey S.},
+title = {{Path-Based Inductive Synthesis for Program Inversion}},
+year = {2011},
+issue_date = {June 2011},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {46},
+number = {6},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/1993316.1993557},
+doi = {10.1145/1993316.1993557},
+abstract = {In this paper, we investigate the problem of semi-automated inversion of imperative programs, which has the potential to make it much easier and less error prone to write programs that naturally pair as inverses, such as insert/delete operations, compressors/decompressors, and so on. Viewing inversion as a subproblem of program synthesis, we propose a novel synthesis technique called Path-based inductive synthesis (PINS) and apply it to inversion. PINS starts from a program P and a template T for its inverse. PINS then iteratively refines the space of template instantiations by exploring paths in the composition of P and T with symbolic execution. PINS uses an SMT solver to intelligently guide the refinement process, based on the paths explored so far. The key idea motivating this approach is the small path-bound hypothesis: that the behavior of a program can be summarized with a small, carefully chosen set of its program paths.We evaluated PINS by using it to invert 14 programs such as compressors (e.g., Lempel-Ziv-Welch), encoders (e.g., UUEncode), and arithmetic operations (e.g., vector rotation). Most of these examples are difficult or impossible to invert using prior techniques, but PINS was able to invert all of them. We also found that a semi-automated technique we developed to mine a template from the program to be inverted worked well. In our experiments, PINS takes between one second to thirty minutes to synthesize inverses. We believe this proof-of-concept implementation demonstrates the viability of the PINS approach to program synthesis.},
+journal = {SIGPLAN Not.},
+month = {jun},
+pages = {492–503},
+numpages = {12},
+keywords = {symbolic execution, pins, testing-inspired synthesis, inductive synthesis, program inversion}
+}
+
+
+@article{10.1145/1993316.1993506,
+author = {Gulwani, Sumit and Jha, Susmit and Tiwari, Ashish and Venkatesan, Ramarathnam},
+title = {{Synthesis of Loop-Free Programs}},
+year = {2011},
+issue_date = {June 2011},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {46},
+number = {6},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/1993316.1993506},
+doi = {10.1145/1993316.1993506},
+abstract = {We consider the problem of synthesizing loop-free programs that implement a desired functionality using components from a given library. Specifications of the desired functionality and the library components are provided as logical relations between their respective input and output variables. The library components can be used at most once, and hence the library is required to contain a reasonable overapproximation of the multiset of the components required.We solve the above component-based synthesis problem using a constraint-based approach that involves first generating a synthesis constraint, and then solving the constraint. The synthesis constraint is a first-order ∃∀ logic formula whose size is quadratic in the number of components. We present a novel algorithm for solving such constraints. Our algorithm is based on counterexample guided iterative synthesis paradigm and uses off-the-shelf SMT solvers.We present experimental results that show that our tool Brahma can efficiently synthesize highly nontrivial 10-20 line loop-free bitvector programs. These programs represent a state space of approximately 2010 programs, and are beyond the reach of the other tools based on sketching and superoptimization.},
+journal = {SIGPLAN Not.},
+month = {jun},
+pages = {62–73},
+numpages = {12},
+keywords = {program synthesis, smt, component-based synthesis}
+}
+
+@inproceedings{VOQC,
+  author = {Kesha Hietala and Robert Rand and Shih-Han Hung and Xiaodi Wu and Michael Hicks},
+  title = {A Verified Optimizer for Quantum Circuits},
+  booktitle = {Proceedings of the {ACM} Conference on Principles of Programming Languages (POPL)},
+  month = jan,
+  year = {2021}
+}
+
+@article{Childs2019CircuitTF,
+  title={Circuit Transformations for Quantum Architectures},
+  author={Andrew M. Childs and Eddie Schoute and Cem M. Unsal},
+  journal={ArXiv},
+  year={2019},
+  volume={abs/1902.09102}
+}
+
+@Inbook{Handschuh2011,
+author="Handschuh, Helena",
+editor="van Tilborg, Henk C. A.
+and Jajodia, Sushil",
+title="SHA-0, SHA-1, SHA-2 (Secure Hash Algorithm)",
+bookTitle="Encyclopedia of Cryptography and Security",
+year="2011",
+publisher="Springer US",
+address="Boston, MA",
+pages="1190--1193",
+isbn="978-1-4419-5906-5",
+doi="10.1007/978-1-4419-5906-5_615",
+url="https://doi.org/10.1007/978-1-4419-5906-5_615"
+}
+
+
+@inproceedings{Rand2018ReQWIRERA,
+  title={ReQWIRE: Reasoning about Reversible Quantum Circuits},
+  author={Robert Rand and Jennifer Paykin and Dong-Ho Lee and S. Zdancewic},
+  booktitle={QPL},
+  year={2018}
+}
+
+@misc{nikahd2015oneway,
+      title={One-Way Quantum Computer Simulation}, 
+      author={Eesa Nikahd and Mahboobeh Houshmand and Morteza Saheb Zamani and Mehdi Sedighi},
+      year={2015},
+      eprint={1604.05659},
+      archivePrefix={arXiv},
+      primaryClass={cs.ET}
+}
+
+@article{Emery2009,
+	abstract = {Current tools for fatigue life prediction of metallic structural components are limited in some or all of the following capabilities: geometry of, and boundary conditions on, the affected structural component, automation of the simulation process, randomness of the primary variables, and physics of the damage evolution processes.DDSim, a next-generation damage and durability simulator, addresses each of these limitations with a hierarchical, multiscale, “search and simulate” strategy. This hierarchical strategy consists of three levels. Level I, described in this paper, performs an initial, reduced order, conservative screening, based on a linear finite element analysis of the uncracked component, to determine the most life-limiting locations for intrinsic material flaws. Initial flaw size can be specified deterministically, or generated randomly from statistical descriptions of the microstructure and used in Monte Carlo simulation. The result is a scalar field of predicted life over the entire domain of the structure. The benefits of the Level I analysis include a high degree of automation, solution speed, and easy implementation of high performance parallel computing resources. A validation case study of Level I is described.Levels II and III are outlined herein, but will be described in further detail in subsequent papers. The Level II analysis uses FRANC3D to accurately predict the number of cycles consumed by microstructurally large crack growth processes. Level III performs multiscale analyses to accurately predict the cycles consumed in microstructurally small crack growth processes.},
+	affiliation = {Sandia National Laboratories, Solid Mechanics Department, P.O. Box 5800, MS0346, Albuquerque, NM 87185, United States; The Cornell Fracture Group, Cornell University, Ithaca, NY, United States; Fracture Analysis Consultants, Ithaca, NY, United States},
+	author = {Emery, J.M. and Hochhalter, J.D. and Wawrzynek, P.A. and Heber, G. and Ingraffea, A.R.},
+	doi = {10.1016/j.engfracmech.2009.02.018},
+	journal = {Engineering Fracture Mechanics},
+	keywords = {Damage tolerance; Durability; Fatigue; Multiscale; Microstructural; Probabilistic; Monte Carlo},
+	language = {English},
+	number = {10},
+	pages = {1500-1530},
+	title = {{DDSim: A hierarchical, probabilistic, multiscale damage and durability simulation system – Part I: Methodology and Level I}},
+	volume = {76},
+	year = {2009},
+}
+
+@misc{Giovannetti2008,
+   title={{Quantum Random Access Memory}},
+   volume={100},
+   ISSN={1079-7114},
+   url={http://dx.doi.org/10.1103/PhysRevLett.100.160501},
+   DOI={10.1103/physrevlett.100.160501},
+   number={16},
+   journal={Physical Review Letters},
+   publisher={American Physical Society (APS)},
+   author={Giovannetti, Vittorio and Lloyd, Seth and Maccone, Lorenzo},
+   year={2008},
+   month={Apr}
+}
+
+
+@article{Quantumsimulation,
+  title = {Quantum simulation},
+  author = {Georgescu, I. M. and Ashhab, S. and Nori, Franco},
+  journal = {Rev. Mod. Phys.},
+  volume = {86},
+  issue = {1},
+  pages = {153--185},
+  numpages = {33},
+  year = {2014},
+  month = {Mar},
+  publisher = {American Physical Society},
+  doi = {10.1103/RevModPhys.86.153},
+  url = {https://link.aps.org/doi/10.1103/RevModPhys.86.153}
+}
+
+@book{partialeval,
+author = {Jones, Neil D. and Gomard, Carsten K. and Sestoft, Peter},
+title = {Partial Evaluation and Automatic Program Generation},
+year = {1993},
+isbn = {0130202495},
+publisher = {Prentice-Hall, Inc.},
+address = {USA}
+}
+
+
+@article{ccx-adder,
+author = {H\"{a}ner, Thomas and Roetteler, Martin and Svore, Krysta M.},
+title = {Factoring Using 2n + 2 Qubits with Toffoli Based Modular Multiplication},
+year = {2017},
+issue_date = {June 2017},
+publisher = {Rinton Press, Incorporated},
+address = {Paramus, NJ},
+volume = {17},
+number = {7–8},
+issn = {1533-7146},
+abstract = {We describe an implementation of Shor's quantum algorithm to factor n-bit integers using only 2n+2 qubits. In contrast to previous space-optimized implementations, ours features a purely Toffoli based modular multiplication circuit. The circuit depth and the overall gate count are in O(n3) and O(n3 logn), respectively. We thus achieve the same space and time costs as Takahashi et al. [1], while using a purely classical modular multiplication circuit. As a consequence, our approach evades most of the cost overheads originating from rotation synthesis and enables testing and localization of some faults in both, the logical level circuit and an actual quantum hardware implementation. Our new (in-place) constant-adder, which is used to construct the modular multiplication circuit, uses only dirty ancilla qubits and features a circuit size and depth in O(nlogn) and O(n), respectively.},
+journal = {Quantum Info. Comput.},
+month = jun,
+pages = {673–684},
+numpages = {12},
+keywords = {quantum circuits, quantum arithmetic, Shor's algorithm}
+}
+
+@article{Giovannetti_2008,
+   title={Quantum Private Queries},
+   volume={100},
+   ISSN={1079-7114},
+   url={http://dx.doi.org/10.1103/PhysRevLett.100.230502},
+   DOI={10.1103/physrevlett.100.230502},
+   number={23},
+   journal={Physical Review Letters},
+   publisher={American Physical Society (APS)},
+   author={Giovannetti, Vittorio and Lloyd, Seth and Maccone, Lorenzo},
+   year={2008},
+   month={Jun}
+}
+
+@article{Berry_2015a,
+   title={Hamiltonian Simulation with Nearly Optimal Dependence on all Parameters},
+   ISBN={9781467381918},
+   url={http://dx.doi.org/10.1109/FOCS.2015.54},
+   DOI={10.1109/focs.2015.54},
+   journal={2015 IEEE 56th Annual Symposium on Foundations of Computer Science},
+   publisher={IEEE},
+   author={Berry, Dominic W. and Childs, Andrew M. and Kothari, Robin},
+   year={2015},
+   month={Oct}
+}
+
+
+@article{Brassard_1998,
+   title={Quantum cryptanalysis of hash and claw-free functions},
+   ISBN={9783540697152},
+   ISSN={1611-3349},
+   url={http://dx.doi.org/10.1007/BFb0054319},
+   DOI={10.1007/bfb0054319},
+   journal={Lecture Notes in Computer Science},
+   publisher={Springer Berlin Heidelberg},
+   author={Brassard, Gilles and HØyer, Peter and Tapp, Alain},
+   year={1998},
+   pages={163–169}
+}
+
+@article{appox-qft2,
+   title={{Approximate quantum Fourier transform with O(n log(n)) T gates}},
+   volume={6},
+   ISSN={2056-6387},
+   url={http://dx.doi.org/10.1038/s41534-020-0257-5},
+   DOI={10.1038/s41534-020-0257-5},
+   number={1},
+   journal={npj Quantum Information},
+   publisher={Springer Science and Business Media LLC},
+   author={Nam, Yunseong and Su, Yuan and Maslov, Dmitri},
+   year={2020},
+   month={Mar}
+}
+
+@article{qft-signalp,
+author = {Gyongyosi, Laszlo and Imre, Sandor},
+year = {2012},
+month = {07},
+pages = {},
+title = {{An Improvement in quantum Fourier transform}}
+}
+
+@misc{cornwell2012amplified,
+      title={The Amplified quantum Fourier transform: solving the local period problem}, 
+      author={David J. Cornwell},
+      year={2012},
+      eprint={1010.0033},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@INPROCEEDINGS{appox-qft1,
+  author={Hales, L. and Hallgren, S.},
+  booktitle={Proceedings 41st Annual Symposium on Foundations of Computer Science}, 
+  title={{An improved quantum Fourier transform algorithm and applications}}, 
+  year={2000},
+  volume={},
+  number={},
+  pages={515-525},
+  doi={10.1109/SFCS.2000.892139}}
+
+
+@book{mike-and-ike,
+author = {Nielsen, Michael A. and Chuang, Isaac L.},
+title = {Quantum Computation and Quantum Information},
+year = {2011},
+isbn = {1107002176},
+publisher = {Cambridge University Press},
+address = {USA},
+edition = {10th Anniversary},
+abstract = {One of the most cited books in physics of all time, Quantum Computation and Quantum Information remains the best textbook in this exciting field of science. This 10th anniversary edition includes an introduction from the authors setting the work in context. This comprehensive textbook describes such remarkable effects as fast quantum algorithms, quantum teleportation, quantum cryptography and quantum error-correction. Quantum mechanics and computer science are introduced before moving on to describe what a quantum computer is, how it can be used to solve problems faster than 'classical' computers and its real-world implementation. It concludes with an in-depth treatment of quantum information. Containing a wealth of figures and exercises, this well-known textbook is ideal for courses on the subject, and will interest beginning graduate students and researchers in physics, computer science, mathematics, and electrical engineering.}
+}
+
+@INPROCEEDINGS{shors,
+  author={Shor, P.W.},
+  booktitle={Proceedings 35th Annual Symposium on Foundations of Computer Science}, 
+  title={Algorithms for quantum computation: discrete logarithms and factoring}, 
+  year={1994},
+  volume={},
+  number={},
+  pages={124-134},
+  doi={10.1109/SFCS.1994.365700}}
+
+@article{Gidney2019ApproximateEP,
+  title={Approximate encoded permutations and piecewise quantum adders},
+  author={Craig Gidney},
+  journal={arXiv: Quantum Physics},
+  year={2019}
+}
+
+@article{qft-adder,
+author = {Beauregard, Stephane},
+title = {Circuit for Shor's Algorithm Using 2n+3 Qubits},
+year = {2003},
+issue_date = {March 2003},
+publisher = {Rinton Press, Incorporated},
+address = {Paramus, NJ},
+volume = {3},
+number = {2},
+issn = {1533-7146},
+abstract = {We try to minimize the number of qubits needed to factor an integer of n bits using Shor's algorithm on a quantum computer. We introduce a circuit which uses 2n + 3 qubits and 0(n3lg(n)) elementary quantum gates in a depth of 0(n3) to implement the factorization algorithm. The circuit is computable in polynomial time on a classical computer and is completely general as it does not rely on any property of the number to be factored.},
+journal = {Quantum Info. Comput.},
+month = mar,
+pages = {175–185},
+numpages = {11},
+keywords = {factorization, modular arithmetics, quantum circuits}
+}
+
+@ARTICLE{quantumssa,
+       author = {{Ittah}, David and {H{\"a}ner}, Thomas and {Kliuchnikov}, Vadym and {Hoefler}, Torsten},
+        title = "{Enabling Dataflow Optimization for Quantum Programs}",
+      journal = {arXiv e-prints},
+     keywords = {Quantum Physics, Computer Science - Emerging Technologies, Computer Science - Programming Languages},
+         year = 2021,
+        month = jan,
+          eid = {arXiv:2101.11030},
+        pages = {arXiv:2101.11030},
+archivePrefix = {arXiv},
+       eprint = {2101.11030},
+ primaryClass = {quant-ph},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2021arXiv210111030I},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+@inproceedings{10.1145/2491956.2462177,
+author = {Green, Alexander S. and Lumsdaine, Peter LeFanu and Ross, Neil J. and Selinger, Peter and Valiron, Beno\^{\i}t},
+title = {Quipper: A Scalable Quantum Programming Language},
+year = {2013},
+isbn = {9781450320146},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi-org.proxy-um.researchport.umd.edu/10.1145/2491956.2462177},
+doi = {10.1145/2491956.2462177},
+abstract = {The field of quantum algorithms is vibrant. Still, there is currently a lack of programming languages for describing quantum computation on a practical scale, i.e., not just at the level of toy problems. We address this issue by introducing Quipper, a scalable, expressive, functional, higher-order quantum programming language. Quipper has been used to program a diverse set of non-trivial quantum algorithms, and can generate quantum gate representations using trillions of gates. It is geared towards a model of computation that uses a classical computer to control a quantum device, but is not dependent on any particular model of quantum hardware. Quipper has proven effective and easy to use, and opens the door towards using formal methods to analyze quantum algorithms.},
+booktitle = {Proceedings of the 34th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {333–342},
+numpages = {10},
+keywords = {quipper, quantum programming languages},
+location = {Seattle, Washington, USA},
+series = {PLDI '13}
+}
+
+
+@book{Hoare:1985:CSP:3921,
+ author = {Hoare, C. A. R.},
+ title = {Communicating sequential processes},
+ year = {1985},
+ isbn = {0-13-153271-5},
+ publisher = {Prentice-Hall, Inc.},
+ address = {Upper Saddle River, NJ, USA},
+} 
+
+@article{2000quant,
+       author = {{Draper}, Thomas G.},
+        title = "{Addition on a Quantum Computer}",
+      journal = {arXiv e-prints},
+     keywords = {Quantum Physics},
+         year = 2000,
+        month = aug,
+          eid = {quant-ph/0008033},
+        pages = {quant-ph/0008033},
+archivePrefix = {arXiv},
+       eprint = {quant-ph/0008033},
+ primaryClass = {quant-ph},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2000quant.ph..8033D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+@InProceedings{quickchick,
+author="Paraskevopoulou, Zoe
+and Hri{\c{T}}cu, C{\u{a}}t{\u{a}}lin
+and D{\'e}n{\`e}s, Maxime
+and Lampropoulos, Leonidas
+and Pierce, Benjamin C.",
+editor="Urban, Christian
+and Zhang, Xingyuan",
+title="Foundational Property-Based Testing",
+booktitle="Interactive Theorem Proving",
+year="2015",
+publisher="Springer International Publishing",
+address="Cham",
+pages="325--343",
+abstract="Integrating property-based testing with a proof assistant creates an interesting opportunity: reusable or tricky testing code can be formally verified using the proof assistant itself. In this work we introduce a novel methodology for formally verified property-based testing and implement it as a foundational verification framework for QuickChick, a port of QuickCheck to Coq. Our framework enables one to verify that the executable testing code is testing the right Coq property. To make verification tractable, we provide a systematic way for reasoning about the set of outcomes a random data generator can produce with non-zero probability, while abstracting away from the actual probabilities. Our framework is firmly grounded in a fully verified implementation of QuickChick itself, using the same underlying verification methodology. We also apply this methodology to a complex case study on testing an information-flow control abstract machine, demonstrating that our verification methodology is modular and scalable and that it requires minimal changes to existing code.",
+isbn="978-3-319-22102-1",
+doi={10.1007/978-3-319-22102-1_22}
+}
+
+@InProceedings{Kissinger2015,
+author="Kissinger, Aleks
+and Zamdzhiev, Vladimir",
+editor="Felty, Amy P.
+and Middeldorp, Aart",
+title="Quantomatic: A proof assistant for diagrammatic reasoning",
+booktitle="Automated Deduction - CADE-25",
+year="2015",
+publisher="Springer International Publishing",
+address="Cham",
+pages="326--336",
+}
+
+@article{Berry_2015,
+   title={{Simulating Hamiltonian Dynamics with a Truncated Taylor Series}},
+   volume={114},
+   ISSN={1079-7114},
+   number={9},
+   journal={Physical Review Letters},
+   publisher={American Physical Society (APS)},
+   author={Berry, Dominic W. and Childs, Andrew M. and Cleve, Richard and Kothari, Robin and Somma, Rolando D.},
+   year={2015},
+   month={Mar}
+}
+
+@article{Low_2019,
+   title={{Hamiltonian Simulation by Qubitization}},
+   volume={3},
+   ISSN={2521-327X},
+   journal={Quantum},
+   publisher={Verein zur Forderung des Open Access Publizierens in den Quantenwissenschaften},
+   author={Low, Guang Hao and Chuang, Isaac L.},
+   year={2019},
+   month={Jul},
+   pages={163}
+}
+
+@article{Tarrataca_2010,
+   title={Tree search and quantum computation},
+   volume={10},
+   ISSN={1573-1332},
+   url={http://dx.doi.org/10.1007/s11128-010-0212-z},
+   DOI={10.1007/s11128-010-0212-z},
+   number={4},
+   journal={Quantum Information Processing},
+   publisher={Springer Science and Business Media LLC},
+   author={Tarrataca, Luís and Wichert, Andreas},
+   year={2010},
+   month={Nov},
+   pages={475–500}
+}
+
+@article{Low_2017,
+   title={{Optimal Hamiltonian Simulation by Quantum Signal Processing}},
+   volume={118},
+   ISSN={1079-7114},
+   number={1},
+   journal={Physical Review Letters},
+   publisher={American Physical Society (APS)},
+   author={Low, Guang Hao and Chuang, Isaac L.},
+   year={2017},
+   month={Jan}
+}
+
+@inproceedings{Core_Calculus,
+author = {Abadi, Mart\'{\i}n and Banerjee, Anindya and Heintze, Nevin and Riecke, Jon G.},
+title = {{A Core Calculus of Dependency}},
+year = {1999},
+isbn = {1581130953},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+booktitle = {Proceedings of the 26th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {147–160},
+numpages = {14},
+location = {San Antonio, Texas, USA},
+series = {POPL '99}
+}
+
+
+@ARTICLE{Sabelfeld-flow,
+  author={Sabelfeld, A. and Myers, A.C.},
+  journal={IEEE Journal on Selected Areas in Communications}, 
+  title={{Language-based information-flow security}}, 
+  year={2003},
+  volume={21},
+  number={1},
+  pages={5-19},
+  doi={10.1109/JSAC.2002.806121}}
+
+
+@article{feynman1982simulating,
+  added-at = {2019-02-26T21:36:34.000+0100},
+  author = {Feynman, Richard P},
+  biburl = {https://www.bibsonomy.org/bibtex/213ff745d56ca88760b0e36f2b112e7a4/rspreeuw},
+  interhash = {e7b5cbbbe625b40aca61c24bdbee745d},
+  intrahash = {13ff745d56ca88760b0e36f2b112e7a4},
+  journal = {International journal of theoretical physics},
+  keywords = {imported},
+  number = {6/7},
+  pages = {467--488},
+  publisher = {World Scientific},
+  timestamp = {2019-02-26T21:36:34.000+0100},
+  title = {{Simulating physics with computers}},
+  volume = 21,
+  year = 1982
+}
+
+@article{Berry_2006,
+   title={{Efficient Quantum Algorithms for Simulating Sparse Hamiltonians}},
+   volume={270},
+   ISSN={1432-0916},
+   number={2},
+   journal={Communications in Mathematical Physics},
+   publisher={Springer Science and Business Media LLC},
+   author={Berry, Dominic W. and Ahokas, Graeme and Cleve, Richard and Sanders, Barry C.},
+   year={2006},
+   month={Dec},
+   pages={359–371}
+}
+
+@article{Childs_2009,
+   title={{On the Relationship Between Continuous- and Discrete-Time Quantum Walk}},
+   volume={294},
+   ISSN={1432-0916},
+   number={2},
+   journal={Communications in Mathematical Physics},
+   publisher={Springer Science and Business Media LLC},
+   author={Childs, Andrew M.},
+   year={2009},
+   month={Oct},
+   pages={581–603}
+}
+
+@article{Draper2000AdditionOA,
+  title={{Addition on a Quantum Computer}},
+  author={Thomas G. Draper},
+  journal={arXiv: Quantum Physics},
+  year={2000}
+}
+
+@article{ripple-carry-mod,
+author = {Markov, Igor L. and Saeedi, Mehdi},
+title = {Constant-Optimized Quantum Circuits for Modular Multiplication and Exponentiation},
+year = {2012},
+issue_date = {May 2012},
+publisher = {Rinton Press, Incorporated},
+address = {Paramus, NJ},
+volume = {12},
+number = {5–6},
+issn = {1533-7146},
+abstract = {Reversible circuits for modular multiplication Cx%M with x < M arise as components of modular exponentiation in Shor's quantum number-factoring algorithm. However, existing generic constructions focus on asymptotic gate count and circuit depth rather than actual values, producing fairly large circuits not optimized for specific C and M values. In this work, we develop such optimizations in a bottom-up fashion, starting with most convenient C values. When zero-initialized ancilla registers are available, we reduce the search for compact circuits to a shortest-path problem. Some of our modular-multiplication circuits are asymptotically smaller than previous constructions, but worst-case bounds and average sizes remain Θ(n2). In the context of modular exponentiation, we offer several constant-factor improvements, as well as an improvement by a constant additive term that is significant for few-qubit circuits arising in ongoing laboratory experiments with Shor's algorithm.},
+journal = {Quantum Info. Comput.},
+month = may,
+pages = {361–394},
+numpages = {34},
+keywords = {modular multiplication, Shor's quantum factoring algorithm, quantum circuits, modular exponentiation}
+}
+
+@article{ripple-carry,
+author = {Cuccaro, Steven and Draper, Thomas and Kutin, Samuel and Moulton, David},
+year = {2004},
+month = {11},
+pages = {},
+title = {A new quantum ripple-carry addition circuit}
+}
+
+@inproceedings{Cranen:2013:OMT:2450387.2450410,
+ author = {Cranen, Sjoerd and Groote, Jan Friso and Keiren, Jeroen J. A. and Stappers, Frank P. M. and de Vink, Erik P. and Wesselink, Wieger and Willemse, Tim A. C.},
+ title = {An Overview of the mCRL2 Toolset and Its Recent Advances},
+ booktitle = {Proceedings of the 19th International Conference on Tools and Algorithms for the Construction and Analysis of Systems},
+ series = {TACAS'13},
+ year = {2013},
+ isbn = {978-3-642-36741-0},
+ location = {Rome, Italy},
+ pages = {199--213},
+ numpages = {15},
+ acmid = {2450410},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@inproceedings{Keiren:2009:BMB:1965974.1965988,
+ author = {Keiren, Jeroen J. A. and Willemse, Tim A. C.},
+ title = {Bisimulation Minimisations for Boolean Equation Systems},
+ booktitle = {Proceedings of the 5th International Haifa Verification Conference on Hardware and Software: Verification and Testing},
+ series = {HVC'09},
+ year = {2011},
+ isbn = {978-3-642-19236-4},
+ location = {Haifa, Israel},
+ pages = {102--116},
+ numpages = {15},
+ url = {http://dl.acm.org/citation.cfm?id=1965974.1965988},
+ acmid = {1965988},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@INPROCEEDINGS{Groote07theformal,
+    author = {Jan Friso Groote and Aad Mathijssen and Michel Reniers and Yaroslav Usenko and Muck Van Weerdenburg},
+    title = {The Formal Specification Language mCRL2},
+    booktitle = {In Proceedings of the Dagstuhl Seminar},
+    year = {2007},
+    publisher = {MIT Press}
+}
+
+@inproceedings{serbanuta-rosu-2010-wrla,
+    author = "\c{S}erbanu\c{t}\u{a}, Traian Florin and Ro\c{s}u, Grigore",
+    publisher = "Springer",
+    doi = "http://dx.doi.org/10.1007/978-3-642-16310-4_8",
+    title = "{K-Maude}: A Rewriting Based Tool for Semantics of Programming Languages",
+    booktitle = "Proceedings of the 8th International Workshop on Rewriting Logic and Its Applications (WRLA'10)",
+    month = "March",
+    year = "2010",
+    pages = "104-122"
+}
+
+@inproceedings{rosu-ellison-schulte-2010-amast,
+title = {Matching Logic: An Alternative to {H}oare/{F}loyd Logic},
+author = {Ro\c{s}u, Grigore and Ellison, Chucky and Schulte, Wolfram},
+booktitle = {Proceedings of the 13th International Conference on Algebraic Methodology And Software Technology (AMAST '10)},
+year = {2010},
+series = {Lecture Notes in Computer Science},
+editor={Johnson, Michael and Pavlovic, Dusko},
+volume = {6486},
+pages={142-162},
+isbn={978-3-642-17795-8},
+}
+
+@inproceedings{hills-rosu-2008-wadt-b,
+title="Towards a Module System for K",
+author={Mark Hills and Grigore Ro\c{s}u},
+booktitle={Recent Trends in Algebraic Development Techniques (WADT'08)},
+series={Lecture Notes in Computer Science},
+volume={5486},
+year={2008},
+pages={187-205}
+}
+
+@article{Park_2019,
+   title={Circuit-Based Quantum Random Access Memory for Classical Data},
+   volume={9},
+   ISSN={2045-2322},
+   url={http://dx.doi.org/10.1038/s41598-019-40439-3},
+   DOI={10.1038/s41598-019-40439-3},
+   number={1},
+   journal={Scientific Reports},
+   publisher={Springer Science and Business Media LLC},
+   author={Park, Daniel K. and Petruccione, Francesco and Rhee, June-Koo Kevin},
+   year={2019},
+   month={Mar}
+}
+
+@article{Veras_2020,
+   title={Circuit-based quantum random access memory for classical data with continuous amplitudes},
+   ISSN={2326-3814},
+   url={http://dx.doi.org/10.1109/TC.2020.3037932},
+   DOI={10.1109/tc.2020.3037932},
+   journal={IEEE Transactions on Computers},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Veras, Tiago M. L. and De Araujo, Ismael C. S. and Park, K. Daniel and Dasilva, Adenilton J.},
+   year={2020},
+   pages={1–1}
+}
+
+@article{ChildsNAND,
+author = {Childs, Andrew and Reichardt, Ben and Spalek, Robert and Zhang, Shengyu},
+year = {2007},
+month = {03},
+pages = {},
+title = {{Every NAND formula of size N can be evaluated in time $N^{1/2+o(1)}$ on a Quantum Computer}}
+}
+
+@INPROCEEDINGS{1366221,
+  author={Ambainis, A.},
+  booktitle={45th Annual IEEE Symposium on Foundations of Computer Science}, 
+  title={Quantum walk algorithm for element distinctness}, 
+  year={2004},
+  volume={},
+  number={},
+  pages={22-31},
+  doi={10.1109/FOCS.2004.54}}
+
+@article{Brassard_1998,
+   title={Quantum cryptanalysis of hash and claw-free functions},
+   ISBN={9783540697152},
+   ISSN={1611-3349},
+   url={http://dx.doi.org/10.1007/BFb0054319},
+   DOI={10.1007/bfb0054319},
+   journal={Lecture Notes in Computer Science},
+   publisher={Springer Berlin Heidelberg},
+   author={Brassard, Gilles and HØyer, Peter and Tapp, Alain},
+   year={1998},
+   pages={163–169}
+}
+
+@article{Giovannetti20082,
+   title={Quantum Private Queries},
+   volume={100},
+   ISSN={1079-7114},
+   url={http://dx.doi.org/10.1103/PhysRevLett.100.230502},
+   DOI={10.1103/physrevlett.100.230502},
+   number={23},
+   journal={Physical Review Letters},
+   publisher={American Physical Society (APS)},
+   author={Giovannetti, Vittorio and Lloyd, Seth and Maccone, Lorenzo},
+   year={2008},
+   month={Jun}
+}
+
+
+@inproceedings{serbanuta-stefanescu-rosu-2008-wmc,
+author= {Traian Florin {\c S}erb{\u a}nu{\c t}{\u a} and Gheorghe {\c S}tef{\u a}nescu and  Grigore Ro{\c s}u},
+title = {Defining and Executing {P} Systems with Structured Data in  {K} },
+booktitle = {Workshop on Membrane Computing (WMC'08)},
+editor = {David W. Corne and  Pierluigi Frisco and  Gheorghe Paun and  Grzegorz Rozenberg and  Arto Salomaa},
+publisher = {Springer},
+series    = {Lecture Notes in Computer Science},
+volume    = {5391},
+year      = {2009},
+pages = {374-393},
+isbn      = {978-3-540-95884-0},
+ee = {http://dx.doi.org/10.1007/978-3-540-95885-7_26},
+doi = {doi:10.1007/978-3-540-95885-7_26},
+bibsource = {DBLP, http://dblp.uni-trier.de},
+longtitle = {Membrane Computing - 9th International Workshop, WMC 2008,
+               Edinburgh, UK, July 28-31, 2008, Revised Selected and Invited
+               Papers}
+}
+
+@inproceedings{park-stefanescu-rosu-2015-pldi,
+    author = "Park, Daejun and \c{S}tef\u{a}nescu, Andrei and Ro\c{s}u, Grigore",
+    publisher = "ACM",
+    doi = "http://dx.doi.org/10.1145/2737924.2737991",
+    title = {{{KJS}: A Complete Formal Semantics of {JavaScript}}},
+    booktitle = "Proceedings of the 36th ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI'15)",
+    month = "June",
+    year = "2015",
+    pages = "346-356"
+}
+
+@mastersthesis{python-semantics,
+    author = "Guth, Dwight",
+    school = "University of Illinois at Urbana-Champaign",
+    month = "July",
+    year = "2013",
+    title = "A Formal Semantics of {P}ython 3.3"
+}
+
+@inproceedings{liordertomany,
+ author = {Li, Liyi and Gunter, Elsa},
+ title = {A Method to Translate Order-Sorted Algebras to Many-Sorted Algebras},
+ booktitle = {Proceedings of the Fourth International Workshop on Rewriting Techniques for
+Program Transformations and Evaluation},
+ series = {WPTE '17},
+ year = {2017},
+ location = {Oxford, UK},
+ publisher = {EPTCS},
+} 
+
+@inproceedings{bogdanas-rosu-2015-popl,
+    author = "Bogd\u{a}na\c{s}, Denis and Ro\c{s}u, Grigore",
+    publisher = "ACM",
+    doi = "http://dx.doi.org/10.1145/2676726.2676982",
+    title = "{K-Java: A Complete Semantics of Java}",
+    booktitle = "Proceedings of the 42nd Symposium on Principles of Programming Languages (POPL'15)",
+    month = "January",
+    year = "2015",
+    pages = "445-456"
+}
+
+@inproceedings{ellison-rosu-2012-popl,
+    author = "Ellison, Chucky and Rosu, Grigore",
+    publisher = "ACM",
+    doi = "http://doi.acm.org/10.1145/2103656.2103719",
+    title = {{An Executable Formal Semantics of C with Applications}},
+    booktitle = "Proceedings of the 39th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL'12)",
+    month = "January",
+    year = "2012",
+    pages = "533-544"
+}
+
+@inproceedings{hathhorn-ellison-rosu-2015-pldi,
+    author = "Hathhorn, Chris and Ellison, Chucky and Ro\c{s}u, Grigore",
+    publisher = "ACM",
+    doi = "http://dx.doi.org/10.1145/2813885.2737979",
+    title = {{Defining the Undefinedness of C}},
+    booktitle = "Proceedings of the 36th ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI'15)",
+    month = "June",
+    year = "2015",
+    pages = "336-345"
+}
+
+@inproceedings{Filaretti2014,
+ author = {Filaretti, Daniele and Maffeis, Sergio},
+ title = {{An Executable Formal Semantics of PHP}},
+ booktitle = {Proceedings of the 28th European Conference on ECOOP 2014 --- Object-Oriented Programming},
+ year = {2014},
+ volume = {8586},
+ isbn = {978-3-662-44201-2},
+ pages = {567--592},
+ numpages = {26},
+ url = {http://dx.doi.org/10.1007/978-3-662-44202-9_23},
+ doi = {10.1007/978-3-662-44202-9_23},
+ acmid = {2945672},
+ publisher = {LNCS}
+}
+
+@Inbook{Corbineau20081,
+author="Corbineau, Pierre",
+editor="Miculan, Marino
+and Scagnetto, Ivan
+and Honsell, Furio",
+title="A Declarative Language for the Coq Proof Assistant",
+bookTitle="Types for Proofs and Programs: International Conference, TYPES 2007, Cividale des Friuli, Italy, May 2-5, 2007 Revised Selected Papers",
+year="2008",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="69--84",
+isbn="978-3-540-68103-8",
+doi="10.1007/978-3-540-68103-8_5",
+url="http://dx.doi.org/10.1007/978-3-540-68103-8_5"
+}
+
+@inproceedings{Corbineau2008,
+ author = {Corbineau, Pierre},
+ title = {{A Declarative Language for the Coq Proof Assistant}},
+ booktitle = {Proceedings of the 2007 International Conference on Types for Proofs and Programs},
+ series = {TYPES'07},
+ year = {2008},
+ volume = {4941},
+ isbn = {3-540-68084-5, 978-3-540-68084-0},
+ location = {Cividale del Friuli, Italy},
+ pages = {69--84},
+ numpages = {16},
+ url = {http://dl.acm.org/citation.cfm?id=1786134.1786139},
+ acmid = {1786139},
+ publisher = {LNCS}
+}
+
+@Inbook{Filaretti20141,
+author="Filaretti, Daniele
+and Maffeis, Sergio",
+title="An Executable Formal Semantics of PHP",
+bookTitle="ECOOP 2014 -- Object-Oriented Programming: 28th European Conference, Uppsala, Sweden, July 28 -- August 1, 2014. Proceedings",
+year="2014",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="567--592",
+isbn="978-3-662-44202-9",
+doi="10.1007/978-3-662-44202-9_23",
+url="http://dx.doi.org/10.1007/978-3-662-44202-9_23"
+}
+
+@inproceedings{martioliet00rewriting,
+    author = {Narciso Mart{\'\i}-Oliet and Jos{\'e} Meseguer},
+    title = {Rewriting logic as a logical and semantic framework},
+    booktitle = {Electronic Notes in Theoretical Computer Science},
+    volume = {4},
+    publisher = {Elsevier Science Publishers},
+    editor = {J. Meseguer},
+    year = {2000}
+}
+
+@inproceedings{clavel00principles,
+    author = {M. Clavel, S. Eker, P. Lincoln and J. Meseguer},
+    title = {Principles of Maude},
+    booktitle = {Electronic Notes in Theoretical Computer Science},
+    volume = {4},
+    publisher = {Elsevier Science Publishers},
+    editor = {J. Meseguer},
+    year = {2000}
+}
+
+@book{Milner:1997:DSM:549659,
+ author = {Milner, Robin and Tofte, Mads and Macqueen, David},
+ title = {The  Definition of Standard ML},
+ year = {1997},
+ isbn = {0262631814},
+ publisher = {MIT Press},
+ address = {Cambridge, MA, USA},
+} 
+
+@article{Lee:2007:TMM:1190215.1190245,
+ author = {Lee, Daniel K. and Crary, Karl and Harper, Robert},
+ title = {{Towards a Mechanized Metatheory of Standard ML}},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2007},
+ volume = {42},
+ number = {1},
+ month = jan,
+ year = {2007},
+ issn = {0362-1340},
+ pages = {173--184},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1190215.1190245},
+ doi = {10.1145/1190215.1190245},
+ acmid = {1190245},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {language definitions, logical frameworks, mechanized metatheory, standard ML, twelf, type safety},
+} 
+
+@inproceedings{Alglave:2010:FWM:2144310.2144342,
+ author = {Alglave, Jade and Maranget, Luc and Sarkar, Susmit and Sewell, Peter},
+ title = {Fences in Weak Memory Models},
+ booktitle = {Proceedings of the 22Nd International Conference on Computer Aided Verification},
+ series = {CAV'10},
+ year = {2010},
+ isbn = {3-642-14294-X, 978-3-642-14294-9},
+ location = {Edinburgh, UK},
+ pages = {258--272},
+ numpages = {15},
+ url = {http://dx.doi.org/10.1007/978-3-642-14295-6_25},
+ doi = {10.1007/978-3-642-14295-6_25},
+ acmid = {2144342},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+}
+
+@inproceedings{evcik:2011:RCV:1925844.1926393,
+  TITLE = {{Relaxed-memory concurrency and verified compilation}},
+  AUTHOR = {Sevcik, Jaroslav and Vafeiadis, Viktor and Zappa Nardelli, Francesco and Jagannathan, Suresh and Sewell, Peter},
+  URL = {https://hal.inria.fr/hal-00907801},
+  BOOKTITLE = {{POPL}},
+  ADDRESS = {Austin, TX, United States},
+  YEAR = {2011},
+  MONTH = Jan,
+  HAL_ID = {hal-00907801},
+  HAL_VERSION = {v1},
+}
+
+@article{c++concurency,
+ author = {Batty, Mark and Dodds, Mike and Gotsman, Alexey},
+ title = {Library Abstraction for C/C++ Concurrency},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2013},
+ volume = {48},
+ number = {1},
+ month = jan,
+ year = {2013},
+ issn = {0362-1340},
+ pages = {235--248},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/2480359.2429099},
+ doi = {10.1145/2480359.2429099},
+ acmid = {2429099},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {C, C++, concurrency, modularity, verification},
+} 
+
+@article{Batty:2011:MCC:1925844.1926394,
+ author = {Batty, Mark and Owens, Scott and Sarkar, Susmit and Sewell, Peter and Weber, Tjark},
+ title = {Mathematizing C++ Concurrency},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2011},
+ volume = {46},
+ number = {1},
+ month = jan,
+ year = {2011},
+ issn = {0362-1340},
+ pages = {55--66},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1925844.1926394},
+ doi = {10.1145/1925844.1926394},
+ acmid = {1926394},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {relaxed memory models, semantics},
+} 
+
+@Inbook{Farzan2004,
+author="Farzan, Azadeh
+and Chen, Feng
+and Meseguer, Jos{\'e}
+and Ro{\c{s}}u, Grigore",
+editor="Alur, Rajeev
+and Peled, Doron A.",
+title="Formal Analysis of Java Programs in JavaFAN",
+bookTitle="Computer Aided Verification: 16th International Conference, CAV 2004, Boston, MA, USA, July 13-17, 2004. Proceedings",
+year="2004",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="501--505",
+isbn="978-3-540-27813-9",
+doi="10.1007/978-3-540-27813-9_46",
+url="http://dx.doi.org/10.1007/978-3-540-27813-9_46"
+}
+
+
+@incollection{Gurevich:1995:EAL:233976.233979,
+ author = {Gurevich, Yuri},
+ chapter = {Evolving Algebras 1993: Lipari Guide},
+ title = {Specification and Validation Methods},
+ editor = {B\"{o}rger, Egon},
+ year = {1995},
+ isbn = {0-19-853854-5},
+ pages = {9--36},
+ numpages = {28},
+ url = {http://dl.acm.org/citation.cfm?id=233976.233979},
+ acmid = {233979},
+ publisher = {Oxford University Press, Inc.},
+ address = {New York, NY, USA},
+} 
+
+@article{Borger:2005:HMD:1085295.1085298,
+ author = {B\"{o}rger, Egon and Fruja, Nicu G. and Gervasi, Vincenzo and St\"{a}rk, Robert F.},
+ title = {A High-level Modular Definition of the Semantics of C\#},
+ journal = {Theor. Comput. Sci.},
+ issue_date = {26 May 2005},
+ volume = {336},
+ number = {2-3},
+ month = may,
+ year = {2005},
+ issn = {0304-3975},
+ pages = {235--284},
+ numpages = {50},
+ url = {http://dx.doi.org/10.1016/j.tcs.2004.11.008},
+ doi = {10.1016/j.tcs.2004.11.008},
+ acmid = {1085298},
+ publisher = {Elsevier Science Publishers Ltd.},
+ address = {Essex, UK},
+ keywords = {C\#, abstract state machines, java, net, semantics of programming languages},
+} 
+
+@article{MOSSES2004195,
+title = "Modular structural operational semantics",
+journal = "The Journal of Logic and Algebraic Programming",
+volume = "60",
+number = "",
+pages = "195 - 228",
+year = "2004",
+note = "Structural Operational Semantics",
+issn = "1567-8326",
+doi = "http://dx.doi.org/10.1016/j.jlap.2004.03.008",
+url = "http://www.sciencedirect.com/science/article/pii/S156783260400027X",
+author = "Peter D Mosses",
+keywords = "Structural operational semantics",
+keywords = "SOS",
+keywords = "Modularity",
+keywords = "MSOS"
+}
+
+@article{Drossopoulou:1999:JTS:308181.308189,
+ author = {Drossopoulou, Sophia and Eisenbach, Susan and Khurshid, Sarfraz},
+ title = {Is the Java Type System Sound?},
+ journal = {Theor. Pract. Object Syst.},
+ issue_date = {Jan. 1999},
+ volume = {5},
+ number = {1},
+ month = jan,
+ year = {1999},
+ issn = {1074-3227},
+ pages = {3--24},
+ numpages = {22},
+ url = {http://dx.doi.org/10.1002/(SICI)1096-9942(199901/03)5:1<3::AID-TAPO2>3.0.CO;2-T},
+ doi = {10.1002/(SICI)1096-9942(199901/03)5:1<3::AID-TAPO2>3.0.CO;2-T},
+ acmid = {308189},
+ publisher = {John Wiley \& Sons, Inc.},
+ address = {New York, NY, USA},
+} 
+
+@inproceedings{Syme:1999:PJT:645580.658814,
+ author = {Syme, Don},
+ title = {Proving Java Type Soundness},
+ booktitle = {Formal Syntax and Semantics of Java},
+ year = {1999},
+ isbn = {3-540-66158-1},
+ pages = {83--118},
+ numpages = {36},
+ url = {http://dl.acm.org/citation.cfm?id=645580.658814},
+ acmid = {658814},
+ publisher = {Springer-Verlag},
+ address = {London, UK, UK},
+} 
+
+
+@article{Sewell:2010:OET:1735538.1735543,
+ author = {Sewell, Peter and Nardelli, Francesco zappa and Owens, Scott and Peskine, Gilles and Ridge, Thomas and Sarkar, Susmit and Strni\v{S}a, Rok},
+ title = {{Ott: Effective Tool Support for the Working Semanticist}},
+ journal = {J. Funct. Program.},
+ issue_date = {January 2010},
+ volume = {20},
+ number = {1},
+ month = jan,
+ year = {2010},
+ issn = {0956-7968},
+ pages = {71--122},
+ numpages = {52},
+ url = {http://dx.doi.org/10.1017/S0956796809990293},
+ doi = {10.1017/S0956796809990293},
+ acmid = {1735543},
+ publisher = {Cambridge University Press},
+ address = {New York, NY, USA},
+} 
+
+@article{Bodin:2014:TMJ:2578855.2535876,
+ author = {Bodin, Martin and Chargueraud, Arthur and Filaretti, Daniele and Gardner, Philippa and Maffeis, Sergio and Naudziuniene, Daiva and Schmitt, Alan and Smith, Gareth},
+ title = {{A Trusted Mechanised JavaScript Specification}},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2014},
+ volume = {49},
+ number = {1},
+ month = jan,
+ year = {2014},
+ issn = {0362-1340},
+ pages = {87--100},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/2578855.2535876},
+ doi = {10.1145/2578855.2535876},
+ acmid = {2535876},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {coq, javascript, mechanised semantics},
+} 
+
+@article{Zhao:2012:FLI:2103621.2103709,
+ author = {Zhao, Jianzhou and Nagarakatte, Santosh and Martin, Milo M.K. and Zdancewic, Steve},
+ title = {{Formalizing the LLVM Intermediate Representation for Verified Program Transformations}},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2012},
+ volume = {47},
+ number = {1},
+ month = jan,
+ year = {2012},
+ issn = {0362-1340},
+ pages = {427--440},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/2103621.2103709},
+ doi = {10.1145/2103621.2103709},
+ acmid = {2103709},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Coq, LLVM, memory safety},
+} 
+
+@inproceedings{Appel:2011:VST:1987211.1987212,
+ author = {Appel, Andrew W.},
+ title = {{Verified Software Toolchain}},
+ booktitle = {Proceedings of the 20th European Conference on Programming Languages and Systems: Part of the Joint European Conferences on Theory and Practice of Software},
+ series = {ESOP'11/ETAPS'11},
+ year = {2011},
+ isbn = {978-3-642-19717-8},
+ location = {Saarbr\&\#252;cken, Germany},
+ pages = {1--17},
+ numpages = {17},
+ url = {http://dl.acm.org/citation.cfm?id=1987211.1987212},
+ acmid = {1987212},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@Article{Blazy2009,
+author="Blazy, Sandrine
+and Leroy, Xavier",
+title= {{Mechanized Semantics for the Clight Subset of the C Language}},
+journal="Journal of Automated Reasoning",
+year="2009",
+volume="43",
+number="3",
+pages="263--288",
+abstract="This article presents the formal semantics of a large subset of the C language called Clight. Clight includes pointer arithmetic, struct and union types, C loops and structured switch statements. Clight is the source language of the CompCert verified compiler. The formal semantics of Clight is a big-step operational semantics that observes both terminating and diverging executions and produces traces of input/output events. The formal semantics of Clight is mechanized using the Coq proof assistant. In addition to the semantics of Clight, this article describes its integration in the CompCert verified compiler and several ways by which the semantics was validated.",
+issn="1573-0670",
+doi="10.1007/s10817-009-9148-3",
+url="http://dx.doi.org/10.1007/s10817-009-9148-3"
+}
+
+
+@article{Bishop:2006:ELH:1111320.1111043,
+ author = {Bishop, Steve and Fairbairn, Matthew and Norrish, Michael and Sewell, Peter and Smith, Michael and Wansbrough, Keith},
+ title = {Engineering with Logic: HOL Specification and Symbolic-evaluation Testing for TCP Implementations},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2006},
+ volume = {41},
+ number = {1},
+ month = jan,
+ year = {2006},
+ issn = {0362-1340},
+ pages = {55--66},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1111320.1111043},
+ doi = {10.1145/1111320.1111043},
+ acmid = {1111043},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {API, HOL, TCP/IP, conformance testing, higher-order logic, network protocols, operational semantics, sockets, specification},
+} 
+
+@book{Nipkow:2002:IPA:1791547,
+ author = {Nipkow, Tobias and Wenzel, Markus and Paulson, Lawrence C.},
+ title = {Isabelle/HOL: A Proof Assistant for Higher-order Logic},
+ year = {2002},
+ isbn = {3-540-43376-7},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+}
+
+@TECHREPORT{Norrish98cformalised,
+  author =	 {Norrish, Michael},
+  title = 	 {{C formalised in HOL}},
+  year = 	 1998,
+  month = 	 dec,
+  url = 	 {https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-453.pdf},
+  institution =  {University of Cambridge, Computer Laboratory},
+  number = 	 {UCAM-CL-TR-453}
+}
+
+@inproceedings{Pfenning:1999:SDT:648235.753634,
+ author = {Pfenning, Frank and Sch\"{u}rmann, Carsten},
+ title = {System Description: Twelf - A Meta-Logical Framework for Deductive Systems},
+ booktitle = {Proceedings of the 16th International Conference on Automated Deduction: Automated Deduction},
+ series = {CADE-16},
+ year = {1999},
+ isbn = {3-540-66222-7},
+ pages = {202--206},
+ numpages = {5},
+ url = {http://dl.acm.org/citation.cfm?id=648235.753634},
+ acmid = {753634},
+ publisher = {Springer-Verlag},
+ address = {London, UK, UK},
+} 
+
+@article{Aiken:1996:CPP:381841.381847,
+ author = {Aiken, Alexander},
+ title = {Cool: A Portable Project for Teaching Compiler Construction},
+ journal = {SIGPLAN Not.},
+ issue_date = {July 1996},
+ volume = {31},
+ number = {7},
+ month = jul,
+ year = {1996},
+ issn = {0362-1340},
+ pages = {19--24},
+ numpages = {6},
+ url = {http://doi.acm.org/10.1145/381841.381847},
+ doi = {10.1145/381841.381847},
+ acmid = {381847},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+@techreport{moore-rosu-2015-tr,
+    author = "Moore, Brandon and Ro\c{s}u, Grigore",
+    month = "February",
+    year = "2015",
+    number = "http://hdl.handle.net/2142/73177",
+    institution = "University of Illinois",
+    title = {{Program Verification by Coinduction}}
+}
+
+
+@inproceedings{rosu-stefanescu-ciobaca-moore-2013-lics,
+    author = "Ro\c{s}u, Grigore and \c{S}tef\u{a}nescu, Andrei and Ciob\^{a}c\u{a}, \c{S}tefan and Moore, Brandon M.",
+    publisher = "IEEE",
+    doi = "",
+    title = {{One-Path Reachability Logic}},
+    booktitle = "Proceedings of the 28th Symposium on Logic in Computer Science (LICS'13)",
+    month = "June",
+    year = "2013",
+    pages = "358-367"
+}
+
+@article{SIKKEL199887,
+title = "Parsing schemata and correctness of parsing algorithms",
+journal = "Theoretical Computer Science",
+volume = "199",
+number = "1",
+pages = "87 - 103",
+year = "1998",
+note = "",
+issn = "0304-3975",
+doi = "http://dx.doi.org/10.1016/S0304-3975(97)00269-7",
+url = "http://www.sciencedirect.com/science/article/pii/S0304397597002697",
+author = "Klaas Sikkel",
+keywords = "Parsing schemata",
+keywords = "Chart parsers",
+keywords = "Correctness proof"
+}
+
+@inproceedings{stefanescu-ciobaca-mereuta-moore-serbanuta-rosu-2014-rta,
+    author = "\c{S}tef\u{a}nescu, Andrei and Ciob\^{a}c\u{a}, \c{S}tefan and Mereu\c{t}\u{a}, Radu and Moore, Brandon M. and \c{S}erb\u{a}nu\c{t}\u{a}, Traian Florin and Ro\c{s}u, Grigore",
+    publisher = "Springer",
+    doi = "http://dx.doi.org/10.1007/978-3-319-08918-8_29",
+    title = {{All-Path Reachability Logic}},
+    series = "LNCS",
+    booktitle = "Proceedings of the Joint 25th International Conference on Rewriting Techniques and Applications and 12th International Conference on Typed Lambda Calculi and Applications (RTA-TLCA'14)",
+    month = "July",
+    volume = "8560",
+    year = "2014",
+    pages = "425-440"
+}
+
+
+@inproceedings{stefanescu-park-yuwen-li-rosu-2016-oopsla,
+    author = "\c{S}tef\u{a}nescu, Andrei and Park, Daejun and Yuwen, Shijiao and Li, Yilong and Ro\c{s}u, Grigore",
+    publisher = "ACM",
+    doi = "http://dx.doi.org/10.1145/2983990.2984027",
+    title = "Semantics-Based Program Verifiers for All Languages",
+    booktitle = "Proceedings of the 31th Conference on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA'16)",
+    month = "Nov",
+    year = "2016",
+    pages = "74-91"
+}
+
+
+@inproceedings{meseguer-rosu-2011-fct,
+    author = "Meseguer, Jos{\'e} and Ro\c{s}u, Grigore",
+    volume = "6914",
+    publisher = "Springer",
+    doi = "http://dl.acm.org/citation.cfm?id=2034214.2034215",
+    title = "The Rewriting Logic Semantics Project: A Progress Report",
+    series = "Lecture Notes in Computer Science",
+    booktitle = "Proceedings of the 17th International Symposium on Fundamentals of Computation Theory (FCT'11)",
+    month = "August",
+    note = "Invited talk",
+    year = "2011",
+    pages = "1-37"
+}
+
+
+@InProceedings{arusoaie-serbanuta-ellison-rosu-2012-wrla,
+author = {Andrei Arusoaie and Traian Florin {\c S}erb{\u a}nu{\c t}{\u a} and Chucky Ellison and Grigore Ro\c{s}u},
+title = {Making {Maude} Definitions more Interactive},
+booktitle = {Rewriting Logic and Its Applications, WRLA 2012},
+series = {Lecture Notes in Computer Science}, 
+pages = {}, 
+year = {2012}, 
+volume = {7571}, 
+number = {}, 
+publisher = {Springer}, 
+}
+
+@inproceedings{meseguer-rosu-2011-fct,
+  author    = {Jos\'e Meseguer and Grigore Ro\c{s}u},
+  title     = {The Rewriting Logic Semantics Project: A Progress Report},
+  booktitle = {Proceedings of the 17th International Symposium on Fundamentals of Computation Theory (FCT'11)},
+  year      = {2011},
+  publisher = {Springer},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {6914},
+  pages     = {1-37},
+  note      = {Invited talk}
+}
+
+@inproceedings{Bogdanas:2012:LPL:2477176.2477725,
+ author = {Bogdanas, Denis},
+ title = {{Label-Based Programming Language Semantics in K Framework with SDF}},
+ booktitle = {Proceedings of the 2012 14th International Symposium on Symbolic and Numeric Algorithms for Scientific Computing},
+ series = {SYNASC '12},
+ year = {2012},
+ isbn = {978-0-7695-4934-7},
+ pages = {160--167},
+ numpages = {8},
+ url = {http://dx.doi.org/10.1109/SYNASC.2012.23},
+ doi = {10.1109/SYNASC.2012.23},
+ acmid = {2477725},
+ publisher = {IEEE Computer Society},
+ address = {Washington, DC, USA},
+ keywords = {SDF, K Framework, rewriting logic, syntax, semantics, parser generator},
+} 
+
+
+@article{SERBANUTA201457,
+title = {{The K Primer (version 3.3)}},
+journal = "Electronic Notes in Theoretical Computer Science",
+volume = "304",
+number = "Supplement C",
+pages = "57 - 80",
+year = "2014",
+note = "Proceedings of the Second International Workshop on the K Framework and its Applications (K 2011).",
+issn = "1571-0661",
+doi = "https://doi.org/10.1016/j.entcs.2014.05.003",
+url = "http://www.sciencedirect.com/science/article/pii/S1571066114000395",
+author = "Traian Florin Şerbănuţă and Andrei Arusoaie and David Lazar and Chucky Ellison and Dorel Lucanu and Grigore Roşu",
+keywords = "Theory and formal methods",
+keywords = "programming language design"
+}
+
+@inproceedings{rosu-stefanescu-2011-nier-icse,
+title = {Matching {Logic}: {A} {New} {Program} {Verification} {Approach} ({NIER} {Track})},
+author = {Grigore Ro\c{s}u and Andrei \c{S}tef\u{a}nescu},
+booktitle = {ICSE'11: Proceedings of the 30th International Conference on Software Engineering},
+year = {2011},
+pages = {868--871},
+ee = {http://doi.acm.org/10.1145/1985793.1985928},
+doi = {doi:10.1145/1985793.1985928},
+publisher = {ACM},
+isbn = {978-1-4503-0445-0},
+}
+
+@inproceedings{rosu-stefanescu-2010-uv,
+  author = {Grigore Ro{\c s}u and Andrei {\c S}tef{\u a}nescu},
+  booktitle = {Proceedings of the 2010 Workshop on Usable Verification (UV'10)},
+  title = {{Matching Logic: A New Program Verification Approach}},
+  publisher = {Microsoft Research},
+  year = "2010",
+}
+
+@inproceedings{hills-chen-rosu-2008-rule,
+author = {Mark Hills and Feng Chen and Grigore Ro\c{s}u},
+title = "{A Rewriting Logic Approach to Static Checking of Units of Measurement in C}",
+booktitle = {Proceedings of the 9th International Workshop on Rule-Based Programming (RULE'08)},
+publisher={Elsevier},
+series={ENTCS},
+volume = {To Appear},
+year={2008}
+}
+
+@inproceedings{ellison-serbanuta-rosu-2008-wadt-b,
+  title={A Rewriting Logic Approach to Type Inference},
+  author={Chucky Ellison and Traian Florin {\c S}erb{\u a}nu{\c t}{\u a} and Grigore Ro{\c s}u},
+  booktitle={Recent Trends in Algebraic Development Techniques},
+  publisher={Springer},
+  series={Lecture Notes in Computer Science},
+  volume={5486},
+  year={2009},
+  pages={135--151},
+  ee={http://dx.doi.org/10.1007/978-3-642-03429-9},
+  doi={doi:10.1007/978-3-642-03429-9},
+  note={Revised Selected Papers from the 19th International Workshop on Algebraic Development Techniques (WADT'08)}
+}
+
+@article{rosu-serbanuta-2010-jlap,
+  title={{An Overview of the {K} Semantic Framework}},
+  author={Grigore Ro{\c s}u and Traian Florin {\c S}erb{\u a}nu{\c t}{\u a} },
+  journal={Journal of Logic and Algebraic Programming},
+  volume={79},
+  number={6},
+  pages={397--434},
+  year={2010},
+  ee={http://dx.doi.org/10.1016/j.jlap.2010.03.012},
+  doi={10.1016/j.jlap.2010.03.012},
+}
+
+@TechReport{meredith-hills-rosu-2007-tr-b,
+author = {Patrick Meredith and Mark Hills and Grigore Ro\c{s}u},
+title = "{A K Definition of Scheme}",
+institution = {University of Illinois at Urbana-Champaign},
+Number     = {Department of Computer Science UIUCDCS-R-2007-2907},
+Year       = {2007}
+}
+
+@TechReport{ellison-serbanuta-rosu-2008-tr,
+  author = {Chucky Ellison and Traian Florin {\c S}erb{\u a}nu{\c t}{\u a} and Grigore Ro{\c s}u},
+  title = {A Rewriting Logic Approach to Type Inference},
+  institution = {University of Illinois at Urbana-Champaign},
+  year = {2008},
+  number = {Department of Computer Science UIUCDCS-R-2008-2934},
+  url={http://hdl.handle.net/2142/11423}
+}
+
+@TechReport{rosu-2007-tr-c,
+author = {Grigore Ro\c{s}u},
+title = "{K:  A Rewriting-Based Framework for Computations  -- Preliminary version}",
+institution = {University of Illinois at Urbana-Champaign},
+Number = {Department of Computer Science UIUCDCS-R-2007-2926 and College of Engineering UILU-ENG-2007-1827},
+Year = {2007},
+Note = {Previous versions published as technical reports UIUCDCS-R-2006-2802 in December 2006, UIUCDCS-R-2005-2672 in 2005.  K was first introduced in the context of Maude in Fall 2003 as part of a programming language design course (technical report UIUCDCS-R-2003-2897)}
+}
+
+
+@inproceedings{lucanu-rosu-serbanuta-2012-wrla,
+    author = "Lucanu, Dorel and \c{S}erb\u{a}nu\c{t}\u{a}, Traian Florin and Ro\c{s}u, Grigore",
+    volume = "7571",
+    publisher = "Springer",
+    doi = "http://dx.doi.org/10.1007/978-3-642-34005-5_3",
+    title = "{K} {Framework} Distilled",
+    series = "LNCS",
+    booktitle = "Proceedings of 9th International Workshop on Rewriting Logic and its Applications (WRLA'12)",
+    month = "March",
+    note = "Invited talk.",
+    year = "2012",
+    pages = "31-53"
+}
+
+
+
+@incollection{Groote_contents1,
+  author      = {J.F. Groote and A. Mathijssen and M.A. Reniers and Y.S. Usenko and M.J. van Weerdenburg},
+  title       = {Analysis of distributed systems with mCRL2},
+  editor      = {M. Alexander and W. Gardner},
+  booktitle   = {Process Algebra for Parallel and Distributed Processing},
+  publisher   = {Chapman and Hall},
+  year        = {2008},
+  pages       = {99--128},
+}
+
+@article{Urban:2008:NTI:1363304.1363307,
+ author = {Urban, Christian},
+ title = {Nominal Techniques in {Isabelle/HOL}},
+ journal = {J. Autom. Reason.},
+ issue_date = {May       2008},
+ volume = {40},
+ number = {4},
+ month = may,
+ year = {2008},
+ issn = {0168-7433},
+ pages = {327--356},
+ numpages = {30},
+ url = {http://dx.doi.org/10.1007/s10817-008-9097-2},
+ doi = {10.1007/s10817-008-9097-2},
+ acmid = {1363307},
+ publisher = {Springer-Verlag New York, Inc.},
+ address = {Secaucus, NJ, USA},
+ keywords = {Lambda-calculus, Nominal logic work, Theorem provers},
+} 
+
+@article{qhoare,
+author = {Ying, Mingsheng},
+title = {Floyd--Hoare Logic for Quantum Programs},
+year = {2012},
+issue_date = {December 2011},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {33},
+number = {6},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/2049706.2049708},
+doi = {10.1145/2049706.2049708},
+abstract = {Floyd--Hoare logic is a foundation of axiomatic semantics of classical programs, and
+it provides effective proof techniques for reasoning about correctness of classical
+programs. To offer similar techniques for quantum program verification and to build
+a logical foundation of programming methodology for quantum computers, we develop
+a full-fledged Floyd--Hoare logic for both partial and total correctness of quantum
+programs. It is proved that this logic is (relatively) complete by exploiting the
+power of weakest preconditions and weakest liberal preconditions for quantum programs.},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = jan,
+articleno = {19},
+numpages = {49},
+keywords = {Quantum computation, completeness, programming language, Floyd--Hoare logic, axiomatic semantics}
+}
+
+
+
+@article{DBLP:journals/jacm/BrookesHR84,
+  author    = {Stephen D. Brookes and
+               C. A. R. Hoare and
+               A. W. Roscoe},
+  title     = {A Theory of Communicating Sequential Processes},
+  journal   = {J. ACM},
+  volume    = {31},
+  number    = {3},
+  year      = {1984},
+  pages     = {560-599},
+  ee        = {http://doi.acm.org/10.1145/828.833},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+@book{Roscoe:1997:TPC:550448,
+ author = {Roscoe, A. W.},
+ title = {The Theory and Practice of Concurrency},
+ year = {1997},
+ isbn = {0136744095},
+ publisher = {Prentice Hall PTR},
+ address = {Upper Saddle River, NJ, USA},
+}
+
+@INPROCEEDINGS{Back94tracerefinement,
+    author = {R. J. R. Back and J. Von Wright},
+    title = {Trace refinement of action systems},
+    booktitle = {Structured Programming},
+    year = {1994},
+    pages = {367--384},
+    publisher = {Springer-Verlag}
+}
+
+@techreport{OperationSemanticsCSP,
+  title = "An Operational Semantics for {CSP}",
+  author = "S. D. Brookes and A. W. Roscoe and D. J. Walker",
+  year = "1986",
+  institution = "{Oxford University Computing Laboratory}",
+  url = "http://www.cs.ox.ac.uk/people/bill.roscoe/publications/26.ps",
+} 
+
+@MISC{Schneider95anoperational,
+    author = {Steve Schneider},
+    title = {An Operational Semantics for Timed CSP},
+    year = {1995}
+}
+
+@incollection {springerlink:10.1007/1181794911,
+   author = {Isobe, Yoshinao and Roggenbach, Markus},
+   affiliation = {National Institute of Advanced Industrial Science and Technology, Japan},
+   title = {A Complete Axiomatic Semantics for the {CSP} Stable-Failures Model},
+   booktitle = {CONCUR 2006 – Concurrency Theory},
+   series = {Lecture Notes in Computer Science},
+   editor = {Baier, Christel and Hermanns, Holger},
+   publisher = {Springer Berlin / Heidelberg},
+   isbn = {978-3-540-37376-6},
+   keyword = {Computer Science},
+   pages = {158-172},
+   volume = {4137},
+   url = {http://dx.doi.org/10.1007/11817949\_11},
+   note = {10.1007/11817949\_11},
+   year = {2006}
+}
+
+@INPROCEEDINGS{FDR2,
+    author = {Formal Systems (Europe) Ltd. },
+    title = {Failures-Divergence Refinement. {FDR2} User Manual},
+    booktitle = {FDR2 User Manual},
+    year = {2010}
+}
+
+@PhdThesis{CSPm,
+  author =       {J.B. Scattergood},
+  title =        {The Semantics and Implementation of Machine-Readable CSP},
+  school =       {Oxford University Computing Laboratory},
+  year =         {1998},
+  type =         {D.Phil.}
+}
+
+@inproceedings{conf/wotug/BrookeP07,
+  added-at = {2012-03-23T00:00:00.000+0100},
+  author = {Brooke, Phillip J. and Paige, Richard F.},
+  biburl = {http://www.bibsonomy.org/bibtex/2a63d7d074d2e42d6bfbac46a7ef82be4/dblp},
+  booktitle = {CPA},
+  crossref = {conf/wotug/2007},
+  editor = {McEwan, Alistair A. and Schneider, Steve A. and Ifill, Wilson and Welch, Peter H.},
+  ee = {http://www.booksonline.iospress.nl/Content/View.aspx?piid=5965},
+  interhash = {df7b0bed5e49e3248865b2cca0ff711e},
+  intrahash = {a63d7d074d2e42d6bfbac46a7ef82be4},
+  isbn = {978-1-58603-767-3},
+  keywords = {dblp},
+  pages = {33-49},
+  publisher = {IOS Press},
+  series = {Concurrent Systems Engineering Series},
+  timestamp = {2012-03-23T00:00:00.000+0100},
+  title = {Lazy Exploration and Checking of {CSP} Models with {CSPsim}.},
+  url = {http://dblp.uni-trier.de/db/conf/wotug/cpa2007.html#BrookeP07},
+  volume = 65,
+  year = 2007
+}
+
+@article{Kapur:1987:MUC:36330.36332,
+ author = {Kapur, Deepak and Narendran, Paliath},
+ title = {Matching, Unification and Complexity},
+ journal = {SIGSAM Bull.},
+ issue_date = {Nov. 1987},
+ volume = {21},
+ number = {4},
+ month = nov,
+ year = {1987},
+ issn = {0163-5824},
+ pages = {6--9},
+ numpages = {4},
+ url = {http://doi.acm.org/10.1145/36330.36332},
+ doi = {10.1145/36330.36332},
+ acmid = {36332},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+
+@Inbook{Kesner1991,
+author="Kesner, Delia",
+editor="Tarlecki, Andrzej",
+title="Pattern matching in order-sorted languages",
+bookTitle="Mathematical Foundations of Computer Science 1991: 16th International Symposium Kazimierz Dolny, Poland, September 9--13, 1991 Proceedings",
+year="1991",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="267--276",
+abstract="We study the problem of pattern matching in languages whose type system is hierarchical and whose evaluation strategy is lazy. We propose an extension of the Puel-Su{\'a}rez compilation scheme to function definitions via order-sorted patterns. Pattern matching trees (PMT's) are defined to have edges labelled not only with structure, but also with subsort constraints. Due to this latter kind of edges, terms are reduced only as far as required to make either a structure or a subsort verification decidable. We show that the PMT is optimal if a decidable property of sequentiality holds for the sets generated during the compilation process. Our method turns out to be applicable for strict languages as well.",
+isbn="978-3-540-47579-8",
+doi="10.1007/3-540-54345-7_70",
+url="https://doi.org/10.1007/3-540-54345-7_70"
+}
+
+
+@article{DEMOOR2001135,
+title = "Higher-order matching for program transformation",
+journal = "Theoretical Computer Science",
+volume = "269",
+number = "1",
+pages = "135 - 162",
+year = "2001",
+issn = "0304-3975",
+doi = "https://doi.org/10.1016/S0304-3975(00)00402-3",
+url = "http://www.sciencedirect.com/science/article/pii/S0304397500004023",
+author = "Oege de Moor and Ganesh Sittampalam"
+}
+
+@online{qsharp,
+  author = {Microsoft},
+  title = {{The Q\# Programming Language}},
+  year = 2017,
+  url = {https://docs.microsoft.com/},
+  urldate = {2017-12-11}
+}
+
+@online{qirm,
+  author = {Microsoft},
+  title = {{Quantum Intermediate Representation}},
+  year = 2021,
+  url = {https://github.com/microsoft/qsharp-language/tree/main/Specifications/QIR},
+  urldate = {2021-05-17}
+}
+
+@online{llvmsemantics,
+  author = {Li, Liyi and Gunter, Elsa},
+  title = {LLVM Semantics},
+  year = 2016,
+  url = {https://github.com/kframework/llvm-semantics},
+  urldate = {2016-11-14}
+}
+
+@manual{fpublication,
+  author = {Ro\c{s}u, Grigore},
+  title = {K Publications},
+  year = 2017,
+  note = "\url{http://www.kframework.org/index.php/K_Publications}"
+}
+
+@online{kimplementation,
+  author = {Ro\c{s}u, Grigore},
+  title = {K Implementation},
+  year = 2016,
+  url = {https://github.com/kframework/k},
+  urldate = {2017-11-1}
+}
+
+@inproceedings{DBLP:conf/wotug/WelchBMCS07,
+  author    = {Peter H. Welch and
+               Neil Brown and
+               James Moores and
+               Kevin Chalmers and
+               Bernhard H. C. Sputh},
+  title     = {Integrating and Extending JCSP},
+  booktitle = {CPA},
+  year      = {2007},
+  pages     = {349-370},
+  ee        = {http://www.booksonline.iospress.nl/Content/View.aspx?piid=5982},
+  crossref  = {DBLP:conf/wotug/2007},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+
+@INPROCEEDINGS{ProBE,
+    author = {Formal Systems (Europe) Ltd},
+    title = {Process Behaviour Explorer. {ProBE} User Manual},
+    booktitle = {ProBE User Manual},
+    year = {2003}
+}
+
+@MISC{Schneider95anoperational,
+    author = {Steve Schneider},
+    title = {An Operational Semantics for Timed CSP},
+    year = {1995}
+}
+
+@techreport{scaffold,
+author = {Abhari, Ali and Faruque, Arvin and Dousti, Mohammad Javad and Svec, Lukas and Catu, Oana and Chakrabati, Amlan and Chiang, Chen-Fu and Vanderwilt, Seth and Black, John and Chong, Frederic and Martonosi, Margaret and Suchara, Martin and Brown, Ken and Pedram, Massoud and Brun, Todd},
+year = {2012},
+institution = {Princeton University},
+title = {{Scaffold: Quantum Programming Language}}
+}
+
+@misc{cross2021openqasm,
+      title={{OpenQASM 3: A broader and deeper quantum assembly language}}, 
+      author={Andrew W. Cross and Ali Javadi-Abhari and Thomas Alexander and Niel de Beaudrap and Lev S. Bishop and Steven Heidel and Colm A. Ryan and John Smolin and Jay M. Gambetta and Blake R. Johnson},
+      year={2021},
+      eprint={2104.14722},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@ARTICLE{Cross2017,
+       author = {{Cross}, Andrew W. and {Bishop}, Lev S. and {Smolin}, John A. and
+         {Gambetta}, Jay M.},
+        title = "{Open quantum assembly language}",
+      journal = {arXiv e-prints},
+     keywords = {Quantum Physics},
+         year = "2017",
+        month = "Jul",
+archivePrefix = {arXiv},
+       eprint = {1707.03429},
+ primaryClass = {quant-ph},
+       adsurl = {https://ui.adsabs.harvard.edu/\#abs/2017arXiv170703429C},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+
+@misc{quilc,
+  title = {The @rigetti optimizing {Quil} compiler},
+  author={{Rigetti Computing}},
+  url = {https://github.com/rigetti/quilc},
+  year = 2019
+}
+
+% Project Q
+@article{Steiger2018,
+  title={ProjectQ: An open source software framework for quantum computing},
+  author={Steiger, Damian S. and H{\"a}ner, Thomas and Troyer, Matthias},
+  journal={Quantum},
+  volume={2},
+  pages={49},
+  year={2018},
+  publisher={Verein zur F{\"o}rderung des Open Access Publizierens in den Quantenwissenschaften},
+  doi="https://doi.org/10.22331/q-2018-01-31-49"
+}
+
+@article{Nam2018,
+	Author = {Nam, Yunseong and Ross, Neil J. and Su, Yuan and Childs, Andrew M. and Maslov, Dmitri},
+	Da = {2018/05/10},
+	Date-Added = {2019-03-16 17:17:55 +0000},
+	Date-Modified = {2019-03-16 17:17:55 +0000},
+	Doi = {10.1038/s41534-018-0072-4},
+	Id = {Nam2018},
+	Isbn = {2056-6387},
+	Journal = {npj Quantum Information},
+	Number = {1},
+	Pages = {23},
+	Title = {Automated optimization of large quantum circuits with continuous parameters},
+	Ty = {JOUR},
+	Url = {https://doi.org/10.1038/s41534-018-0072-4},
+	Volume = {4},
+	Year = {2018},
+}
+
+@article{Gidney2021howtofactorbit,
+  doi = {10.22331/q-2021-04-15-433},
+  url = {https://doi.org/10.22331/q-2021-04-15-433},
+  title = {How to factor 2048 bit {RSA} integers in 8 hours using 20 million noisy qubits},
+  author = {Gidney, Craig and Eker{\aa{}}, Martin},
+  journal = {{Quantum}},
+  issn = {2521-327X},
+  publisher = {{Verein zur F{\"{o}}rderung des Open Access Publizierens in den Quantenwissenschaften}},
+  volume = {5},
+  pages = {433},
+  month = apr,
+  year = {2021}
+}
+
+@misc{tket,
+title = {pytket},
+author = {{Cambridge Quantum Computing Ltd}},
+year = {2019},
+url= {https://cqcl.github.io/pytket/build/html/index.html},
+}
+
+@misc{cirq,
+title = {{Cirq: An Open Source Framework for Programming Quantum Computers}},
+author = {{Google Quantum AI}},
+year = {2019},
+url= {https://quantumai.google/cirq},
+}
+
+@misc{PyQuil,
+title = {{PyQuil: Quantum programming in Python}},
+author = {{Rigetti Computing}},
+year = {2021},
+url= {https://pyquil-docs.rigetti.com},
+}
+
+@article{quantumcomputercurrent1,
+ author  = {Wilkins, Angela},
+ year = {2021},
+ date    = {2021-08-16},
+ title   = {{The Way I See It: The State of Quantum Computing}},
+ journal = {Rice University},
+ url     = {https://news.rice.edu/news/2021/way-i-see-it-state-quantum-computing},
+ urldate = {2021-08-16}
+}
+
+@article{quantumcomputercurrent2,
+ author  = {Somma, Rolando},
+ year = {2020},
+ date    = {2020-03-13},
+ title   = {{Are We Ready for Quantum Computers?}},
+ journal = {Scientific American},
+ url     = {https://blogs.scientificamerican.com/observations/are-we-ready-for-quantum-computers},
+ urldate = {2020-03-13}
+}
+
+Are We Ready for Quantum Computers?
+
+
+@inproceedings{Qiskit,
+  title={The {IBM Q} experience and {QISKit} open-source quantum computing software},
+  author={Cross, Andrew},
+  booktitle={APS Meeting Abstracts},
+  year={2018}
+}
+
+@misc{Qiskit2019,
+       author = {Gadi Aleksandrowicz and Thomas Alexander and Panagiotis Barkoutsos and Luciano Bello and Yael Ben-Haim and David Bucher and Francisco Jose Cabrera-Hern{\'a}ndez and Jorge Carballo-Franquis and Adrian Chen and Chun-Fu Chen and Jerry M. Chow and Antonio D. C{\'o}rcoles-Gonzales and Abigail J. Cross and Andrew Cross and Juan Cruz-Benito and Chris Culver and Salvador De La Puente Gonz{\'a}lez and Enrique De La Torre and Delton Ding and Eugene Dumitrescu and Ivan Duran and Pieter Eendebak and Mark Everitt and Ismael Faro Sertage and Albert Frisch and Andreas Fuhrer and Jay Gambetta and Borja Godoy Gago and Juan Gomez-Mosquera and Donny Greenberg and Ikko Hamamura and Vojtech Havlicek and Joe Hellmers and {\L}ukasz Herok and Hiroshi Horii and Shaohan Hu and Takashi Imamichi and Toshinari Itoko and Ali Javadi-Abhari and Naoki Kanazawa and Anton Karazeev and Kevin Krsulich and Peng Liu and Yang Luh and Yunho Maeng and Manoel Marques and Francisco Jose Mart{\'\i}n-Fern{\'a}ndez and Douglas T. McClure and David McKay and Srujan Meesala and Antonio Mezzacapo and Nikolaj Moll and Diego Moreda Rodr{\'\i}guez and Giacomo Nannicini and Paul Nation and Pauline Ollitrault and Lee James O'Riordan and Hanhee Paik and Jes{\'u}s P{\'e}rez and Anna Phan and Marco Pistoia and Viktor Prutyanov and Max Reuter and Julia Rice and Abd{\'o}n Rodr{\'\i}guez Davila and Raymond Harry Putra Rudy and Mingi Ryu and Ninad Sathaye and Chris Schnabel and Eddie Schoute and Kanav Setia and Yunong Shi and Adenilton Silva and Yukio Siraichi and Seyon Sivarajah and John A. Smolin and Mathias Soeken and Hitomi Takahashi and Ivano Tavernelli and Charles Taylor and Pete Taylour and Kenso Trabing and Matthew Treinish and Wes Turner and Desiree Vogt-Lee and Christophe Vuillot and Jonathan A. Wildstrom and Jessica Wilson and Erick Winston and Christopher Wood and Stephen Wood and Stefan W{\"o}rner and Ismail Yunus Akhalwaya and Christa Zoufal},
+       title = {Qiskit: An open-source framework for quantum computing},
+       year = {2019},
+       doi = {10.5281/zenodo.2562110}
+}
+
+@InProceedings{Green2013,
+  Title                    = {{Quipper: A scalable quantum programming language}},
+  Author                   = {Alexander Green and Peter LeFanu Lumsdaine and Neil J. Ross and Peter Selinger and Beno{\^i}t Valiron},
+  Booktitle                = {Proceedings of the 34th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+  Year                     = {2013},
+  Pages                    = {333--342},
+  Series                   = {PLDI 2013},
+  doi = {10.1145/2491956.2462177}
+}
+
+@ARTICLE{Anticoli2017,
+       author = {{Anticoli}, Linda and {Piazza}, Carla and {Taglialegne}, Leonardo and
+         {Zuliani}, Paolo},
+        title = {{Verifying quantum programs: From {Quipper} to {QPMC}}},
+      journal = {arXiv e-prints},
+         year = 2017,
+archivePrefix = {arXiv},
+       eprint = {1708.06312},
+ primaryClass = {cs.LO},
+}
+
+@InProceedings{openqasmtrans,
+author="Singhal, Kartik and Rand, Robert and Hicks, Michael",
+title={{Verified Translation Between Low-Level Quantum Languages}},
+booktitle="Programming Languages for Quantum Computing",
+year="2020"
+}
+
+@article{Coecke2011,
+author = {Coecke, Bob and Duncan, Ross},
+year = {2009},
+month = {06},
+pages = {},
+title = {Interacting quantum observables: Categorical algebra and diagrammatics},
+volume = {13},
+journal = {New Journal of Physics},
+doi = {10.1088/1367-2630/13/4/043016}
+}
+
+@inproceedings{Rand2017,
+  author    = {Robert Rand and
+               Jennifer Paykin and
+               Steve Zdancewic},
+  title     = {{QWIRE} practice: Formal verification of quantum circuits in {C}oq},
+  booktitle = {Proceedings 14th International Conference on Quantum Physics and Logic,
+               {QPL} 2017, Nijmegen, The Netherlands, 3-7 July 2017.},
+  pages     = {119--132},
+  year      = {2017},
+  timestamp = {Tue, 08 May 2018 16:10:55 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1803-00699},
+  bibsource = {dblp computer science bibliography, https://dblp.org},
+  url = {https://doi.org/10.4204/EPTCS.266.8},
+  doi       = {10.4204/EPTCS.266.8}
+}
+
+@phdthesis{Green2010,
+  title={{Towards a formally verified functional quantum programming language}},
+  author={Green, Alexander S},
+  year={2010},
+  school={University of Nottingham}
+}
+
+@ARTICLE{Shi2019,
+       author = {{Shi}, Yunong and {Li}, Xupeng and {Tao}, Runzhou and
+         {Javadi-Abhari}, Ali and {Cross}, Andrew W. and {Chong}, Frederic T. and
+         {Gu}, Ronghui},
+        title = "{Contract-based verification of a realistic quantum compiler}",
+      journal = {arXiv e-prints},
+         year = "2019",
+        month = "Aug",
+archivePrefix = {arXiv},
+       eprint = {1908.08963},
+ primaryClass = {quant-ph}
+}
+
+@INPROCEEDINGS{Miller2006,
+  author={D. M. {Miller} and M. A. {Thornton}},
+  booktitle={36th International Symposium on Multiple-Valued Logic (ISMVL'06)}, 
+  title={{QMDD}: A decision diagram structure for reversible and quantum circuits}, 
+  year={2006},
+  volume={},
+  number={},
+  pages={30-30},
+  doi={10.1109/ISMVL.2006.35}}
+
+@inproceedings{Smith2019,
+ author = {Smith, Kaitlin N. and Thornton, Mitchell A.},
+ title = {A quantum computational compiler and design tool for technology-specific targets},
+ booktitle = {Proceedings of the 46th International Symposium on Computer Architecture},
+ series = {ISCA '19},
+ year = {2019},
+ doi = {10.1145/3307650.3322262}
+} 
+
+@article{Kissinger2019,
+author = {Kissinger, Aleks and van de Wetering, John},
+year = {2020},
+month = {04},
+pages = {230-242},
+title = {{PyZX}: Large scale automated diagrammatic reasoning},
+volume = {318},
+journal = {Electronic Proceedings in Theoretical Computer Science},
+doi = {10.4204/EPTCS.318.14}
+}
+
+@article{Kissinger2019b,
+    title={Reducing {T}-count with the {ZX}-calculus},
+    author={{Kissinger}, Aleks and {van de Wetering}, John},
+    journal={arXiv e-prints},
+    eprint={1903.10477},
+    archivePrefix={arXiv},
+    primaryClass={quant-ph},
+    year={2019}
+}
+
+ 
+@inproceedings{Fagan2018,
+  author = {{Fagan}, Andrew and {Duncan}, Ross},
+  title = {Optimising {C}lifford circuits with {Q}uantomatic},
+  booktitle = {Proceedings of the 15th International Conference on Quantum Physics and Logic, {QPL} 2018, Halifax, Nova Scotia, 3-7 June 2018},
+  year = 2018,
+  doi = {10.4204/EPTCS.287.5}
+}
+
+@article{Abramsky2009,
+  title={Categorical quantum mechanics},
+  author={Abramsky, Samson and Coecke, Bob},
+  journal={Handbook of quantum logic and quantum structures},
+  volume={2},
+  pages={261--325},
+  year={2009}
+}
+
+@InProceedings{reverC,
+author="Amy, Matthew
+and Roetteler, Martin
+and Svore, Krysta M.",
+editor="Majumdar, Rupak
+and Kun{\v{c}}ak, Viktor",
+title={{Verified Compilation of Space-Efficient Reversible Circuits}},
+booktitle="Computer Aided Verification",
+year="2017",
+publisher="Springer International Publishing",
+address="Cham",
+pages="3--21",
+abstract="The generation of reversible circuits from high-level code is an important problem in several application domains, including low-power electronics and quantum computing. Existing tools compile and optimize reversible circuits for various metrics, such as the overall circuit size or the total amount of space required to implement a given function reversibly. However, little effort has been spent on verifying the correctness of the results, an issue of particular importance in quantum computing. There, compilation allows not only mapping to hardware, but also the estimation of resources required to implement a given quantum algorithm, a process that is crucial for identifying which algorithms will outperform their classical counterparts. We present a reversible circuit compiler called ReVerC, which has been formally verified in F{\$}{\$}^{\backslash}star {\$}{\$}and compiles circuits that operate correctly with respect to the input program. Our compiler compiles the Revs language [21] to combinational reversible circuits with as few ancillary bits as possible, and provably cleans temporary values.",
+isbn="978-3-319-63390-9"
+}
+
+@inproceedings{filliatre13esop,
+  author = {Jean-Christophe Filli\^atre and Andrei Paskevich},
+  title = {Why3 --- Where programs meet provers},
+  booktitle = {Proceedings of the 22nd European Symposium on Programming},
+  year = 2013,
+  series = {Lecture Notes in Computer Science}
+}
+
+@article{qbricks,
+    title={{Toward Certified Quantum Programming}},
+    author = {{Chareton}, Christophe and {Bardin}, S{\'e}bastien and {Bobot}, Fran{\c{c}}ois and {Perrelle}, Valentin and {Valiron}, Benoit},
+    journal={arXiv e-prints},
+    eprint={2003.05841},
+    archivePrefix={arXiv},
+    primaryClass={cs.PL},
+    year={2020}
+}
+
+@phdthesis{RandThesis,
+  title={Formally verified quantum programming},
+  author={Rand, Robert},
+  year={2018},
+  school={University of Pennsylvania}
+}
+
+@inproceedings{Rand2018,
+  author = {Robert Rand and Jennifer Paykin and Dong-Ho Lee and Steve Zdancewic},
+  title = {Re{QWIRE}: Reasoning about reversible quantum circuits},
+  booktitle = {Proceedings of the 15th International Conference on Quantum Physics and Logic, {QPL} 2018, Halifax, Nova Scotia, 3-7 June 2018},
+  year = 2018,
+  doi = {10.4204/EPTCS.287.17}
+}
+
+@misc{parent2015reversible,
+      title={{Reversible circuit compilation with space constraints}}, 
+      author={Alex Parent and Martin Roetteler and Krysta M. Svore},
+      year={2015},
+      eprint={1510.00377},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@article{scaffCCnew,
+	doi = {10.1088/2058-9565/ab8c2c},
+	url = {https://doi.org/10.1088/2058-9565/ab8c2c},
+	year = 2020,
+	month = {may},
+	publisher = {{IOP} Publishing},
+	volume = {5},
+	number = {3},
+	pages = {034013},
+	author = {Andrew Litteken and Yung-Ching Fan and Devina Singh and Margaret Martonosi and Frederic T Chong},
+	title = {{An updated {LLVM}-based quantum research compiler with further {OpenQASM} support}},
+	journal = {Quantum Science and Technology},
+	abstract = {Quantum computing is a rapidly growing field with the potential to change how we solve previously intractable problems. Emerging hardware is approaching a complexity that requires increasingly sophisticated programming and control. Scaffold is an older quantum programming language that was originally designed for resource estimation for far-future, large quantum machines, and ScaffCC is the corresponding LLVM-based compiler. For the first time, we provide a full and complete overview of the language itself, the compiler as well as its pass structure. While previous works Abhari et al (2015 Parallel Comput. 45 2–17), Abhari et al (2012 Scaffold: quantum programming language https://cs.princeton.edu/research/techreps/TR-934-12), have piecemeal descriptions of different portions of this toolchain, we provide a more full and complete description in this paper. We also introduce updates to ScaffCC including conditional measurement and multidimensional qubit arrays designed to keep in step with modern quantum assembly languages, as well as an alternate toolchain targeted at maintaining correctness and low resource count for noisy-intermediate scale quantum (NISQ) machines, and compatibility with current versions of LLVM and Clang. Our goal is to provide the research community with a functional LLVM framework for quantum program analysis, optimization, and generation of executable code.}
+}
+
+@inproceedings{10.1145/3453483.3454061,
+author = {Yu, Nengkun and Palsberg, Jens},
+title = {Quantum Abstract Interpretation},
+year = {2021},
+isbn = {9781450383912},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3453483.3454061},
+doi = {10.1145/3453483.3454061},
+abstract = {In quantum computing, the basic unit of information is a qubit. Simulation of a general quantum program takes exponential time in the number of qubits, which makes simulation infeasible beyond 50 qubits on current supercomputers. So, for the understanding of larger programs, we turn to static techniques. In this paper, we present an abstract interpretation of quantum programs and we use it to automatically verify assertions in polynomial time. Our key insight is to let an abstract state be a tuple of projections. For such domains, we present abstraction and concretization functions that form a Galois connection and we use them to define abstract operations. Our experiments on a laptop have verified assertions about the Bernstein-Vazirani, GHZ, and Grover benchmarks with 300 qubits.},
+booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
+pages = {542–558},
+numpages = {17},
+keywords = {quantum programming, scalability, abstract interpretation},
+location = {Virtual, Canada},
+series = {PLDI 2021}
+}
+
+@inproceedings{JavadiAbhari2014,
+ author = {Javadi-Abhari, Ali and Patil, Shruti and Kudrow, Daniel and Heckey, Jeff and Lvov, Alexey and Chong, Frederic T. and Martonosi, Margaret},
+ title = {{ScaffCC: A framework for compilation and analysis of quantum computing programs}},
+ booktitle = {Proceedings of the 11th ACM Conference on Computing Frontiers},
+ series = {CF '14},
+ year = {2014},
+ isbn = {978-1-4503-2870-8},
+ location = {Cagliari, Italy},
+ pages = {1:1--1:10},
+ articleno = {1},
+ numpages = {10},
+ url = {http://doi.acm.org/10.1145/2597917.2597939},
+ doi = {10.1145/2597917.2597939},
+ acmid = {2597939},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {compilers, quantum computation, reversible logic},
+} 
+
+@article{10.1145/2578855.2535879,
+author = {Pagani, Michele and Selinger, Peter and Valiron, Beno\^{\i}t},
+title = {Applying Quantitative Semantics to Higher-Order Quantum Computing},
+year = {2014},
+issue_date = {January 2014},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {49},
+number = {1},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/2578855.2535879},
+doi = {10.1145/2578855.2535879},
+abstract = {Finding a denotational semantics for higher order quantum computation is a long-standing
+problem in the semantics of quantum programming languages. Most past approaches to
+this problem fell short in one way or another, either limiting the language to an
+unusably small finitary fragment, or giving up important features of quantum physics
+such as entanglement. In this paper, we propose a denotational semantics for a quantum
+lambda calculus with recursion and an infinite data type, using constructions from
+quantitative semantics of linear logic.},
+journal = {SIGPLAN Not.},
+month = jan,
+pages = {647–658},
+numpages = {12},
+keywords = {quantum computation, higher-order, functional programming, categorical model, completely positive maps}
+}
+
+@inproceedings{sliqlanguage,
+author = {Bichsel, Benjamin and Baader, Maximilian and Gehr, Timon and Vechev, Martin},
+title = {{Silq: A High-Level Quantum Language with Safe Uncomputation and Intuitive Semantics}},
+year = {2020},
+isbn = {9781450376136},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3385412.3386007},
+doi = {10.1145/3385412.3386007},
+abstract = {Existing quantum languages force the programmer to work at a low level of abstraction leading to unintuitive and cluttered code. A fundamental reason is that dropping temporary values from the program state requires explicitly applying quantum operations that safely uncompute these values. We present Silq, the first quantum language that addresses this challenge by supporting safe, automatic uncomputation. This enables an intuitive semantics that implicitly drops temporary values, as in classical computation. To ensure physicality of Silq's semantics, its type system leverages novel annotations to reject unphysical programs. Our experimental evaluation demonstrates that Silq programs are not only easier to read and write, but also significantly shorter than equivalent programs in other quantum languages (on average -46% for Q#, -38% for Quipper), while using only half the number of quantum primitives.},
+booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {286–300},
+numpages = {15},
+keywords = {Quantum Language, Semantics, Uncomputation},
+location = {London, UK},
+series = {PLDI 2020}
+}
+
+@inproceedings{unqomp,
+author = {Paradis, Anouk and Bichsel, Benjamin and Steffen, Samuel and Vechev, Martin},
+title = {Unqomp: Synthesizing Uncomputation in Quantum Circuits},
+year = {2021},
+isbn = {9781450383912},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3453483.3454040},
+doi = {10.1145/3453483.3454040},
+abstract = {A key challenge when writing quantum programs is the need for uncomputation: temporary
+values produced during the computation must be reset to zero before they can be safely
+discarded. Unfortunately, most existing quantum languages require tedious manual uncomputation,
+often leading to inefficient and error-prone programs. We present Unqomp, the first
+procedure to automatically synthesize uncomputation in a given quantum circuit. Unqomp
+can be readily integrated into popular quantum languages, allowing the programmer
+to allocate and use temporary values analogously to classical computation, knowing
+they will be uncomputed by Unqomp. Our evaluation shows that programs leveraging Unqomp
+are not only shorter (-19% on average), but also generate more efficient circuits
+(-71% gates and -19% qubits on average).},
+booktitle = {Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
+pages = {222?236},
+numpages = {15},
+keywords = {Quantum Circuits, Synthesis, Uncomputation},
+location = {Virtual, Canada},
+series = {PLDI 2021}
+}
+
+@inproceedings{Clarke:1981:DSS:648063.747438,
+ author = {Clarke, Edmund M. and Emerson, E. Allen},
+ title = {Design and Synthesis of Synchronization Skeletons Using Branching-Time Temporal Logic},
+ booktitle = {Logic of Programs, Workshop},
+ year = {1982},
+ isbn = {3-540-11212-X},
+ pages = {52--71},
+ numpages = {20},
+ url = {http://dl.acm.org/citation.cfm?id=648063.747438},
+ acmid = {747438},
+ publisher = {Springer-Verlag},
+ address = {London, UK, UK},
+} 
+
+
+@Inbook{Owens2008,
+author="Owens, Scott",
+editor="Drossopoulou, Sophia",
+title="A Sound Semantics for OCaml                light                          ",
+bookTitle="Programming Languages and Systems: 17th European Symposium on Programming, ESOP 2008, Held as Part of the Joint European Conferences on Theory and Practice of Software, ETAPS 2008, Budapest, Hungary, March 29-April 6, 2008. Proceedings",
+year="2008",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="1--15",
+abstract="Few programming languages have a mathematically rigorous definition or metatheory---in part because they are perceived as too large and complex to work with. This paper demonstrates the feasibility of such undertakings: we formalize a substantial portion of the semantics of Objective Caml's core language (which had not previously been given a formal semantics), and we develop a mechanized type soundness proof in HOL. We also develop an executable version of the operational semantics, verify that it coincides with our semantic definition, and use it to test conformance between the semantics and the OCaml implementation. We intend our semantics to be a suitable substrate for the verification of OCaml programs.",
+isbn="978-3-540-78739-6",
+doi="10.1007/978-3-540-78739-6_1",
+url="http://dx.doi.org/10.1007/978-3-540-78739-6_1"
+}
+
+
+@Inbook{Maharaj19941,
+author="Maharaj, Saviand Gunter, Elsa",
+editor="Melham, Thomas F.
+and Camilleri, Juanito",
+title="Studying the ML module system in HOL",
+bookTitle="Higher Order Logic Theorem Proving and Its Applications: 7th International Workshop Valletta, Malta, September 19--22, 1994 Proceedings",
+year="1994",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="346--361",
+abstract="In an earlier project [5] the dynamic semantics of the Core of Standard ML (SML) was encoded in the HOL theorem-prover. We extend this by adding the dynamic Module system. We then develop a possible dynamic semantics for a Module system with higher-order functors and encode this as well. Next we relate these two semantics via embeddings and projections and discuss how we can use these to state and to prove that evaluation in the proposed system is a conservative extension, in an appropriate sense, of evaluation in the SML Module system.",
+isbn="978-3-540-48803-3",
+doi="10.1007/3-540-58450-1_53",
+url="http://dx.doi.org/10.1007/3-540-58450-1_53"
+}
+
+@inproceedings{Maharaj1994,
+ author = {Maharaj, Savi and Gunter, Elsa L.},
+ title = {{Studying the ML Module System in HOL}},
+ booktitle = {Proceedings of the 7th International Workshop on Higher Order Logic Theorem Proving and Its Applications},
+ year = {1994},
+ volume = {859},
+ isbn = {3-540-58450-1},
+ pages = {346--361},
+ numpages = {16},
+ url = {http://dl.acm.org/citation.cfm?id=646521.759249},
+ acmid = {759249},
+ publisher = {LNCS}
+} 
+
+
+@inproceedings{citeulike:5906202,
+    author = {Felleisen, Matthias and Friedman, Daniel P.},
+    booktitle = {3rd Working Conference on the Formal Description of Programming Concepts},
+    citeulike-article-id = {5906202},
+    keywords = {cek},
+    month = aug,
+    posted-at = {2011-07-13 07:58:05},
+    priority = {2},
+    title = {Control operators, the {SECD}-machine, and the lambda-calculus},
+    year = {1986}
+}
+
+@article{HoareLogic,
+ author = {Hoare, C. A. R.},
+ title = {{An axiomatic basis for computer programming}},
+ journal = {Commun. ACM},
+ issue_date = {Oct. 1969},
+ volume = {12},
+ number = {10},
+ month = oct,
+ year = {1969},
+ issn = {0001-0782},
+ pages = {576--580},
+ numpages = {5},
+ url = {http://doi.acm.org/10.1145/363235.363259},
+ doi = {10.1145/363235.363259},
+ acmid = {363259},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {axiomatic method, formal language definition, machine-independent programming, program documentation, programming language design, theory of programming' proofs of programs},
+} 
+
+@inproceedings{dragon11,
+  editor    = {Jens Bendisposto, Cliff Jones, Michael Leuschel, Alexander Romanovsky},
+  booktitle = {AVoCS'11 -- Proceedings of the Eleventh International Workshop on
+               Automated Verification of Critical Systems},
+  publisher = {Newcastle University},
+  author    = {Marc Dragon, Andy Gimblett, Markus Roggenbach},
+  title     = {{A} {S}imulator for {T}imed {CSP}},
+  year      = {2011},
+}
+
+
+@inproceedings{fdr3,
+  author    = {Thomas Gibson-Robinson and Philip Armstrong,
+Alexandre Boulgakov and A.W. Roscoe},
+  title     = {FDR3 - A Modern Refinement Checker for CSP},
+  booktitle = {TACAS},
+  year      = {2014},
+  note      = {In Press}
+}
+
+
+
+@proceedings{DBLP:conf/hicss/2009,
+  title     = {42st Hawaii International International Conference on Systems
+               Science (HICSS-42 2009), Proceedings (CD-ROM and online),
+               5-8 January 2009, Waikoloa, Big Island, HI, USA},
+  booktitle = {HICSS},
+  publisher = {IEEE Computer Society},
+  year      = {2009},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@inproceedings{ayesha,
+  author    = {Elsa L. Gunter and
+               Ayesha Yasmeen and
+               Carl A. Gunter and
+               Anh Nguyen},
+  title     = {Specifying and Analyzing Workflows for Automated Identification
+               and Data Capture},
+  booktitle = {HICSS},
+  year      = {2009},
+  pages     = {1-11},
+  ee        = {http://dx.doi.org/10.1109/HICSS.2009.402},
+  crossref  = {DBLP:conf/hicss/2009},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@inproceedings{Wong:2007:PAW:1785051.1785059,
+ author = {Wong, Peter Y. H. and Gibbons, Jeremy},
+ title = {A process-algebraic approach to workflow specification and refinement},
+ booktitle = {Proceedings of the 6th international conference on Software composition},
+ series = {SC'07},
+ year = {2007},
+ isbn = {3-540-77350-9, 978-3-540-77350-4},
+ location = {Braga, Portugal},
+ pages = {51--65},
+ numpages = {15},
+ url = {http://dl.acm.org/citation.cfm?id=1785051.1785059},
+ acmid = {1785059},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@INPROCEEDINGS{Wright94derivinghuman-error,
+    author = {Peter Wright and Bob Fields and Michael Harrison},
+    title = {Deriving Human-Error Tolerance Requirements from Tasks},
+    booktitle = {In “Proc. of ICRE’94 – IEEE Int’l. Conf. on Requirements Engineering},
+    year = {1994},
+    pages = {135--142},
+    publisher = {IEEE}
+}
+
+@MISC{Kuncakquantifier-freeboolean,
+    author = {Viktor Kuncak},
+    title = {Quantifier-Free Boolean Algebra with Presburger Arithmetic is {NP}-Complete},
+    year = {2007}
+}
+
+@phdthesis{ayeshaa,
+author = {Yasmeen, Ayesha},
+title = {Formalizing operator task analysis},
+school = {University of Illinois at Urbana-Champaign, USA},
+year = {2011},
+}
+
+@incollection{isabelle,
+	Author = {Lawrence C. Paulson},
+	Booktitle = {Logic and Computer Science},
+	Date-Modified = {2005-04-20 12:07:55 +0100},
+	Editor = {P. Odifreddi},
+	Pages = {361-386},
+	Publisher = {Academic Press},
+	Title = {{{Isabelle}: The Next 700 Theorem Provers}},
+	Year = {1990}}
+
+@INPROCEEDINGS{Calder01asymbolic,
+    author = {Muffy Calder and Carron Shankland},
+    title = {A symbolic semantics and bisimulation for Full LOTOS},
+    booktitle = {PROC. FORMAL TECHNIQUES FOR NETWORKED AND DISTRIBUTED SYSTEMS (FORTE XIV},
+    year = {2001},
+    pages = {184--200},
+    publisher = {Kluwer Academic Publishers}
+}
+
+@techreport{ksemantics,
+    author = "Li, Liyi and Gunter, Elsa L",
+    month = "June",
+    year = "2018",
+    number = "http://hdl.handle.net/2142/100116",
+    institution = "University of Illinois at Urbana-Champaign",
+    title = {{IsaK: A Complete Semantics of K}}
+}
+
+
+@article{javamemorymodel,
+ author = {Manson, Jeremy and Pugh, William and Adve, Sarita V.},
+ title = {The Java Memory Model},
+ journal = {SIGPLAN Not.},
+ issue_date = {January 2005},
+ volume = {40},
+ number = {1},
+ month = jan,
+ year = {2005},
+ issn = {0362-1340},
+ pages = {378--391},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/1047659.1040336},
+ doi = {10.1145/1047659.1040336},
+ acmid = {1040336},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Java, concurrency, memory model, multithreading},
+} 
+
+@article{Pugliese:2009:SSC:1556510.1556714,
+ author = {Pugliese, Rosario and Tiezzi, Francesco and Yoshida, Nobuko},
+ title = {A Symbolic Semantics for a Calculus for Service-Oriented Computing},
+ journal = {Electron. Notes Theor. Comput. Sci.},
+ issue_date = {July, 2009},
+ volume = {241},
+ month = jul,
+ year = {2009},
+ issn = {1571-0661},
+ pages = {135--164},
+ numpages = {30},
+ url = {http://dx.doi.org/10.1016/j.entcs.2009.06.008},
+ doi = {10.1016/j.entcs.2009.06.008},
+ acmid = {1556714},
+ publisher = {Elsevier Science Publishers B. V.},
+ address = {Amsterdam, The Netherlands, The Netherlands},
+ keywords = {Service-oriented computing, process calculi, service orchestration, symbolic semantics},
+} 
+
+@inproceedings{DBLP:conf/concur/Sangiori93,
+  author    = {Davide Sangiorgi},
+  title     = {A Theory of Bisimulation for the pi-Calculus},
+  booktitle = {CONCUR},
+  year      = {1993},
+  pages     = {127-142},
+  ee        = {http://dx.doi.org/10.1007/3-540-57208-2_10},
+  crossref  = {DBLP:conf/concur/1993},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@proceedings{DBLP:conf/concur/1993,
+  editor    = {Eike Best},
+  title     = {CONCUR '93, 4th International Conference on Concurrency
+               Theory, Hildesheim, Germany, August 23-26, 1993, Proceedings},
+  booktitle = {CONCUR},
+  publisher = {Springer},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {715},
+  year      = {1993},
+  isbn      = {3-540-57208-2},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@inproceedings{Bonchi:2008:SSR:1792803.1792831,
+ author = {Bonchi, Filippo and Montanari, Ugo},
+ title = {Symbolic semantics revisited},
+ booktitle = {Proceedings of the Theory and practice of software, 11th international conference on Foundations of software science and computational structures},
+ series = {FOSSACS'08/ETAPS'08},
+ year = {2008},
+ isbn = {3-540-78497-7, 978-3-540-78497-5},
+ location = {Budapest, Hungary},
+ pages = {395--412},
+ numpages = {18},
+ url = {http://dl.acm.org/citation.cfm?id=1792803.1792831},
+ acmid = {1792831},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@article{Hennessy:1995:SB:202362.202370,
+ author = {Hennessy, M. and Lin, H.},
+ title = {Symbolic bisimulations},
+ journal = {Theor. Comput. Sci.},
+ issue_date = {Feb. 20, 1995},
+ volume = {138},
+ number = {2},
+ month = feb,
+ year = {1995},
+ issn = {0304-3975},
+ pages = {353--389},
+ numpages = {37},
+ url = {http://dx.doi.org/10.1016/0304-3975(94)00172-F},
+ doi = {10.1016/0304-3975(94)00172-F},
+ acmid = {202370},
+ publisher = {Elsevier Science Publishers Ltd.},
+ address = {Essex, UK},
+} 
+
+
+@proceedings{DBLP:conf/hicss/2009,
+  title     = {42st Hawaii International International Conference on Systems
+               Science (HICSS-42 2009), Proceedings (CD-ROM and online),
+               5-8 January 2009, Waikoloa, Big Island, HI, USA},
+  booktitle = {HICSS},
+  publisher = {IEEE Computer Society},
+  year      = {2009},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@INPROCEEDINGS{Sun08modelchecking,
+    author = {Jun Sun and Yang Liu and Jin Song Dong},
+    title = {Model checking csp revisited: Introducing a process analysis toolkit},
+    booktitle = {In ISoLA 2008},
+    year = {2008},
+    pages = {307--322},
+    publisher = {Springer}
+}
+
+@MISC{Groote_binarydecision,
+    author = {Jan Friso Groote},
+    title = {Binary Decision Diagrams for First Order Predicate Logic},
+    year = {}
+}
+
+@inproceedings{Cousot:1977:AIU:512950.512973,
+ author = {Cousot, Patrick and Cousot, Radhia},
+ title = {Abstract interpretation: a unified lattice model for static analysis of programs by construction or approximation of fixpoints},
+ booktitle = {Proceedings of the 4th ACM SIGACT-SIGPLAN symposium on Principles of programming languages},
+ series = {POPL '77},
+ year = {1977},
+ location = {Los Angeles, California},
+ pages = {238--252},
+ numpages = {15},
+ url = {http://doi.acm.org/10.1145/512950.512973},
+ doi = {10.1145/512950.512973},
+ acmid = {512973},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+@MISC{Kuncakquantifier-freeboolean,
+    author = {Viktor Kuncak},
+    title = {Quantifier-Free Boolean Algebra with Presburger Arithmetic is {NP}-Complete},
+    year = {2007}
+}
+
+@article{deBruijn,
+author = {de Bruijn, Nicolaas Govert},
+title = {{Lambda Calculus Notation with Nameless Dummies: a Tool for Automatic Formula Manipulation with Application to the Church-Rosser Theorem}},
+journal = {Indagationes Mathematicae (Elsevier)},
+year = {1972},
+volume = {34},
+pages = {381--392},
+read = {Yes},
+rating = {0},
+date-added = {2012-04-04T06:51:32GMT+00:00},
+date-modified = {2012-04-16T07:00:01GMT+00:00},
+local-url = {file://localhost/Users/liamoc/Library/Application%20Support/Papers2/Articles/1972/de%20Bruijn/1972%20de%20Bruijn.pdf},
+file = {{1972 de Bruijn.pdf:/Users/liamoc/Library/Application Support/Papers2/Articles/1972/de Bruijn/1972 de Bruijn.pdf:application/pdf}},
+uri = {\url{papers2://publication/uuid/BDDF01D3-D6BE-439A-ADC1-0184F6CB5F82}}
+}
+
+@phdthesis{ayeshaa,
+author = {Yasmeen, Ayesha},
+title = {Formalizing operator task analysis},
+school = {University of Illinois at Urbana-Champaign, USA},
+year = {2011},
+}
+
+@incollection{isabellea,
+	Author = {Lawrence C. Paulson},
+	Booktitle = {Logic and Computer Science},
+	Date-Modified = {2005-04-20 12:07:55 +0100},
+	Editor = {P. Odifreddi},
+	Pages = {361-386},
+	Publisher = {Academic Press},
+	Title = {{Isabelle}: The Next 700 Theorem Provers},
+	Year = {1990}}
+
+@article{mansky2016ptrans,
+  author = {Mansky, William and Gunter, Elsa L. and Griffith, Dennis and Adams, Michael D.},
+  title = {Specifying and executing optimizations for generalized control flow graphs},
+  journal = {Science of Computer Programming},
+  pages = {2--23},
+  year = {2016},
+  volume = {130},
+  month = nov,
+  issn = {0167-6423},
+  doi = {10.1016/j.scico.2016.06.003},
+}
+
+@article{DBLP:journals/corr/abs-0907-3804,
+  author    = {Colin Stirling},
+  title     = {Decidability of higher-order matching},
+  journal   = {Logical Methods in Computer Science},
+  volume    = {5},
+  number    = {3},
+  year      = {2009},
+  url       = {http://arxiv.org/abs/0907.3804},
+  timestamp = {Tue, 21 Sep 2010 13:24:18 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-0907-3804},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{elsahol,
+  author    = {Myra Van Inwegen and
+               Elsa L. Gunter},
+  title     = {{HOL-ML}},
+  booktitle = {Higher Order Logic Theorem Proving and its Applications, 6th International
+               Workshop, {HUG} '93, Vancouver, BC, Canada, August 11-13, 1993, Proceedings},
+  pages     = {61--74},
+  year      = {1993},
+  volume    = {780},
+  url       = {https://doi.org/10.1007/3-540-57826-9_125},
+  doi       = {10.1007/3-540-57826-9_125},
+  publisher = {LNCS},
+  timestamp = {Sat, 20 May 2017 15:32:54 +0200},
+  biburl    = {https://dblp.org/rec/bib/conf/tphol/InwegenG93},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@TechReport{liyi,
+  author =       {Liyi Li and Elsa L. Gunter and William Mansky },
+  title =        {Symbolic Semantics for CSP},
+  institution =  {Department of Computer Science, University of Illinois at Urbana-Champaign},
+  year =         {2013},
+  url =         {http://hdl.handle.net/2142/44888}
+}
+
+@MISC{Clavel01maude:specification,
+    author = {M. Clavel and F. Durán and S. Eker and P. Lincoln and N. Martí-Oliet and J. Meseguer and J. F. Quesada},
+    title = {Maude: Specification and Programming in Rewriting Logic},
+    year = {2001}
+}
+
+@misc{felleisen1986control,
+  title={Control Operators, the SECD Machine, and the $\lambda$-Calculus, Formal Description of Programming Concepts III (ed. M. Wirsing), 193--217},
+  author={Felleisen, Matthias and Friedman, D},
+  year={1986},
+  publisher={North-Holland}
+}
+
+@inproceedings{grover1996,
+author = {Grover, Lov K.},
+title = {A Fast Quantum Mechanical Algorithm for Database Search},
+year = 1996,
+isbn = {0897917855},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/237814.237866},
+booktitle = {Proceedings of the Twenty-Eighth Annual ACM Symposium on Theory of Computing},
+pages = {212–219},
+numpages = {8},
+location = {Philadelphia, Pennsylvania, USA},
+series = {STOC '96},
+eprint={quant-ph/9605043},
+archivePrefix={arXiv}
+}
+
+@article{grover1997,
+  title = {Quantum Mechanics Helps in Searching for a Needle in a Haystack},
+  author = {Grover, Lov K.},
+  journal = {Phys. Rev. Lett.},
+  volume = {79},
+  issue = {2},
+  pages = {325--328},
+  year = 1997,
+  month = jul,
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.79.325},
+  eprint={quant-ph/9706033},
+  archivePrefix={arXiv}
+}
+
+@inproceedings{chacha,
+  title={ChaCha, a variant of Salsa20},
+  author={Bernstein, Daniel J.},
+  publisher={ECRYPT Network of Excellence in Cryptology},
+  location={Lausanne, Switzerland},
+  series={The State of the Art of Stream Ciphers},
+  pages={273--278},
+  url={https://cr.yp.to/papers.html#chacha},
+  month=feb,
+  year=2008
+}
+
+@InProceedings{grover-hash,
+author="Bernstein, Daniel J.",
+editor="Sendrier, Nicolas",
+title="Grover vs. McEliece",
+booktitle="Post-Quantum Cryptography",
+year="2010",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="73--80",
+abstract="This paper shows that quantum information-set-decoding attacks are asymptotically much faster than non-quantum information-set-decoding attacks.",
+isbn="978-3-642-12929-2",
+doi={10.1007/978-3-642-12929-2_6}
+}
+
+@techreport{rfc7905,
+  author = {A. Langley and W. Chang and N. Mavrogiannopoulos and J. Strombergson and S. Josefsson},
+  title = {ChaCha20-Poly1305 Cipher Suites for Transport Layer Security (TLS)},
+  type = {RFC},
+  number = {7905},
+  year = 2016,
+  month = Jun,
+  issn = {2070-1721},
+  publisher = {Internet Engineering Task Force},
+  doi={10.17487/RFC7905}
+}
+
+@techreport{rfc8446,
+  author = {E. Rescorla},
+  title = {The Transport Layer Security (TLS) Protocol Version 1.3},
+  howpublished = {Internet Requests for Comments},
+  type = {RFC},
+  number = {8446},
+  year = 2018,
+  month = Aug,
+  issn = {2070-1721},
+  publisher = {Internet Engineering Task Force},
+  doi={10.17487/RFC8446}
+}
+
+@Inbook{salsa,
+author="Bernstein, Daniel J.",
+editor="Robshaw, Matthew
+and Billet, Olivier",
+title="The Salsa20 Family of Stream Ciphers",
+bookTitle="New Stream Cipher Designs: The eSTREAM Finalists",
+year="2008",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="84--97",
+abstract="Salsa20 is a family of 256-bit stream ciphers designed in 2005 and submitted to eSTREAM, the ECRYPT Stream Cipher Project. Salsa20 has progressed to the third round of eSTREAM without any changes. The 20-round stream cipher Salsa20/20 is consistently faster than AES and is recommended by the designer for typical cryptographic applications. The reduced-round ciphers Salsa20/12 and Salsa20/8 are among the fastest 256-bit stream ciphers available and are recommended for applications where speed is more important than confidence. The fastest known attacks use ≈{\thinspace}2153 simple operations against Salsa20/7, ≈{\thinspace}2249 simple operations against Salsa20/8, and ≈{\thinspace}2255 simple operations against Salsa20/9, Salsa20/10, etc. In this paper, the Salsa20 designer presents Salsa20 and discusses the decisions made in the Salsa20 design.",
+isbn="978-3-540-68351-3",
+doi="10.1007/978-3-540-68351-3_8"
+}
+
+@inproceedings{coq-bits,
+author = {Kennedy, Andrew and Benton, Nick and Jensen, Jonas B. and Dagand, Pierre-Evariste},
+title = {Coq: The World's Best Macro Assembler?},
+year = {2013},
+isbn = {9781450321549},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/2505879.2505897},
+abstract = {We describe a Coq formalization of a subset of the x86 architecture. One emphasis of the model is brevity: using dependent types, type classes and notation we give the x86 semantics a makeover that counters its reputation for baroqueness. We model bits, bytes, and memory concretely using functions that can be computed inside Coq itself; concrete representations are mapped across to mathematical objects in the SSReflect library (naturals, and integers modulo 2n) to prove theorems. Finally, we use notation to support conventional assembly code syntax inside Coq, including lexically-scoped labels. Ordinary Coq definitions serve as a powerful "macro" feature for everything from simple conditionals and loops to stack-allocated local variables and procedures with parameters. Assembly code can be assembled within Coq, producing a sequence of hex bytes. The assembler enjoys a correctness theorem relating machine code in memory to a separation-logic formula suitable for program verification.},
+booktitle = {Proceedings of the 15th Symposium on Principles and Practice of Declarative Programming},
+pages = {13–24},
+numpages = {12},
+keywords = {Coq, dependent types, assembly code},
+location = {Madrid, Spain},
+series = {PPDP '13}
+}
+
+
+@misc{quipper-qasm,
+author={Bian, Xiaoning},
+title={Compile Quipper quantum circuit to OpenQasm 2.0 program},
+year=2020,
+url = "https://www.mathstat.dal.ca/~xbian/QasmTrans/",
+note = "[Online; accessed 8-July-2021]"
+}
+
+
+@misc{ddsim,
+      title={Hybrid Schr\"odinger-Feynman Simulation of Quantum Circuits With Decision Diagrams}, 
+      author={Lukas Burgholzer and Hartwig Bauer and Robert Wille},
+      year={2021},
+      eprint={2105.07045},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@article{Yuan2022,
+author = {Yuan, Charles and McNally, Christopher and Carbin, Michael},
+title = {Twist: Sound Reasoning for Purity and Entanglement in Quantum Programs},
+year = {2022},
+issue_date = {January 2022},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {6},
+number = {POPL},
+url = {https://doi.org/10.1145/3498691},
+doi = {10.1145/3498691},
+abstract = {Quantum programming languages enable developers to implement algorithms for quantum computers that promise computational breakthroughs in classically intractable tasks. Programming quantum computers requires awareness of entanglement, the phenomenon in which measurement outcomes of qubits are correlated. Entanglement can determine the correctness of algorithms and suitability of programming patterns. In this work, we formalize purity as a central tool for automating reasoning about entanglement in quantum programs. A pure expression is one whose evaluation is unaffected by the measurement outcomes of qubits that it does not own, implying freedom from entanglement with any other expression in the computation. We present Twist, the first language that features a type system for sound reasoning about purity. The type system enables the developer to identify pure expressions using type annotations. Twist also features purity assertion operators that state the absence of entanglement in the output of quantum gates. To soundly check these assertions, Twist uses a combination of static analysis and runtime verification. We evaluate Twist’s type system and analyses on a benchmark suite of quantum programs in simulation, demonstrating that Twist can express quantum algorithms, catch programming errors in them, and support programs that existing languages disallow, while incurring runtime verification overhead of less than 3.5%.},
+journal = {Proc. ACM Program. Lang.},
+month = {jan},
+articleno = {30},
+numpages = {32},
+keywords = {purity, entanglement, type systems, quantum programming}
+}
+
+\end{filecontents}

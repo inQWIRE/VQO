@@ -1,0 +1,618 @@
+\usepackage{xcolor}
+\usepackage{colortbl}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
+%\usepackage{stmaryrd}
+\usepackage{hyperref}
+
+\usepackage{subcaption}
+%\usepackage{subfig}
+\usepackage{wrapfig}
+
+\usepackage{xspace}
+\usepackage{float}
+\usepackage{balance}
+
+\usepackage{textcomp} %just for a vertical quote
+
+\usepackage{changepage}
+\usepackage{array}
+
+
+% References
+%\usepackage[capitalize, noabbrev]{cleveref} % must be loaded after hyperref and amsmath
+\usepackage{cleveref} % must be loaded after hyperref and amsmath
+
+% Figures
+\usepackage{wrapfig}
+\usepackage{caption}
+
+% Tables
+\usepackage{longtable}
+\usepackage{tabu}
+
+% Lists
+%\usepackage[inline,shortlabels]{enumitem}
+
+% Proof trees
+\usepackage{mathpartir}
+%\usepackage{bussproofs}
+
+% Symbolx
+\usepackage{mathtools} %psmallmatrix
+%\usepackage{stmaryrd} % more math symbols
+\usepackage{xfrac} % fractions
+
+% Enumeration
+% \usepackage{enumitem} % resume option
+
+% Quantum
+\usepackage[qm,braket]{qcircuit}
+%\usepackage{braket}
+\newcommand{\ketbra}[2]{\ket{#1}\!\bra{#2}}
+
+\hyphenation{Comp-Cert}
+
+%Language names
+
+\newcommand{\name}{\textsc{vqo}\xspace}
+\newcommand{\qvm}{\textsc{qvm}\xspace}
+\newcommand{\sourcelang}{\ensuremath{\mathcal{O}\textsc{qimp}}\xspace}
+%\newcommand{\pqasm}{\textsc{oqasm}\xspace}
+\newcommand{\oqasm}{\ensuremath{\mathcal{O}\textsc{qasm}}\xspace}
+\newcommand{\pqasm}{\ensuremath{\mathcal{O}\textsc{qasm+}}\xspace}
+\newcommand{\intlang}{\oqasm}
+\newcommand{\vqimp}{\sourcelang}
+\newcommand{\vqir}{\intlang}
+\newcommand{\sqir}{\textsc{sqir}\xspace}
+%\newcommand{\sqir}{\textsc{sqire}\xspace}
+\newcommand{\qwire}{\ensuremath{\mathcal{Q}\textsc{wire}}\xspace}
+\newcommand{\qbricks}{\ensuremath{\mathcal{Q}\textsc{bricks}}\xspace}
+\newcommand{\liquids}{LIQ\emph{Ui}$\ket{}$\xspace}
+\newcommand{\liquid}{Liquid\xspace}
+\newcommand{\revs}{R\textsc{evs}\xspace}
+\newcommand{\reverc}{R\textsc{e}V\textsc{er}C\xspace}
+\newcommand{\fstar}{F${}^\star$\xspace}
+\newcommand{\voqc}{\textsc{voqc}\xspace}
+\newcommand{\tket}{t$\vert$ket$\rangle$\xspace}
+\newcommand{\myparagraph}[1]{\paragraph{\textbf{#1}}}
+\newcommand{\qket}[1]{\ket{\Phi(#1)}}
+%quantum tikz macros
+% These are useful if not using qcircuit (which kind of sucks, alternatives do exist
+\usepackage{tikz}
+\newcommand{\mycontrol}[2]{\draw[fill=black] (#1,#2) circle [radius=0.10];}
+\newcommand{\qnot}[2]{\draw (#1,#2) circle [radius=0.20]; \draw (#1,#2-0.20) -- (#1,#2+0.20);}
+\newcommand{\cnot}[3]{\qnot{#1}{#3}\mycontrol{#1}{#2}\draw (#1,#2) -- (#1,#3);}
+\newcommand{\tof}[4]{\qnot{#1}{#4}\mycontrol{#1}{#2}\mycontrol{#1}{#3}\draw (#1,#2) -- (#1,#4);\draw (#1,#3) -- (#1,#4);}
+\newcommand{\unitary}[3]{\draw[fill=white] (#2-0.4,#3-0.4) rectangle node {\texttt{#1}} (#2+0.4,#3+0.4);}
+\newcommand{\had}[2]{\unitary{H}{#1}{#2}}
+\newcommand{\meas}[2]{\draw[fill=white] (#1-0.8,#2-0.4) rectangle node {\texttt{meas}} (#1+0.8,#2+0.4);}
+\newcommand{\discard}[2]{\draw[thick](#1,#2-0.2) -- (#1,#2+0.2);}
+
+% From POPL2017
+\newcommand{\shows}{\ensuremath{\vdash}}
+\newcommand{\mprod}{\mathbin{\text{\footnotesize \ensuremath{\otimes}}}}
+\newcommand{\aprod}{\mathbin{\text{\footnotesize \ensuremath{\&}}}}
+\newcommand{\msum}{\mathbin{\text{\footnotesize \ensuremath{\parr}}}}
+\newcommand{\asum}{\mathbin{\text{\footnotesize \ensuremath{\oplus}}}}
+\newcommand{\lolto}{\ensuremath{\multimap}}
+\newcommand{\bang}{\ensuremath{\oc}}
+\newcommand{\whynot}{\ensuremath{\wn}}
+\newcommand{\one}{\ensuremath{1}}
+\newcommand{\zero}{\ensuremath{0}}
+\newcommand{\interp}[1]{[ #1 ]}
+\newcommand{\interpalt}[1]{\llbracket #1 \rrbracket}
+\newcommand{\ecode}[1]{\emph{\texttt{#1}}}
+
+% From QPL2017
+\newenvironment{nscenter}
+ {\parskip=3pt\par\nopagebreak\centering}
+ {\par\noindent\ignorespacesafterend}
+
+% From CoqPL2018
+\newcommand{\dimx}[1]{\text{dim}_x(#1)}
+\newcommand{\dimy}[1]{\text{dim}_y(#1)}
+
+% From QPL2018
+
+% Standard mathematical definitions
+% Field
+\newcommand{\F}{\ensuremath{\mathbb{F}}\xspace}
+% Integers
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}\xspace}
+% Naturals
+\newcommand{\N}{\ensuremath{\mathbb{N}}\xspace}
+% Rationals
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}\xspace}
+% Reals
+\newcommand{\R}{\ensuremath{\mathbb{R}}\xspace}
+% Complex
+\newcommand{\CC}{\ensuremath{\mathbb{C}}\xspace}
+% \newcommand{\C}{\ensuremath{\mathbb{C}}\xspace}
+
+%   Tikz
+\usepackage{pgf}
+
+\usepackage{tikz} % circuit diagrams
+\usetikzlibrary{%
+  arrows,%
+  shapes.misc,% wg. rounded rectangle
+  shapes.geometric, % diamonds
+  shapes.arrows,%
+  shapes.callouts,
+  shapes.gates.logic.US,
+  chains,%
+  matrix,%
+  positioning,% wg. " of "
+  scopes,%
+  decorations.pathmorphing,% /pgf/decoration/random steps | erste Graphik
+  decorations.text,
+  decorations.pathreplacing, % braces
+  shadows,%
+  automata
+}
+\tikzset{ machine/.style={
+    % The shape:
+    rectangle,
+    % The size:
+    minimum width=25mm,
+    minimum height=18mm,
+    text width=24mm,
+    % The alignment
+    align=center,
+    % The border:
+    very thick,
+    draw=black,
+    % The colors:
+    color=black,
+    fill=white,
+    % Font
+%    font=\ttfamily,
+  }
+}
+
+% Place two figures side-by-side, possibly overlapping
+\newenvironment{pairfigures}[4]{%
+\newcommand{\foot}{#4} % yay, clever hackery!
+  \let\and&
+  \begin{center}%
+  \vspace{#3\baselineskip}%
+  \begin{tabular}{m{#1}m{#2}}%
+}{%
+  \end{tabular}
+  \vspace{\foot\baselineskip}
+  \end{center}
+}
+
+\newcommand{\function}[2]{#1~#2}
+\newcommand*\rfrac[2]{{}^{#1}\!/_{#2}}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+%
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+%\DeclarePairedDelimiter{\inpar}[2]{}{}{#1\;\delimsize\|\;#2}
+\newcommand{\inpar}{\mathbin{\|}}
+
+% Proper division symbol
+\makeatletter
+\DeclareRobustCommand{\vardivision}{%
+  \mathbin{\mathpalette\@vardivision\relax}% 
+}
+\newcommand{\@vardivision}[2]{%
+  \reflectbox{$\m@th\smallsetminus$}%
+}
+\makeatother
+
+
+
+% Latin  Abbr
+\newcommand{\etal}{\emph{et al.}\xspace}
+\newcommand{\eg}{\emph{e.g.,}\xspace}
+\newcommand{\ie}{\emph{i.e.,}\xspace}
+\newcommand{\etc}{\emph{etc.}\xspace}
+
+% Math commands
+\DeclareMathOperator{\tr}{tr}
+
+% Table formatting
+\newcommand{\ltwo}[1]{\multicolumn{2}{l}{#1}}
+\newcommand{\ctwo}[1]{\multicolumn{2}{c}{#1}}
+\usepackage{booktabs}
+
+% Types
+\newcommand{\One}{\code{One}}
+\newcommand{\Bit}{\code{Bit}}
+\newcommand{\Qubit}{\code{Qubit}}
+% Qwire Syntax
+\newcommand{\Gate}[2]{\code{Gate}(#1,#2)}
+\newcommand{\Unitary}[2]{\code{Unitary}(#1,#2)}
+\renewcommand{\Box}[2]{\code{Box}(#1,#2)}
+\newcommand{\mkbox}[2]{\code{box}(#1 \Rightarrow #2)}
+\newcommand{\qcontrol}[1]{\code{control}~#1}  % \control conflicts with qcircuit package
+\newcommand{\bitcontrol}[1]{\code{bit-control}~#1}
+
+% Code
+\newcommand{\None}{\code{None}}
+\newcommand{\Some}[1]{\code{Some}~#1}
+
+% Listings
+\usepackage{alltt}
+\usepackage{listings,lstcoq}
+%\usepackage{MnSymbol}
+\definecolor{ltblue}{rgb}{0,0.4,0.4}
+\definecolor{dkblue}{rgb}{0,0.1,0.6}
+\definecolor{dkgreen}{rgb}{0,0.35,0}
+\definecolor{dkviolet}{rgb}{0.3,0,0.5}
+\definecolor{dkred}{rgb}{0.5,0,0}
+\lstset{language=Coq}
+
+\newcommand{\code}[1]{{\small\texttt{#1}}}
+%\newcommand{\mcode}[1]{{\small\mathtt{#1}}}
+%\newcommand{\code}[1]{\lstinline{#1}}
+
+% Preventing pagebreaks
+\newenvironment{absolutelynopagebreak}
+  {\par\nobreak\vfil\penalty0\vfilneg
+   \vtop\bgroup}
+  {\par\xdef\tpd{\the\prevdepth}\egroup
+   \prevdepth=\tpd}
+
+ %% VQIMP syntax, semantic values
+ \newcommand{\rulelab}[1]{{\small \textsc{#1}}}
+\newcommand{\steps}{\ensuremath{\longrightarrow}}
+\newcommand{\tbool}{\texttt{bool}}
+\newcommand{\tsizeof}{\texttt{sizeof}}
+\newcommand{\vbool}{\texttt{Bool}}
+\newcommand{\verror}{\texttt{Error}}
+\newcommand{\vval}{\mathpzc{val}}
+\newcommand{\tfixed}{\texttt{fixedp}}
+\newcommand{\tnat}{\texttt{nat}}
+\newcommand{\tarr}[2]{\texttt{array}~{#1}~{#2}}
+\newcommand{\econst}[2]{({#1}){#2}}
+\newcommand{\eindex}[2]{{#1}\texttt{[}{#2}\texttt{]}}
+
+\newcommand{\sexp}[3]{\texttt{let}~{#1}~=~{#2}~\texttt{in}~{#3}}
+\newcommand{\sskip}{\texttt{\{\}}}
+\newcommand{\sifq}[2]{\texttt{if}~{(#1)}~{\{#2\}}}
+\newcommand{\sifb}[3]{\texttt{if}~{(#1)}~{#2}~\texttt{else}~{#3}}
+\newcommand{\swhile}[3]{\texttt{while}~{(#1)}~{#2}~{\{#3\}}}
+\newcommand{\sqwhile}[6]{\texttt{for}~{(#1~;~#2~;~#3~;~#4)}~{#5}~{\{#6\}}}
+\newcommand{\sinit}[2]{\texttt{int}~{#1}~=~{#2}}
+\newcommand{\sincr}[1]{{#1}\texttt{++}}
+\newcommand{\tnor}[1]{\texttt{Nor}~{#1}}
+\newcommand{\thad}[1]{\texttt{Had}~{#1}}
+\newcommand{\tch}[2]{\texttt{CH}~{#1}~{#2}}
+\newcommand{\tpower}[1]{\mathcal{P}(#1)}
+\newcommand{\iev}[1]{\texttt{ev}(#1)}
+\newcommand{\itau}{\mathcal{T}}
+\DeclareMathOperator*{\Motimes}{\text{\raisebox{0.25ex}{\scalebox{0.8}{$\bigotimes$}}}}
+
+\newcommand{\ttype}[2]{\Motimes_{#1}~{#2}}
+\newcommand{\cupdot}{\mathbin{\mathaccent\cdot\cup}}
+\newcommand{\ias}[1]{\texttt{as}(#1)}
+\newcommand{\ibs}[1]{\texttt{bs}(#1)}
+\newcommand{\ips}[1]{\texttt{ps}(#1)}
+\newcommand{\fivepule}[5]{\{#1\}~\{#2\}~#3~\{#4\}~\{#5\}}
+
+\newcommand{\sassign}[4]{{#1} \leftarrow {#3}~{#2}~{#4}}
+\newcommand{\ssassign}[3]{{#1} \xleftarrow{#2} {#3}}
+\newcommand{\sand}[2]{{#1}~{\&\&}~{#2}}
+\newcommand{\samplify}[1]{\texttt{amplify}\{#1\}}
+\newcommand{\sreflect}[1]{\texttt{reflect}\{#1\}}
+\newcommand{\sdistr}[1]{\texttt{diffuse}(#1)}
+\newcommand{\smea}[1]{\texttt{measure}(#1)}
+\newcommand{\size}[1]{\texttt{size}(#1)}
+
+\newcommand{\sfor}[3]{\texttt{for}~{#1}~{#2}~{#3}}
+\newcommand{\scall}[3]{{#1}\leftarrow {#2}~{#3}}
+\newcommand{\sseq}[2]{{#1}\,\texttt{;}\,{#2}}
+\newcommand{\sinv}[1]{\texttt{inv}~{#1}}
+\newcommand{\inst}[3][ ]{\texttt{#2}^{#1}~{#3}}
+\newcommand{\insttwo}[4][ ]{\texttt{#2}^{#1}~{#3}~{#4}}
+\newcommand{\instthree}[5][ ]{\texttt{#2}^{#1}~{#3}~{#4}~{#5}}
+\newcommand{\iskip}[1]{\inst{ID}{#1}}
+\newcommand{\iu}[1]{\inst{U}{#1}}
+\newcommand{\inot}[1]{\inst{X}{#1}}
+\newcommand{\ictrl}[2]{\insttwo{CU}{#1}{#2}}
+\newcommand{\irz}[3][ ]{\insttwo[#1]{RZ}{#2}{#3}}
+\newcommand{\isr}[3][ ]{\insttwo[#1]{SR}{#2}{#3}}
+\newcommand{\icnot}[2]{\insttwo{CNOT}{#1}{#2}}
+\newcommand{\ilshift}[1]{\inst{Lshift}{#1}}
+\newcommand{\irshift}[1]{\inst{Rshift}{#1}}
+\newcommand{\irev}[1]{\inst{Rev}{#1}}
+\newcommand{\iqft}[3][ ]{\insttwo[#1]{QFT}{#2}{#3}}
+\newcommand{\tphi}[1]{\texttt{Phi}~{#1}}
+%\newcommand{\thad}[1]{\texttt{Had}~{#1}}
+\newcommand{\ihad}[1]{\inst{H}{#1}}
+\newcommand{\isp}[2]{\mathcal{#1}_{#2}}
+\newcommand{\hsp}[1]{\mathcal{#1}}
+\newcommand{\iseq}[2]{{#1}\,\texttt{;}\,{#2}}
+\newcommand{\inval}[2]{\insttwo{Nval}{#1}{#2}}
+\newcommand{\ihval}[3]{\instthree{Hval}{#1}{#2}{#3}}
+\newcommand{\iqval}[2]{\insttwo{Qval}{#1}{#2}}
+\newcommand{\itext}[1]{\texttt{#1}}
+
+\newcommand{\iassign}[2]{{#1}\leftarrow{#2}}
+\newcommand{\iread}[1]{\texttt{read}{(#1)}}
+\newcommand{\iwrite}[1]{\texttt{write}{(#1)}}
+\newcommand{\imeas}[1]{\mathpzc{M}\texttt{[}#1\texttt{]}}
+\newcommand{\ileta}[3]{\texttt{let }{#1}\texttt{ = }#2\texttt{ in }#3}
+\newcommand{\ifstmt}[3]{\texttt{if }\texttt{(}{#1}\texttt{) }{#2}\texttt{ else }{#3}}
+\newcommand{\irepeat}[2]{\texttt{repeat }{#1}\texttt{ }{#2}}
+\newcommand{\inits}[2]{\texttt{init }{#1}\texttt{ }{#2}}
+\newcommand{\ibuild}[2]{{#1}\leftarrow \texttt{build}{(#2)}}
+\newcommand{\instr}{\iota}
+
+\newcommand{\app}[3]{#2\texttt{[}{#3}\mapsto{#1}\texttt{]}}
+\newcommand{\xsem}{\texttt{xg}}
+\newcommand{\hsem}{\texttt{hc}}
+\newcommand{\qsem}{\texttt{qt}}
+\newcommand{\psem}{\texttt{pm}}
+\newcommand{\rsem}{\texttt{rz}}
+\newcommand{\rrsem}{\texttt{rrz}}
+\newcommand{\cnotsem}{\texttt{flip}}
+\newcommand{\csem}{\texttt{cu}}
+\newcommand{\srsem}{\texttt{sr}}
+\newcommand{\rssem}{\texttt{rs}}
+
+\newcommand{\Omegasz}{\Sigma}
+\newcommand{\Omegaty}{\Omega}
+%% Coq documentation
+%\usepackage{coqdoc}
+
+% VPHL commands
+\def\keyfont#1{\texttt{#1}}
+\newcommand{\constfont}[1]{\mbox{\ensuremath{\mathtt{#1}}}}
+\newcommand{\SKIP}{\keyfont{skip}\xspace}
+\newcommand{\ASSN}{\keyfont{:=}}
+\newcommand{\assign}[2]{\ensuremath{#1\; \ASSN\; #2}}
+\newcommand{\IF}{\keyfont{if}\xspace}
+\newcommand{\THEN}{\keyfont{then}\xspace}
+\newcommand{\ELSE}{\keyfont{else}\xspace}
+\newcommand{\ift}[3]{\ensuremath{\IF\ {#1} \ \THEN\ {#2} \ \ELSE\ {#3}}\xspace}
+\newcommand{\END}{\keyfont{end}\xspace} 
+\newcommand{\WHILE}{\keyfont{while}\xspace}
+\newcommand{\DO}{\keyfont{do}\xspace}
+\newcommand{\UNTIL}{\keyfont{until}\xspace}
+\newcommand{\while}[2]{\WHILE\ {#1}\ \DO\ {#2}\ \xspace}
+\newcommand{\IMP}{\emph{Imp}\xspace}
+\newcommand{\PRIMP}{\emph{PrImp}\xspace}
+\newcommand{\VPHL}{\emph{VPHL}\xspace}
+\newcommand{\TOSS}{\keyfont{toss}\xspace}
+\newcommand{\toss}[2]{\ensuremath{#1\; \ASSN \; \TOSS(#2)}\xspace}
+\newcommand{\cond}[2]{\ensuremath{#1 \! \mid \! #2}\xspace}
+\newcommand{\bicond}[3]{\ensuremath{#1 XYZ_{#2}^{#3}}\xspace}
+\newcommand{\hoare}[3]{\ensuremath{\{#1\}\; #2 \; \{#3\}}\xspace}
+\newcommand{\denote}[1]{\llbracket #1 \rrbracket\xspace}
+%\newcommand{\pdenote}[1]{(\!| #1 |\!)}
+\newcommand{\dabs}[1]{|\!| #1 |\!|}
+\newcommand{\pdenote}[1]{\{\hspace{-0.2em}| #1 |\hspace{-0.2em}\}}
+\newcommand{\plusplus}{\mathbin{+\hspace{-0.08em}+}}
+\newcommand{\lift}[1]{\ensuremath{\lceil #1 \rceil}\xspace} 
+\newcommand{\opsem}[3]{\ensuremath{#1 \; / \; #2 \Downarrow#3}\xspace}
+\newcommand{\unit}[1]{\ensuremath{\keyfont{Unit} \; #1}\xspace} 
+\newcommand{\prb}[2]{\ensuremath{Pr_{#2}(#1)}}
+\newcommand{\true}[1]{\ensuremath{\lceil #1 \rceil}}
+\newcommand{\TRUE}{\texttt{true}\xspace}
+\newcommand{\FALSE}{\texttt{false}\xspace} 
+\newcommand{\UNIT}{\ensuremath{\keyfont{Unit}}\xspace} %Changed for VPHL
+
+% Quantum Hoare Commands
+\newcommand{\bb}{\textbf{b}}
+\newcommand{\bn}{\textbf{n}}
+\newcommand{\qb}{\textbf{q}}
+\newcommand{\qn}{\textbf{qn}}
+\newcommand{\rand}[3][]{\ensuremath{#2 \; \oplus_{#1} \; #3}\xspace}
+\newcommand{\lpw}{\ensuremath{\mathcal{L}_{pw}}\xspace}
+%\newcommand{\bra}[1]{\ensuremath{\langle #1 |}\xspace}
+%\newcommand{\ket}[1]{\ensuremath{| #1 \rangle }\xspace} % bra and ket are defined in qcircuit
+%\newcommand{\braket}[2]{\ensuremath{\langle #1 | #2 \rangle}\xspace} % defined as ip in qcircuit
+\newcommand{\qif}[3]{\ensuremath{\texttt{qif}\ {#1} \ \THEN\ {#2} \ \ELSE\ {#3}}\xspace}
+\newcommand{\case}[3]{\ensuremath{\texttt{case}\ #1 \ \rhd \ 0: {#2}, \dots, n-1: {#3}}\xspace}
+\newcommand{\qcase}[3]{\ensuremath{\texttt{qcase}\ #1 \ \rhd \ 0: {#2}, \dots, n-1: {#3}}\xspace}
+\newcommand{\masgn}[2]{\ensuremath{#1 \stackrel{m}{\texttt{:=}} #2}} % measure conflicts with qcircuit package
+\newcommand{\bit}{\keyfont{bit }\xspace}
+\newcommand{\qbit}{\keyfont{qbit }\xspace}
+%\newcommand{\discard}[1]{\keyfont{discard } #1\xspace}
+\newcommand{\MEASURE}{\ensuremath{\keyfont{measure}}\xspace}
+\newcommand{\mif}[3]{\ensuremath{\MEASURE \ {#1} \ \THEN\ {#2} \ \ELSE\ {#3}}\xspace}
+\newcommand{\timeseq}{\mathrel{{*}{=}}} % replace with unitary
+\newcommand{\ds}[3]{\ensuremath{\denote{\langle #1 \rangle \ #2 \ \langle #3 \rangle}}\xspace}
+\newcommand{\mat}[1]{\mathbf{#1}} %May not use
+%\newcommand{\unitary}[2]{\ensuremath{\assign{#1}{\mat{#2} #1}}\xspace}
+%\newcommand{\unitary}[2]{\ensuremath{#1 \timeseq #2}\xspace}
+\newcommand{\mcase}[3]{\ensuremath{\texttt{measure} \ #1[#2] \ : \ #3}\xspace}
+\newcommand{\mwhile}[3]{\ensuremath{\WHILE \ #1[#2] \ \DO \ #3}\xspace}
+\newcommand{\lqtd}{\ensuremath{\mathcal{L}_{qTD}}\xspace}
+
+\newcommand{\highlight}[1]{\textcolor{red}{#1}}
+
+%% Underscore issues
+%\usepackage{relsize}
+%\renewcommand{\_}{\textscale{.7}{\textunderscore}}
+% LaTeX says no...
+
+%% Unicode
+\usepackage{newunicodechar}
+\let\Alpha=A
+\let\Beta=B
+\let\Epsilon=E
+\let\Zeta=Z
+\let\Eta=H
+\let\Iota=I
+\let\Kappa=K
+\let\Mu=M
+\let\Nu=N
+\let\Omicron=O
+\let\omicron=o
+\let\Rho=P
+\let\Tau=T
+\let\Chi=X
+
+\newunicodechar{Α}{\ensuremath{\Alpha}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{Β}{\ensuremath{\Beta}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{Γ}{\ensuremath{\Gamma}}
+\newunicodechar{γ}{\ensuremath{\gamma}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+\newunicodechar{δ}{\ensuremath{\delta}}
+\newunicodechar{Ε}{\ensuremath{\Epsilon}}
+\newunicodechar{ε}{\ensuremath{\epsilon}}
+\newunicodechar{ϵ}{\ensuremath{\varepsilon}}
+\newunicodechar{Ζ}{\ensuremath{\Zeta}}
+\newunicodechar{ζ}{\ensuremath{\zeta}}
+\newunicodechar{Η}{\ensuremath{\Eta}}
+\newunicodechar{η}{\ensuremath{\eta}}
+\newunicodechar{Θ}{\ensuremath{\Theta}}
+\newunicodechar{θ}{\ensuremath{\theta}}
+\newunicodechar{ϑ}{\ensuremath{\vartheta}}
+\newunicodechar{Ι}{\ensuremath{\Iota}}
+\newunicodechar{ι}{\ensuremath{\iota}}
+\newunicodechar{Κ}{\ensuremath{\Kappa}}
+\newunicodechar{κ}{\ensuremath{\kappa}}
+\newunicodechar{Λ}{\ensuremath{\Lambda}}
+\newunicodechar{λ}{\ensuremath{\lambda}}
+\newunicodechar{Μ}{\ensuremath{\Mu}}
+\newunicodechar{μ}{\ensuremath{\mu}}
+\newunicodechar{Ν}{\ensuremath{\Nu}}
+\newunicodechar{ν}{\ensuremath{\nu}}
+\newunicodechar{Ξ}{\ensuremath{\Xi}}
+\newunicodechar{ξ}{\ensuremath{\xi}}
+\newunicodechar{Ο}{\ensuremath{\Omicron}}
+\newunicodechar{ο}{\ensuremath{\omicron}}
+\newunicodechar{Π}{\ensuremath{\Pi}}
+\newunicodechar{π}{\ensuremath{\pi}}
+\newunicodechar{ϖ}{\ensuremath{\varpi}}
+\newunicodechar{Ρ}{\ensuremath{\Rho}}
+\newunicodechar{ρ}{\ensuremath{\rho}}
+\newunicodechar{ϱ}{\ensuremath{\varrho}}
+\newunicodechar{Σ}{\ensuremath{\Sigma}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{ς}{\ensuremath{\varsigma}}
+\newunicodechar{Τ}{\ensuremath{\Tau}}
+\newunicodechar{τ}{\ensuremath{\tau}}
+\newunicodechar{Υ}{\ensuremath{\Upsilon}}
+\newunicodechar{υ}{\ensuremath{\upsilon}}
+\newunicodechar{Φ}{\ensuremath{\Phi}}
+\newunicodechar{φ}{\ensuremath{\phi}}
+\newunicodechar{ϕ}{\ensuremath{\varphi}}
+\newunicodechar{Χ}{\ensuremath{\Chi}}
+\newunicodechar{χ}{\ensuremath{\chi}}
+\newunicodechar{Ψ}{\ensuremath{\Psi}}
+\newunicodechar{ψ}{\ensuremath{\psi}}
+\newunicodechar{Ω}{\ensuremath{\Omega}}
+\newunicodechar{ω}{\ensuremath{\omega}}
+
+\newunicodechar{ℕ}{\ensuremath{\mathbb{N}}}
+\newunicodechar{∅}{\ensuremath{\emptyset}}
+
+\newunicodechar{∙}{\ensuremath{\bullet}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{≅}{\ensuremath{\cong}}
+\newunicodechar{≡}{\ensuremath{\equiv}}
+\newunicodechar{≤}{\ensuremath{\le}}
+\newunicodechar{≥}{\ensuremath{\ge}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{∀}{\ensuremath{\forall}}
+\newunicodechar{∃}{\ensuremath{\exists}}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{∓}{\ensuremath{\pm}}
+\newunicodechar{·}{\ensuremath{\cdot}}
+\newunicodechar{⋯}{\ensuremath{\cdots}}
+\newunicodechar{…}{\ensuremath{\ldots}}
+\newunicodechar{∷}{~\mathrel{:\!\!\!:}~}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{∞}{\ensuremath{\infty}}
+\newunicodechar{→}{\ensuremath{\to}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{⇒}{\ensuremath{\Rightarrow}}
+\newunicodechar{↦}{\ensuremath{\mapsto}}
+\newunicodechar{↝}{\ensuremath{\leadsto}}
+\newunicodechar{∨}{\ensuremath{\vee}}
+\newunicodechar{∧}{\ensuremath{\wedge}}
+\newunicodechar{⊢}{\ensuremath{\vdash}}
+\newunicodechar{⊣}{\ensuremath{\dashv}}
+\newunicodechar{∣}{\ensuremath{\mid}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{⊆}{\ensuremath{\subseteq}}
+\newunicodechar{⊂}{\ensuremath{\subset}}
+\newunicodechar{∪}{\ensuremath{\cup}}
+\newunicodechar{⋓}{\ensuremath{\Cup}}
+\newunicodechar{∉}{\ensuremath{\not\in}}
+\newunicodechar{√}{\ensuremath{\sqrt}}
+
+
+
+\newunicodechar{⊸}{\ensuremath{\multimap}}
+\newunicodechar{⊗}{\ensuremath{\otimes}}
+\newunicodechar{⨂}{\ensuremath{\bigotimes}}
+\newunicodechar{⊕}{\ensuremath{\oplus}}
+\newunicodechar{〈}{\ensuremath{\langle}}
+\newunicodechar{⟨}{\ensuremath{\langle}}
+\newunicodechar{⟩}{\ensuremath{\rangle}}
+\newunicodechar{〉}{\ensuremath{\rangle}}
+\newunicodechar{¡}{\ensuremath{\upsidedownbang}}
+\newunicodechar{∘}{\ensuremath{\circ}}
+\newunicodechar{†}{\ensuremath{\dagger}}
+\newunicodechar{⊤}{\ensuremath{\top}}
+\newunicodechar{⊥}{\ensuremath{\bot}}
+
+\newunicodechar{〚}{\ensuremath{\llbracket}}
+\newunicodechar{〛}{\ensuremath{\rrbracket}}
+
+%% COMMENTS 
+\usepackage{etoolbox} % replaces ifthen package
+\newtoggle{comments}
+\toggletrue{comments}
+%\togglefalse{comments}
+
+\iftoggle{comments}{
+  \newcommand{\fixme}[1]{\textbf{\textcolor{red}{[ Fixme: #1]}}}
+  \newcommand{\todo}[1]{\textbf{\textcolor{green}{[ TODO: #1 ]}}}
+  \newcommand{\mwh}[1]{\textbf{\textcolor{red}{[ Mike: #1 ]}}}
+  \newcommand{\yxp}[1]{\textbf{\textcolor{blue}{[ Yuxiang: #1 ]}}}
+  \newcommand{\khh}[1]{\textbf{\textcolor{orange}{[ Kesha: #1 ]}}}
+  \newcommand{\shh}[1]{\textbf{\textcolor{purple}{[ Shih-Han: #1 ]}}}
+  \newcommand{\liyi}[1]{\textbf{\textcolor{blue}{[ Liyi: #1 ]}}}
+  \newcommand{\oth}[2]{\textbf{\textcolor{red}{[ #1: #2 ]}}}
+  \newcommand{\xwu}[1]{\textbf{\textcolor{purple}{[ Xiaodi: #1 ]}}}
+  \newcommand{\fsdv}[1]{\textbf{\textcolor{pink}{[ Finn: #1 ]}}}
+}{
+  \newcommand{\fixme}[1]{}
+  \newcommand{\todo}[1]{}
+  \newcommand{\rnr}[1]{}
+  \newcommand{\mwh}[1]{}  
+  \newcommand{\khh}[1]{}
+  \newcommand{\liyi}[1]{}
+  \newcommand{\shh}[1]{}
+  \newcommand{\xwu}[1]{}
+  \newcommand{\oth}[2]{}
+}
+
+\newtoggle{submission}
+\toggletrue{submission}
+%\togglefalse{submission}
+
+\iftoggle{submission}{
+  \newcommand{\aref}[1]{\Cref{#1} of the extended version of this paper}
+}{
+  \newcommand{\aref}[1]{\Cref{#1}}
+}
+
+
+%% END COMMENTS
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

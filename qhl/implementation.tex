@@ -1,0 +1,543 @@
+\section{\name Quantum Oracle Framework}
+\label{sec:implementation}
+
+This section presents \name, our framework for specifying, compiling,
+testing, and verifying quantum oracles, whose architecture was
+given in \Cref{fig:arch}. We start by considering translation
+from \oqasm to \sqir and proof of its correctness. Next, we discuss \name's
+property-based random testing framework for \oqasm
+programs. Finally, we discuss \vqimp, a simple imperative language for
+writing oracles, which compiles to \oqasm. We also present its proved-correct 
+compiler and means to test the correctness of \vqimp oracles.
+
+\subsection{Translation from \oqasm to \sqir}\label{sec:vqir-compilation}
+
+\newcommand{\tget}{\texttt{get}}
+\newcommand{\tstart}{\texttt{start}}
+\newcommand{\tfst}{\texttt{fst}}
+\newcommand{\tsnd}{\texttt{snd}}
+\newcommand{\tucom}[1]{\texttt{ucom}~{#1}}
+\newcommand{\tif}{\texttt{if}}
+\newcommand{\tthen}{\texttt{then}}
+\newcommand{\telse}{\texttt{else}}
+\newcommand{\tlet}{\texttt{let}}
+\newcommand{\tin}{\texttt{in}}
+
+\name translates \oqasm to \sqir by mapping \oqasm positions to \sqir 
+concrete qubit indices and expanding \oqasm instructions to sequences
+of \sqir gates.
+%
+% Most \oqasm instructions are easily mapped to operations in \sqir, with the exception of the position shifting instructions.  
+% The difficulty there is the virtual-to-physical qubit compilation.
+% In \oqasm, a position $p$ is a pair of a qubit variable and offset, not
+% a physical qubit location in a quantum circuit. We keep track of a map
+% from each \oqasm position to a concrete \sqir qubit index.
+%
+Translation is expressed as the judgment
+$\Sigma\vdash (\gamma,\instr) \steps
+(\gamma',\epsilon)$ where $\Sigma$ maps \oqasm variables to their sizes, 
+$\epsilon$ is the output \sqir circuit, and $\gamma$ maps an \oqasm 
+position $p$ to a \sqir concrete qubit index (i.e., offset into a 
+global qubit register).  At the start of translation, for every
+variable $x$ and $i < \Sigma(x)$, $\gamma$ maps $(x,i)$ to a unique
+concrete index chosen from 0 to $\sum_{x}(\Sigma(x))$.
+
+\begin{figure}[t]
+{\Small
+
+  \begin{mathpar}
+    \inferrule{ }{\Sigma\vdash(\gamma,\inot{p}) \to (\gamma,\textcolor{blue}{\inot{\gamma(p)}})}
+          
+    \inferrule{\gamma'=\gamma[\forall i.\; i < \Sigma(x) \Rightarrow (x,i)\mapsto \gamma(x,(i+1)\%\Sigma(x))]}{\Sigma\vdash(\gamma,\ilshift{x}) \to (\gamma',\textcolor{blue}{\iskip{(\gamma'(x,0))}})}
+    
+    \inferrule{\Sigma\vdash(\gamma,\instr) \to (\gamma,\textcolor{blue}{\epsilon})\\
+      \textcolor{blue}{\epsilon' = \texttt{ctrl}(\gamma(p),\epsilon)}}{\Sigma\vdash(\gamma,\ictrl{p}{\instr}) \to (\gamma,\textcolor{blue}{\epsilon')}}    
+     
+    \inferrule{ \Sigma\vdash (\gamma,\instr_1) \to (\gamma',\textcolor{blue}{\epsilon_1}) \\ \Sigma\vdash(\gamma',\instr_2) \to (\gamma'',\textcolor{blue}{\epsilon_2})}{\Sigma\vdash(\gamma,\sseq{\instr_1}{\instr_2}) \to (\gamma'',\textcolor{blue}{\sseq{\epsilon_1}{\epsilon_2}})}             
+  
+  \end{mathpar}
+}
+\vspace*{-1em}
+\caption{Select \oqasm to \sqir translation rules (\sqir circuits are marked blue)}
+\label{fig:compile-vqir}
+\end{figure}
+
+\Cref{fig:compile-vqir} depicts a selection of translation rules.\footnote{Translation in fact threads through the typing judgment, but we elide that for simplicity.}
+The first rule shows how to translate
+$\inot{p}$, which has a directly corresponding gate in \sqir.
+The second rule left-shifts the qubits of the target variable in the
+map $\gamma$, and produces an identity gate (which will be removed in a subsequent optimization pass).
+For example, say we have variables $x$ and $y$ in the map $\gamma$ and variable $x$ has three qubits so $\gamma$ is $\{(x,0)\mapsto 0,(x,1)\mapsto 1, (x,2)\mapsto 2,(y,0)\mapsto 3,...\}$.
+Then after $\ilshift{x}$ the $\gamma$ map becomes $\{(x,0)\mapsto 1,(x,1)\mapsto 2, (x,2)\mapsto 0,(y,0)\mapsto 3,...\}$. 
+%
+The last two rules translate the \texttt{CU} and sequencing instructions. In the \texttt{CU} translation, the rule assumes that $\instr$'s translation does not affect the $\gamma$ position map. This requirement is assured for well-typed programs per rule \rulelab{CU} in \Cref{fig:exp-well-typed}. \texttt{ctrl} generates the controlled version of an arbitrary \sqir program using standard decompositions \cite[Chapter 4.3]{mike-and-ike}.
+
+\newcommand{\transs}[3]{[\!|{#1}|\!]^{#2}_{#3}}
+
+We have proved \oqasm-to-\sqir translation correct. To formally state
+the correctness property we relate $d$-qubit \oqasm states to \sqir states, which are vectors of $2^d$ complex numbers, via a function $\transs{-}{d}{\gamma}$, where $\gamma$ is the virtual-to-physical qubit map.
+%
+For example, say that our program uses two variables, $x$ and $y$, and both have two qubits.
+The qubit states are $\ket{0}$ and $\ket{1}$ (meaning that $x$ has type \texttt{Nor}), and $\qket{r_1}$ and $\qket{r_2}$ (meaning that $y$ has type \texttt{Phi}).
+Furthermore, say that $\gamma = \{(x,0)\mapsto 0,(x,1)\mapsto 1, (y,0)\mapsto 2, (y,1)\mapsto 3\}$. 
+This \oqasm program state will be mapped to the $2^4$-element vector $\ket{0}\otimes \ket{1}\otimes (\ket{0}+e^{2\pi i r_1}\ket{1})\otimes (\ket{0}+e^{2\pi i r_2}\ket{1})$.
+
+
+\begin{theorem}\label{thm:vqir-compile}\rm[\oqasm translation correctness]
+  Suppose $\Sigma; \Omega \vdash \instr \triangleright \Omega'$ and
+  $\Sigma \vdash(\gamma,\instr) \to (\gamma',\epsilon)$. %, and $\overline{\gamma}$ and $\overline{\gamma'}$ are the inverse functions of $\gamma$ and $\gamma'$, respectively.\footnote{$\gamma$ and $\overline{\gamma}$ form a finite bijection. I.e., for every $k<d$, $\overline{\gamma}(k)$ is defined, $\gamma(\overline{\gamma}(k))=k$, and for every $p$ that appears in $\instr$, $\gamma(p)$ is defined, $\gamma(p)< d$, and $\overline{\gamma}(\gamma(p)) = p$.} 
+Then for $\Sigma; \Omega \vdash \varphi$, $\llbracket \instr \rrbracket\varphi=\varphi'$, and we have 
+$\llbracket \epsilon \rrbracket \times \transs{\varphi}{d}{\gamma} = \transs{\varphi'}{d}{\gamma'}$ where $\llbracket \epsilon \rrbracket$ is the matrix interpretation of $\epsilon$ per \sqir's semantics.
+\end{theorem}
+
+The proof of translation correctness is by induction on the \oqasm program $\instr$. 
+Most of the proof simply shows the correspondence of operations in $\instr$ to their translated-to gates $\epsilon$ in \sqir, except for shifting operations, which update the virtual-to-physical map.
+% Notice that a \oqasm shifting operation on variable $x$ changes the virtual to physical map from $\gamma$ to $\gamma'$ while generating only \texttt{ID} gates. The map shifting changes the ``world view'' of later operations on $x$, because the qubit physical positions are different between $\gamma$ and $\gamma'$.
+% To prove the correctness, for physical positions in $x$, we compare their virtual positions before and after the shifting by using the inverse maps of $\gamma$ and $\gamma'$. Then, we show that difference implements the shifting operation semantics.
+
+Note that to link a complete, translated oracle $\instr$ into a larger \sqir program may require that $\gamma = \gamma'$, i.e., $\texttt{neutral}(\instr)$, so that logical inputs match logical outputs. This requirement is naturally met for programs written to be reversible, as is the case for all arithmetic circuits in this paper, e.g., \coqe{rz_adder} from \Cref{fig:circuit-example}. % If necessary, the programmer could add dynamic swap instructions manually (encodable in \oqasm).
+
+\ignore{
+\begin{lemma}\label{thm:subgroupoid-lemma}\rm
+   For all $\epislon \in \{\epsilon^{(\Sigma,\Omega)}\}$, if $\epislon$ is valid operation in $\hsp{S}_n$, $n \le m$, and $\hsp{S}_m$ and it every qubit in $\hsp{S}_m$ satisfies $\Omega$'s restriction, then 
+\end{lemma}
+
+
+We view $(\mathcal{H}, \instr )$ as a groupoid over Hilbert space $\mathcal{H}$, we can then defined a subset of $\mathcal{H}$ as $\mathcal{H}^n_s$, where it has the following conditions:
+
+\begin{itemize}
+\item Each element in $\mathcal{H}^n_s$ has the form: $\ket{q_1}\otimes ... \otimes \ket{q_n}$, where $\ket{q_1}$,...,$\ket{q_n}$ are 1-dimensional qubit. 
+\item For any element $\ket{q_1}$,...,$\ket{q_n}$ in $\mathcal{H}^n_s$, $\ket{q_i}$ has three possible forms:  $\alpha\ket{c}$, $\frac{1}{\sqrt{2}} \alpha( s_1 \ket{0}+ s_2 \ket{1})$, or $\frac{1}{\sqrt{2}}\alpha~(\ket{0}+\beta\ket{1})$.
+\end{itemize}
+
+We view $\Sigma;\Omega\vdash \iota \triangleright \Omega'$ as a predicate for each \oqasm operation $\iota$ on where a program $\iota$ is defined given a subspace $\mathcal{H}_{(x, p)}$, then $(\mathcal{H}^n_s, \instr )$ is a sub-groupoid of $(\mathcal{H}, \instr )$ for all $\instr$ that is type-checked in $\mathcal{H}^n_s$.
+
+We then define a superoperator over $\instr$ as $\instr^*(\rho)= \llbracket \instr \rrbracket \rho \llbracket \instr \rrbracket^{\dag}$ where $\rho \in (\mathcal{H}^n_s)^*$. $(\mathcal{H}^n_s)^*$ is the collection of density matrices seen as linear transformations from $\mathcal{H}^n_s$ to $\mathcal{H}^n_s$.
+The superoperator gives the density matrix interpretation of the \oqasm semantics. We define a $2^m$ dimensional database $D$ as $\mathcal{H}^n_s \otimes D$, and $D$ has the format $\ket{q_1}$,...,$\ket{q_{2^n}}$ where $q_i$ is a $k$ array bitstring, each of the bitstring position is either $0$ or $1$.
+We define a new operation in $\instr$ as $\texttt{read}\;y\;x$, such that $y$ is a $k$-length qubit, and $x$ is a $m$ length qubit representing the position. The desity matrix semantics of the $\texttt{read}$ operation is given as:
+
+{
+\[\Sigma^{2^m-1}_{0}\ket{i}\bra{i}\otimes D_{i}\]
+}
+
+With finite bijection mapping $\tget(\rho)$ and $\varrho$, we develop the translation process as the function $(d * \Sigma * \rho * \instr * \varrho) \to (\tucom{d}* \rho * \varrho)$, where $d$ is the dimension number indicating the number of qubits in the system, $\Sigma$ maps variables to qubit numbers in \oqasm, $\rho$ is the position mapping database, $\varrho$ is the inverse function of $\tget(\rho)$, $\instr$ is an \oqasm program, and $\delta\in\tucom{d}$ is a \sqir circuit. 
+
+
+create a mapping database $\rho$ that maps positions $p$ to a data structure $\coqe{nat} * (\coqe{nat} \to \coqe{nat}) * (\coqe{nat} \to \coqe{nat})$. We assume that all qubit locations in \sqir are managed as a number line counting from $0$. The first \coqe{nat} value is the starting position for an \oqasm variable $x$ on the number line. We assume that $\texttt{start}(\rho,x)$ is a function to get the start position of $x$ in the map $\rho$. The second function ($\mu$, $\coqe{nat} \to \coqe{nat}$) is a mapping from position offset to the offset number of the physical position in \sqir. 
+\khh{Moved from earlier text: Function $\tstart(\rho,x)$ is equivalent to $\rho(x,0)$. }
+For example, a position $(x,i)$ is mapped to $\tstart(\rho,x)+\mu(i)$ in the number line. The third function ($\nu$, $\coqe{nat} \to \coqe{nat}$) is the inverse function mapping from an offset in \sqir back to the offset in \oqasm. For every offset $i$ for $x$ in \oqasm, if $\mu$ and $\nu$ are the two maps in $\rho(x)$, then $\mu(\nu(i)) = i$, and vice versa. We assume that the actual virtual to physical position mapping is $ \tget(\rho)$, which gets the physical position in \sqir for $p$.
+$\tget(\rho,p)$ gives us the \sqir position for $p$ and its definition is $\texttt{start}(\rho,\texttt{fst}(p))+\texttt{get\_}\mu(\rho,\texttt{fst}(p))(\texttt{snd}(p))$.
+On the other hand, since different virtual positions map to different physical positions, the function $\tget(\rho)$ is bijective; there is an inverse function $\varrho$ for $\tget(\rho)$, such that $\tget(\rho,p)=i \Rightarrow \varrho(i) = p$. The functions $\rho$, $\tget(\rho)$, and its inverse function $\varrho$ are also useful in the translation process, and we assume that they satisfy \textbf{finite bijection}, where for a set of positions $\overline{p}$, there exists a mapping database $\rho$, a dimension number $d$ and an inverse function $\varrho$, such that for all $p$ in $\overline{p}$, $\tget(\rho,p)=i$, $i<d$, $\varrho(\tget(\rho,p))=p$, and $\tget(\rho,\varrho(i))=i$.}
+\ignore{
+\begin{definition}\label{def:vars-def}\rm
+(\textbf{finite bijection})
+Given a virtual to physical position mapping database $\rho$, and the mapping function $\tget(\rho)$, its inverse function $\varrho$, a map from \oqasm variables to its qubit size $\Sigma$, and $d$ is the dimension of the qubits in \sqir and it is a maximum number that is larger than all physical position number in the image of $\tget{\rho}$, we say that $\rho$ and $\varrho$ is finitely bijective iff:
+
+\begin{itemize}
+  \item For all $p$, if $\tfst(p))$ is in the domain of $\rho$ and $\tsnd(p)< \Sigma(\tfst(p))$, then $\tget(\rho,p)<d$.
+  \item For all $i$, if $i < d$, then $\tfst(\varrho(i))$ is in the domain of $\rho$ and $\tsnd(\varrho(i))< \Sigma(\tfst(\varrho(i)))$
+\item For all $p$, if $\tfst(p))$ is in the domain of $\rho$ and $\tsnd(p)< \Sigma(\tfst(p))$, then $\varrho(\tget(\rho,p)) = p$.
+\item For all $i$, if $i < d$, then $\tget(\rho, \varrho(i))=i$.
+\item For all $p_1$ $p_2$, if $p_1 \neq p_2$, then $\tstart(\rho,p_1) \neq \tstart(\rho,p_1)$.
+\item For all $x$ $y$, if $x \neq y$, then for all $i$ $j$, such that $i < \Sigma(x)$ and $j < \Sigma(y)$, $\tget(\rho,(x,i)) \neq \tget(\rho,(y, j))$.
+\item For all $p$, if $\tsnd(p) < \Sigma(\tfst(p))$, then $\tget\_\mu(\rho,\tfst(p))(\tsnd(p))<\Sigma(\tfst(p))$.
+\item For all $p$, if $i < \Sigma(x)$, then $\tget\_\nu(\rho,x)(i)<\Sigma(x)$.
+\end{itemize}
+
+\end{definition}
+}
+
+% \mwh{The bits that were here about proof engineering were not
+%   understandable to someone without context. If you want to say that
+%   somehow our design made things easier, you have to present the
+%   alternative, to indicate why it would be otherwise be hard. Being
+%   more concrete (e.g., framing it for a particular proof) will make it
+%   more understandable too. If this is a general benefit, I would
+%   suggest saying something back in section 3, or speaking about the
+%   proofs of particular operators in section 5.}
+
+% \subsection{\oqasm Proof Engineering}
+% \label{sec:oqasm-sem}
+
+% We benefit from three key features when writing proofs about \oqasm programs: \textit{separability}, \textit{discreteness}, and \textit{well-formedness}.
+% Separability means that when reasoning about state $\varphi$, we can consider each qubit separately.
+% This is reflected in the data structures in Coq that represent the three qubit forms in \Cref{def:well-formed}:
+
+% {\footnotesize
+% \noindent
+% $
+%  \inval{c}{b} \equiv  e^{2 \pi i b}\ket{c} \quad
+%  \insttwo{Hval}{h}{b} \equiv  e^{2\pi{i} b}\ket{h} \quad
+%   \iqval{b_1}{b_2} \equiv e^{2\pi{i} b_1}\qket{b_2}
+% $
+% }
+% \noindent
+% In this representation, each qubit has its own complex global phase factors ($b, b_1$), which are independent of other qubits'.
+
+% Discreteness refers to the fact that the bits $c$ and phase values $b$ can be represented by natural numbers, which is a benefit for randomized testing in \Cref{sec:rand-testing}.
+
+% Well-formedness means that we can use assumptions about a state's form from \Cref{def:well-formed} to simplify proofs.
+% For example, consider applying a $\texttt{SR}^{[-1]}$ gate to a variable $x$ of type \texttt{Phi}.
+% In the result of this application, the $b_2$ value of every qubit $k$ in $x$ will be of the form $\frac{\upsilon}{2^{n - k}}$ for some $\upsilon$ (which is the same over all $k$).
+% Therefore, proving a property about the $b_2$ values of qubits in $x$ only requires reasoning about $\varphi(x,0)$.
+% If $\varphi(x,0)$'s local phase is $\frac{\upsilon}{2^{n}}$ for some $\upsilon$, then the local phase for $\varphi(x,k)$ is $\frac{\upsilon}{2^{n- k}}$.
+
+\subsection{Property-based Random Testing}\label{sec:rand-testing}
+
+% Proofs of operator correctness can be time-consuming and repetitive.
+\oqasm's type system ensures that states can be efficiently
+represented. We leverage this fact to implement a testing framework
+for \oqasm programs using QuickChick \cite{quickchick}, which is
+a property-based testing (PBT) framework for Coq in the style of
+Haskell's QuickCheck~\cite{10.1145/351240.351266}. We use this
+framework for two purposes: To test correctness
+properties of \oqasm programs and to experiment with the consequences of
+approximation for efficiency and correctness.
+
+\myparagraph{Implementation}
+
+PBT randomly generates inputs using a hand-crafted \emph{generator}, 
+and confirms that a property holds for the given inputs. Since
+arithmetic/oracle operations are defined over \texttt{Nor}-basis
+inputs, we wrote a generator for these inputs. 
+%
+A single test of an \oqasm program involves five steps:
+(1) generate (or specify) $n$, which is the number of qubits in the input;
+(2) for each input variable $x$, generate uniformly random bitstrings $b_0b_1...b_{n-1}$ of length $n$, representing $x$'s initial qubit value $\bigotimes_{i=0}^{n-1} \alpha(0)\ket{b_i}$;
+(3) prepare an \oqasm state $\varphi$ containing all input variables' encoded bitstrings;
+(4) execute the \oqasm program with the prepared state; and
+(5) check that the resulting state satisfies the desired property.
+%\footnote{Given a binary operation $\oplus$, its bitstring form $\overline{\oplus}$, and operation $[-]_n$ to turn a number into a size $n$ bitstring, we aim to prove the following property about \oqasm program $\oplus(z,x,y)$: For variables $x$ and $y$, state $\varphi$, if $\varphi(x)=e^{2 \pi i b_x}\ket{[v_x]_n}$, $\varphi(y)=e^{2 \pi i b_y}\ket{[v_y]_n}$, and $\varphi(z)=e^{2 \pi i b_z}\ket{0}$, then $\llbracket \oplus(z,x,y) \rrbracket\varphi=\varphi[z\mapsto \ket{[[v_x]_n\overline{\oplus}[v_y]_n]_n}]$.}
+
+We took several steps to improve testing performance. 
+First, we streamlined the representation of states:
+Per the semantics in \Cref{fig:deno-sem}, in a state with $n$ qubits, the phase associated with each qubit can be written as $\alpha(\frac{\upsilon}{2^n})$ for some natural number $\upsilon$. 
+Qubit values in both bases are thus pairs of natural numbers: the global phase $\upsilon$ (in range $[0,2^n)$) and $b$ (for $\ket{b}$) or $y$ (for $\qket{\frac{y}{2^n}}$). 
+An \oqasm state $\varphi$ is a map from qubit positions $p$ to qubit values $q$; in our proofs, this map is implemented as a partial function, but for testing, we use an AVL tree implementation (proved equivalent to the functional map). 
+To avoid excessive stack use, we implemented the \oqasm semantics function tail-recursively. 
+To run the tests, QuickChick runs OCaml code that it \emph{extracts} from the Coq definitions; during extraction, we replace natural numbers and operations thereon with machine integers and operations. We present performance results in \Cref{sec:arith-oqasm}.
+
+\myparagraph{Testing Correctness}
+
+A full formal proof is the gold standard for correctness, but it is also
+laborious. It is especially deflating to be well through a proof only
+to discover that the intended property does not hold and, worse,
+that nontrivial changes to the program are necessary.
+Our PBT framework gives assurance that an \oqasm
+program property is correct by attempting to falsify it using
+thousands of randomly generated instances, with good coverage of the
+program's input space. We have used PBT to test the correctness of a
+variety of operators useful in oracle programs, as presented in
+\Cref{sec:arith-oqasm}. When implementing a QFT-adder circuit, using
+PBT revealed that we had encoded the wrong endianness. 
+We have also used PBT with \vqimp programs by first
+compiling them to \oqasm and then testing their correctness at that
+level.
+
+\myparagraph{Assessing the Effect of Approximation}
+
+Because of the resource limitations of near-term machines, programmers
+may wish to \emph{approximate} the implementation of an operation to
+save qubits or gates, rather than implement it exactly. For example, a
+programmer may prefer to substitute QFT with an approximate QFT, which
+requires fewer gates. Of course, this substitution will affect the
+circuit's semantics, and the programmer will want to understand the
+\emph{maximum distance} (similarity) between the approximate and exact
+implementations, to see if it is tolerable. To this end, we can test
+a relational property between the outputs of an exact and approximate circuit, 
+on the same inputs, to see if the difference is
+acceptable. \Cref{sec:approx-circs} presents experiments comparing
+the effect of approximation on circuits using QFT-based adders.
+
+% There are two modes of the comparison framework. First, we randomly generate same inputs for the two circuits, and answer the question how many percentages of outputs are exactly the same. If the difference rate is small, in some cases, the approximate circuit could be useful. Second, we also generate same inputs for the two circuits and answer the question that what parts in the output bitstrings are exactly the same. In analyzing circuits and their approximate implementations, most likely, a circuit might produce results that are almost always different from the results from its approximate implementation. However, some parts of their outputs might be the same. For example, in comparing the QFT-based addition circuit and the AQFT-based one, we find that the result high bits that are within the AQFT precision number range are the same as long as the low bits do not produce extra carry bit.
+% Then, we can utilize the similarity being discovered in our framework to construct other useful oracles. See \Cref{sec:qft-case}.
+
+% For PBT to be efficient, careful consideration must be given to the datatypes used to represent program states.
+% As shown in \Cref{def:well-formed}, all possible phase values have the form $e^{2 \pi i b}$ for some real value $b$.In our implementation, we consider a finite approximation of $b$, such that there is a bitstring $[\upsilon]_n$ with $b\approx\frac{1}{2^{1\cdot [\upsilon]_n(k)}}+...+\frac{1}{2^{n-k\cdot [\upsilon]_n(n-1)}}$.
+% This is why we have a smallest phase precision number $r_0$ (represented by the $n$ here) in translation from \oqasm to \sqir.
+% Obviously, $[\upsilon]_n$ can be represented by a natural number $\upsilon$.
+% The remaining issue is that we need to find a good number representation of $b$, so that phase rotation gate applications ($\texttt{RZ}^{[-1]}$ and $\texttt{SR}^{[-1]}$) can be implemented by natural number operations.
+% We choose to record $b$ as a number $\upsilon'$ whose bitstring representation is $\texttt{rev}([\upsilon]_n)$ \footnote{$\texttt{rev}([c_1,...,c_n])=[c_n,...,c_1]$}, i.e, $[\upsilon']_n=\texttt{rev}([\upsilon]_n)$, where $[\upsilon]_n$ is the bitstring mentioned above.
+% Then, applying the operation $(\upsilon'+2^{n - j})\%2^{n}$ is exactly the same as applying a phase rotation $e^{\frac{2 \pi i}{2^j}}$ to $b$ as $e^{2\pi i * (b+\frac{1}{2^j})}$, and applying $(\upsilon'+2^{n}-2^{n - j})\%2^{n}$ is the same as applying a phase rotation $e^{-\frac{2 \pi i}{2^j}}$ to $b$ as $e^{2\pi i * (b-\frac{1}{2^j})}$.
+% Since $\texttt{SR}^{[-1]}$ is a series of $\texttt{RZ}^{[-1]}$, the $\upsilon'$ representation allows us to represent phases (and phase rotations) as natural numbers (and arithmetic operations).
+
+\subsection{\vqimp: A High-level Oracle Language}\label{sec:qimp}
+
+\begin{figure}[t]
+{\footnotesize
+\centering
+\[\hspace*{-1em}
+\begin{array}{c}
+\begin{array}{l}
+\texttt{fixedp sin}(\textcolor{red}{Q~\texttt{fixedp }x_{/8}},\;\textcolor{red}{Q~\texttt{fixedp }x_r},\;C~\texttt{nat }n)\{
+\\[0.2em]
+\;\;\textcolor{red}{x_r\texttt{ = }x_{/8};} \;\;C~\texttt{fixedp }n_y;\;\;\textcolor{red}{Q~\texttt{fixedp }x_z;}\;\;
+\textcolor{red}{Q~\texttt{fixedp }x_1;}
+\\[0.2em]
+\;\;
+C~\texttt{nat }n_1;\;\;
+C~\texttt{nat }n_2;\;\;
+C~\texttt{nat }n_3;\;\;
+C~\texttt{nat }n_4;\;\;
+C~\texttt{nat }n_5;
+\\[0.2em]
+\;\;\texttt{for }(C~\texttt{nat }i\texttt{ = }0;\; i\texttt{ < }n;\;i\texttt{++})\{\\
+\;\;\quad n_1\texttt{ = }i+1;\;\;n_2\texttt{ = }2*n_1;\;\;n_3\texttt{ = }\texttt{pow}(8,n_2);\;\;
+          n_4\texttt{ = }n_2+1;
+\\[0.2em]
+\;\;\quad n_5\texttt{ = }n_4!;\;\;n_y\texttt{ = }n_3 / n_5;\;\;
+\textcolor{red}{x_z\texttt{ = }\texttt{pow}(x_{/8},n_4);}\\[0.2em]
+\;\;\quad \texttt{if }(\texttt{even}(n_1))\;\;{\{
+\textcolor{red}{{x_1}\texttt{ = }{n_y}*{x_z};\;\;
+x_r\texttt{ += }{x_1};}
+
+\}}\\[0.2em]
+\;\;\quad\texttt{else } {\{\textcolor{red}{{x_1}\texttt{ = }{n_y}*{x_z};\;\;{x_r}\texttt{ -= }{x_1};}\};}\\[0.2em]
+\;\;\quad\textcolor{red}{\texttt{inv}(x_1);\;\;\texttt{inv}(x_z);}
+
+\}\\
+\;\;\texttt{return }\textcolor{red}{(8*x_r)};\\
+\}
+\end{array}\\[8em]
+\sin{x}\approx 8*(\frac{x}{8}-\frac{8^2}{3!}(\frac{x}{8})^3+\frac{8^4}{5!}(\frac{x}{8})^5-\frac{8^6}{7!}(\frac{x}{8})^7+...+(-1)^{n-1}\frac{8^{2n-2}}{(2n-1)!}(\frac{x}{8})^{2n-1})
+\end{array}
+\]
+}
+\vspace*{-1em}
+\caption{Implementing sine in \vqimp}
+\label{fig:sine-impl}
+\end{figure}
+
+It is not uncommon for programmers to write oracles as metaprograms in
+a quantum assembly's host language, e.g., as we did for \coqe{rz_adder} in
+\Cref{fig:circuit-example}. But this process can be tedious and error-prone,
+especially when trying to write optimized code.
+%
+To make writing efficient arithmetic-based quantum oracles easier,
+we developed \vqimp, a higher-level imperative language that compiles
+to \oqasm. Here we discuss \vqimp's basic features, describe how we 
+optimize \vqimp programs during compilation using partial
+evaluation, and provide correctness guarantees for \vqimp programs. 
+Using \vqimp, we have defined operations for the ChaCha20 hash-function \cite{chacha}, exponentiation, sine, arcsine, and cosine, and tested program correctness by running inputs through \vqimp's semantics. 
+%
+More details about \vqimp are available in \Cref{sec:appendix}.
+
+\myparagraph{Language Features}
+
+An \vqimp program is a sequence of function definitions, with the last
+acting as the ``main'' function. Each function definition is a series
+of statements that concludes by returning a value $v$.  \vqimp statements contain
+variable declarations, assignments (e.g., $x_r\texttt{ = }x_{/8}$),
+arithmetic computations ($n_1\texttt{ = }i+1$), loops, conditionals,
+and function calls.
+%In declarations, all variables are initialized as $0$.
+Variables $x$ have types $\tau$, which are either primitive types
+$\omega^m$ or arrays thereof, of size $n$. A primitive type pairs a
+base type $\omega$ with a \emph{quantum mode} $m$. There are three base
+types: type $\tnat$ indicates non-negative (natural) numbers; type
+$\tfixed$ indicates fixed-precision real numbers in the range $(-1,1)$;
+and type $\tbool$ represents booleans. The programmer specifies the
+number of qubits to use to represent $\tnat$ and $\tfixed$ numbers
+when invoking the \vqimp compiler.  
+%
+The mode $m \in\{C, Q\}$ on a primitive type indicates when a
+type's value is expected to be known: $C$ indicates that the value is based
+on a classical parameter of the oracle, and should be known at compile
+time; $Q$ indicates that the value is a quantum input to the oracle, 
+computed at run-time. 
+
+\Cref{fig:sine-impl} shows the \vqimp implementation of the sine function,
+which is used in quantum applications such as Hamiltonian
+simulation~\cite{feynman1982simulating,Childs_2009}. 
+Because $\tfixed$ types must be in the range $(-1,1)$, the function
+takes $\frac{1}{8}$ times the input angle in variable $x_{/8}$ (the input 
+angle $x$ is in $[0,2\pi)$). The result, stored in variable $x_r$, 
+is computed by a Taylor expansion of $n$ terms.
+The standard formula for the Taylor expansion is
+$\sin{x}\approx
+x-\frac{x^3}{3!}+\frac{x^5}{5!}-\frac{x^7}{7!}+...+(-1)^{n-1}\frac{x^{2n-1}}{(2n-1)!}$;
+the loop in the algorithm computes an equivalent formula given input
+$\frac{1}{8}x$, as shown at the bottom of the figure. 
+% Performing this manual transformation is tedious, but allows for
+% the significant reduction in qubits required to represent a
+% $\tfixed$. We can use property testing to help assure the
+% transformation is correct; automating the transformation would be
+% interesting future work.
+
+% The return value $8*x_r$ in \Cref{fig:sine-impl} is automatically computed by \vqimp.
+% Programmers can set a flag $n$ for a $\tfixed$ variable $x$
+% and \vqimp will automatically convert the value of $x$ to $\frac{x}{n}$, like $x_{/8}$ in \Cref{fig:sine-impl}, and multiply $n$ back to the return result, like $8*x_r$.
+% \khh{But even if \vqimp adds the multiplication by 8, the user still has to write their algorithm with $x/8$ in mind, right? (E.g., ``pow(8,n2)'' in the code.) This doesn't seem very automatic.}
+
+% Another feature of \vqimp is \emph{reversibility}; we provide two kinds.
+% First, every \vqimp function call is reversible. For example, in a call to the \texttt{sin} function, excluding the computed result $x_r$, the side-effects on input variables, e.g., $x_{/8}$, are uncomputed once the call returns. 
+% Second, \vqimp's \texttt{inv} operation can be used to manually uncompute a single assignment of a variable.
+% For example, $\texttt{inv}(x_1)$ in \Cref{fig:sine-impl} uncomputes $x_1$ in every loop iteration.
+% To implement this, we maintain a stack during compilation that tracks the nearest assignment of a variable.
+% See \Cref{sec:appendix} for more details.
+
+\myparagraph{Reversible Computation}
+\label{sec:revcomp}
+
+Since programs that run on quantum computers must be
+\emph{reversible}, \vqimp compiles functions to reverse their
+effects upon returning. In \Cref{fig:sine-impl}, after the
+\texttt{main} function returns, only the return value is copied and
+stored to a target variable. For other values, like $x_{/8}$, the 
+compiler will insert an \emph{inverse circuit} to revert all side effects.
+
+When variables are reused within a function, they must be
+\emph{uncomputed} using \vqimp's $\sinv{x}$ operation. For
+example, in \Cref{fig:sine-impl}, the second \texttt{inv} operation
+returns $x_z$ to its state prior to the execution of
+$\textcolor{red}{x_z\texttt{=}\texttt{pow}(x_{/8},n_4)}$ so that $x_z$ 
+can be reassigned in the next iteration.
+We plan to incorporate automatic uncomputation techniques to insert $\sinv{x}$ calls automatically, but doing so requires care to avoid blowup in the generated circuit \cite{unqomp}. 
+
+The \name compiler imposes three restrictions on the use of $\sinv{x}$, 
+which aim to ensure that each use uncomputes just one assignment to $x$.
+%
+First, since the semantics of an \texttt{inv} operation reverses the
+most recent assignment, we require that every \texttt{inv} operation
+have a definite predecessor. Example \texttt{(1)} in \Cref{fig:inv-examples}
+shows an \texttt{inv} operation on a variable that does not have a
+predecessor; \texttt{(2)} shows a variable $z$ whose
+predecessor is not always executed. Both are invalid in \vqimp.
+Second, the statements between an \texttt{inv} operation and its
+predecessor cannot write to any variables used in the body of the
+predecessor. Example \texttt{(3)} presents an invalid case where $x$
+is used in the predecessor of $z$, and is assigned between the
+\texttt{inv} and the predecessor.  The third restriction is that, while
+sequenced \texttt{inv} operations are allowed, the number of \texttt{inv}
+operations must match the number of predecessors. Example \texttt{(4)}
+is invalid, while \texttt{(5)} is valid, because the first
+\texttt{inv} in \texttt{(5)} matches the multiplication assignment
+and the second \texttt{inv} matches the addition assignment.
+
+\begin{figure}[t]
+\footnotesize
+\[
+\begin{array}{c}
+\texttt{(1)}
+\begin{array}{l}
+
+a\texttt{=}x\texttt{ * }y;
+\\
+\texttt{inv}(z);
+\textcolor{red}{\xmark}
+\end{array}
+\quad
+\texttt{(2)}
+\begin{array}{l}
+\texttt{if}(x<y)\\
+\;\;\;a\texttt{=}x\texttt{ * }y;\\
+\texttt{else}\\
+\;\;\;z\texttt{=}x\texttt{ * }y;
+\\
+\texttt{inv}(z);
+\textcolor{red}{\xmark}
+\end{array}
+
+\quad
+\texttt{(3)}
+\begin{array}{l}
+
+z\texttt{=}x\texttt{ * }y;
+\\
+x\texttt{=}x\texttt{ + }1;
+\textcolor{red}{\xmark}
+\\
+\texttt{inv}(z);
+\end{array}
+\quad
+\texttt{(4)}
+\begin{array}{l}
+
+z\texttt{=}x\texttt{ * }y;
+\\
+\texttt{inv}(z);
+\\
+\texttt{inv}(z);
+\textcolor{red}{\xmark}
+\end{array}
+\quad
+\texttt{(5)}
+\begin{array}{l}
+
+z\texttt{+=}x;
+\\
+z\texttt{=}x\texttt{ * }y;
+\\
+\texttt{inv}(z);
+\\
+\texttt{inv}(z);
+\end{array}
+\textcolor{green}{\cmark}
+\end{array}
+\]
+\caption{Example (in)valid uses of \texttt{inv}}\label{fig:inv-examples}
+\end{figure}
+
+To implement these well-formedness checks, \name's \vqimp compiler maintains a 
+stack of assignment statements. Once the compiler hits an \texttt{inv}
+operation, it pops statements from the stack to find a match
+for the variable being uncomputed. It also checks that none of the popped
+statements contain an assignment of variables
+used in the predecessor statement.
+
+\myparagraph{Compilation from \vqimp to \oqasm}
+
+The \vqimp compiler performs \emph{partial evaluation} \cite{partialeval} 
+on the input program given
+classical parameters; the residual program is compiled to a quantum
+circuit.
+%
+In particular, we compile an \vqimp program by evaluating its $C$-mode
+components, storing the results in a store $\sigma$, and then
+using these results while translating its $Q$-mode components
+into \oqasm code. For example, when compiling the \texttt{for} loop in
+\Cref{fig:sine-impl}, the compiler will look up the value of
+loop-bound variable $n$ in the store and update $i$'s value in the
+store for each iteration. When compiling the loop-body statement
+$n_1\texttt{=} i + 1$, variable $n_1$ will simply be updated in the
+store, and no code generated. When compiling statement
+$\textcolor{red}{x_z \texttt{=} \texttt{pow}({x_{/8}},n_4)}$, the fact that $x_z$ has
+mode $Q$ means that \oqasm code must be generated. Thus, each iteration will
+compile the non $C$-mode components of the body, essentially inlining the
+loop. As an illustration, if we were to initialize $n$
+to 3, the partially evaluated program would be equivalent to the
+following (in \oqasm rather than \vqimp).
+
+{
+\begin{footnotesize}
+\begin{center}
+$
+\begin{array}{l@{~}l}
+\textcolor{red}{x_r\texttt{ = }x_{/8};}\; &
+\textcolor{red}{{x_z}\texttt{ = }\texttt{pow}(x_{/8},3);}\;
+\textcolor{red}{{x_1}\texttt{ = }{\frac{8^2}{3!}}*{x_z};\;{x_r}\texttt{ -= }{x_1};}\;
+\textcolor{red}{\sinv{x_1};\;\sinv{x_z};}
+\\
+&\textcolor{red}{{x_z}\texttt{ = }\texttt{pow}(x_{/8},5);}\;
+\textcolor{red}{{x_1}\texttt{ = }{\frac{8^4}{5!}}*{x_z};\;{x_r}\texttt{ += }{x_1};}\;
+\textcolor{red}{\sinv{x_1};\;\sinv{x_z};}\;
+\\
+&\textcolor{red}{{x_z}\texttt{ = }\texttt{pow}(x_{/8},7);}\;
+\textcolor{red}{{x_1}\texttt{ = }{\frac{8^6}{7!}}*{x_z};\;{x_r}\texttt{ -= }{x_1};}\;
+\textcolor{red}{\sinv{x_1};\;\sinv{x_z};}
+\end{array}
+$
+\end{center}
+\end{footnotesize}
+}
+
+We have verified that compilation from \vqimp to \oqasm is correct, in
+Coq, with a caveat: Proofs for assignment statements are
+parameterized by correctness statements about the involved operators.
+Each Coq operator function has a correctness statement associated with it; e.g., 
+we state that the \oqasm code
+produced by invoking \coqe{rz_adder} for addition corresponds to an addition at
+the \vqimp level. In the case of \coqe{rz_adder} and a few others, we
+have a proof of this in Coq; for the rest, we use PBT to provide some
+assurance that the statement is true. Further details about \vqimp compilation and its correctness claims can be found in \Cref{sec:appendix}.
+% Programmers can also use PBT to test \vqimp programs, by first compiling them to \oqasm (see \Cref{sec:grovers}).
