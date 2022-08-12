@@ -16,8 +16,8 @@ method Shor ( a : nat, N : nat, n : nat, x : Q[n], y : Q[n] )
   for (int i = 0; i < n; x[i]; i ++)
     invariant (0 <= i <= n)
     invariant (saturation(x[0..i]))
-    invariant (type(x[0..i],y) = Tensor n (ch (2^i) {k | j baseof x[0..i] && k = (j,a^j mod N)}))
-    invariant ((x[0..i],y) == psum(k=0,2^i,1,(k,a^k mod N))) //psum(k=b,M,p(k),b(k)) = sum_{k=b}^M p(k)*b(k)
+    invariant (type(y,x[0..i]) = Tensor n (ch (2^i) {k | j baseof x[0..i] && k = (a^j mod N,j)}))
+    invariant ((y,x[0..i]) == psum(k=0,2^i,1,(a^k mod N,k))) //psum(k=b,M,p(k),b(k)) = sum_{k=b}^M p(k)*b(k)
   {
     y *= cl(a^(2^i) * y mod N);
   }

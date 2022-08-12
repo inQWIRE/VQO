@@ -105,7 +105,8 @@
 \newcommand{\interp}[1]{[ #1 ]}
 \newcommand{\interpalt}[1]{\llbracket #1 \rrbracket}
 \newcommand{\ecode}[1]{\emph{\texttt{#1}}}
-
+\newcommand{\cmode}{\texttt{c}}
+\newcommand{\mmode}{\texttt{q}}
 % From QPL2017
 \newenvironment{nscenter}
  {\parskip=3pt\par\nopagebreak\centering}
@@ -285,7 +286,7 @@
 \newcommand{\sifq}[2]{\texttt{if}~{(#1)}~{\{#2\}}}
 \newcommand{\sifb}[3]{\texttt{if}~{(#1)}~{#2}~\texttt{else}~{#3}}
 \newcommand{\swhile}[3]{\texttt{while}~{(#1)}~{#2}~{\{#3\}}}
-\newcommand{\sqwhile}[6]{\texttt{for}~{(#1~;~#2~;~#3~;~#4)}~{#5}~{\{#6\}}}
+\newcommand{\sqwhile}[7]{\texttt{for}~{(#1~;~#2~;~#3~;~#4)}~{#5}~{#6}~{\{#7\}}}
 \newcommand{\sinit}[2]{\texttt{int}~{#1}~=~{#2}}
 \newcommand{\sincr}[1]{{#1}\texttt{++}}
 \newcommand{\tnor}[1]{\texttt{Nor}~{#1}}
@@ -299,6 +300,7 @@
 \newcommand{\ttype}[2]{\Motimes_{#1}~{#2}}
 \newcommand{\cupdot}{\mathbin{\mathaccent\cdot\cup}}
 \newcommand{\ias}[1]{\texttt{as}(#1)}
+\newcommand{\iasa}[2]{\texttt{as}^{#1}(#2)}
 \newcommand{\ibs}[1]{\texttt{bs}(#1)}
 \newcommand{\ips}[1]{\texttt{ps}(#1)}
 \newcommand{\fivepule}[5]{\{#1\}~\{#2\}~#3~\{#4\}~\{#5\}}

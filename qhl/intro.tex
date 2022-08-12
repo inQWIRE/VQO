@@ -60,7 +60,7 @@ In addition, the states appearing in these algorithms can be mapped to classical
 
 \Cref{fig:arch} provides the QNP development plan. 
 In the first stage, we develop the Q-Dafny proof system including a quantum language (QWhile) 
-that contains operations for writing oracles (QQASM/OQIMP),
+that contains operations for writing oracles (\oqasm/\sourcelang),
 a type system to record the qubit state forms for easing property proofs, 
 as well as a proof system built on top of the classical Hoare Logic array theory.
 In addition, Q-Dafny is compiled to Dafny, 
@@ -109,37 +109,34 @@ and we also generate axioms that handle the transformation between state represe
 
 \begin{figure}[t]
 {\small
-  \begin{lstlisting}[language=C++,xleftmargin=4 mm]
-method Shor ( a : int, N : int, n : int, x : Q[n], y : Q[n] )
+  \begin{lstlisting}[numbers=left,language=C++,xleftmargin=4 mm]
+method Shor ( a : int, N : int, n : int, m : int, x : Q[n], y : Q[n] )
  requires (n > 0)
  requires (1 < a < N)
  requires (N < 2^(n-1))
+ requires (N^2 < 2^m <= 2 * N^2)
  requires (gcd(a, N) == 1)
  requires ( type(x) = Tensor n (Nor 0))
  requires ( type(y) = Tensor n (Nor 0))
- ensures (a^xv mod N == yv)
- ensures (gcd(q, t) == 1)
- ensures (is_even(t))
- ensures (a^(t/2) + 1 divides N || a^(t/2) - 1 divides N)
- //ensures (r.pos > (4 * e^(-2) / PI ^ 2) / (Nat.log2 N)^4)
+ ensures (gcd(N, r) == 1)
+ ensures (p.pos >= 4 / (PI ^ 2))
 {
   x *= H ;
-  y *= cl(y+1); //cl might be omitted.
+  y *= cl(y+1); //cl can be omitted.
   for (int i = 0; i < n; x[i]; i ++)
     invariant (0 <= i <= n)
     invariant (saturation(x[0..i]))
-    invariant (type(x[0..i],y) = Tensor n (ch (2^i) {k | j baseof x[0..i] && k = (j,a^j mod N)}))
+    invariant (type(y,x[0..i]) = Tensor n (ch (2^i) {k | j baseof x[0..i] && k = (a^j mod N,j)}))
     //psum(k=b,M,p(k),b(k)) = sum_{k=b}^M p(k)*b(k)
-    invariant ((x[0..i],y) == psum(k=0,2^i,1,(k,a^k mod N))) 
+    invariant ((y,x[0..i]) == psum(k=0,2^i,1,(a^k mod N,k))) 
   {
     y *= cl(a^(2^i) * y mod N);
   }
 
- M z := measure(y);//forall x in x[0..n), valid(x) ==> z.base = a^(x.base) mod N
+ M z := measure(y);//partial measurement, actually measure(y,r) r is the period
  x *= RQFT;
- M r := measure(x); //r is r.pos and r.base
- int t := conFrac(r); //continued fraction of r.base and maintain r.pos (probability)
- 
+ M p := measure(x); //p.pos and p.base
+ var r := post_period(m,p.base) // exists t. 2^m * t / r = p.base
 }
   \end{lstlisting}
 }
@@ -153,8 +150,8 @@ The first stage session type system tracks only qubit bases.
 As a consequence, the set of quantum algorithms that are efficiently reasonable has the scheme $\texttt{QFT};U;\texttt{QFT}^{-1}$,
 where $\texttt{QFT}$ and $\texttt{QFT}^{-1}$ are Hadamard or QFT gates that switch qubits array state forms between normal and superposition, $U$ is an arbitrary combination of QWhile operations that use Hadamard or QFT gates in a manageable manner.
 For rich expressiveness, we permit two kinds of managed operations that might involve Hadamard or QFT gates: 
-oracle assignments written in OQASM/OQIMP and quantum reflection operations (\texttt{amplify} and \texttt{diffuse} in \Cref{fig:vqimp}).
-The concept of "management" refers to the fact that there is a type system in OQASM/OQIMP to ensure the use of Hadamard or QFT gates do not cause entanglement, as well as the Hadamard or QFT gate usage in quantum reflections has a fixed implementation, such that its semantics is well-known and its property reasoning is captured by Q-Dafny.
+oracle assignments written in \oqasm/\sourcelang and quantum reflection operations (\texttt{amplify} and \texttt{diffuse} in \Cref{fig:vqimp}).
+The concept of "management" refers to the fact that there is a type system in \oqasm/\sourcelang to ensure the use of Hadamard or QFT gates do not cause entanglement, as well as the Hadamard or QFT gate usage in quantum reflections has a fixed implementation, such that its semantics is well-known and its property reasoning is captured by Q-Dafny.
 
 Almost all near term quantum algorithms are definable in terms of the above scheme, such as GHZ, Grover's, Shor's, and Childs' Boolean equation algorithms.
 To prove properties about advanced quantum algorithms, the session type system needs to track qubit phases, which will complicate its design, and it is the major task of stage 3 in the QNP development.

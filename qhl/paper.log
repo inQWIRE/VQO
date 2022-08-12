@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.29)  21 JUL 2022 20:52
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.29)  23 JUL 2022 19:18
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1469,10 +1469,6 @@ Package: listings 2019/09/10 1.8c (Carsten Heinz)
 Package: newunicodechar 2018/04/08 v1.2 Defining Unicode characters
 )
 
-Package newunicodechar Warning: Redefining Unicode character on input line 528.
-
-
-
 Package newunicodechar Warning: Redefining Unicode character on input line 530.
 
 
@@ -1489,15 +1485,11 @@ Package newunicodechar Warning: Redefining Unicode character on input line 536.
 
 
 
-Package newunicodechar Warning: Redefining Unicode character on input line 537.
+Package newunicodechar Warning: Redefining Unicode character on input line 538.
 
 
 
-Package newunicodechar Warning: Redefining Unicode character on input line 560.
-
-
-
-Package newunicodechar Warning: Redefining Unicode character on input line 561.
+Package newunicodechar Warning: Redefining Unicode character on input line 539.
 
 
 
@@ -1513,7 +1505,15 @@ Package newunicodechar Warning: Redefining Unicode character on input line 564.
 
 
 
+Package newunicodechar Warning: Redefining Unicode character on input line 565.
+
+
+
 Package newunicodechar Warning: Redefining Unicode character on input line 566.
+
+
+
+Package newunicodechar Warning: Redefining Unicode character on input line 568.
 
 
 ) (/usr/share/texlive/texmf-dist/tex/latex/psnfss/pifont.sty
@@ -1820,6 +1820,12 @@ LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
 
 Class acmart Warning: A possible image without description on input line 48.
 
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
+(Font)              scaled to size 10.0pt on input line 63.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 7.3pt on input line 63.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 5.5pt on input line 63.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 7.0pt on input line 75.
 [1.1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
@@ -1852,117 +1858,105 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.0pt on input line 117.
+(Font)              scaled to size 9.0pt on input line 118.
 
 
-Class acmart Warning: A possible image without description on input line 148.
+Class acmart Warning: A possible image without description on input line 145.
 
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 10.0pt on input line 153.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 7.3pt on input line 153.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 153.
-[3.3]) (./intlang.tex
+(Font)              scaled to size 10.0pt on input line 150.
+) (./intlang.tex [3.3]
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 9.0pt on input line 19.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
 (Font)              scaled to size 9.0pt on input line 25.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 6.2pt on input line 47.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 41.
+(Font)              scaled to size 9.0pt on input line 51.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 7.3pt on input line 41.
+(Font)              scaled to size 7.3pt on input line 51.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 41.
+(Font)              scaled to size 5.5pt on input line 51.
 
 
-Class acmart Warning: A possible image without description on input line 43.
+Class acmart Warning: A possible image without description on input line 53.
 
 
-Class acmart Warning: A possible image without description on input line 65.
+Class acmart Warning: A possible image without description on input line 74.
 
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.0pt on input line 92.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.2pt on input line 92.
+(Font)              scaled to size 8.0pt on input line 107.
 
-Class acmart Warning: A possible image without description on input line 130.
+Class acmart Warning: A possible image without description on input line 132.
 
-[4.4]
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 160.
- [5.5]
+[4.4] [5.5]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 205.
- [6.6]
+(Font)              scaled to size 10.0pt on input line 220.
+ [6.6] [7.7]
 LaTeX Font Info:    Trying to load font information for OT1+pzc on input line 2
-80.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pzc.fd
+92.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pzc.fd
 File: ot1pzc.fd 2001/06/04 font definitions for OT1/pzc.
 )
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <10> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 280.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 292.
 
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `pzc' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <7.3> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 280.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 292.
 
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <5.5> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 280.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 292.
 
-
-[7.7]
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <8> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 286.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 298.
 
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <6.2> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 286.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 298.
 
 
 
-Class acmart Warning: A possible image without description on input line 299.
+Class acmart Warning: A possible image without description on input line 311.
 
 LaTeX Font Info:    Font shape `OT1/pzc/m/it' in size <9> not available
-(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 318.
+(Font)              Font shape `OT1/pzc/mb/it' tried instead on input line 326.
 
 
-Class acmart Warning: A possible image without description on input line 330.
-
-
-Overfull \hbox (3.07048pt too wide) in paragraph at lines 396--430
- [] 
- []
+Class acmart Warning: A possible image without description on input line 338.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 445.
+(Font)              scaled to size 8.0pt on input line 413.
 
-Class acmart Warning: A possible image without description on input line 452.
+Class acmart Warning: A possible image without description on input line 420.
 
 [8.8] [9.9]
 
-LaTeX Warning: Command \textbackslash invalid in math mode on input line 575.
+Class acmart Warning: A possible image without description on input line 584.
 
 
-Class acmart Warning: A possible image without description on input line 616.
-
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 3199) has occurred while \output is active []
 
  [10.10]
+
+LaTeX Font Warning: Command \small invalid in math mode on input line 619.
+
 [11.11]) Excluding 'acks' comment. (./paper.bbl
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 8.0pt on input line 45.
 LaTeX Info: Redefining \tempurl on input line 119.
 LaTeX Info: Redefining \tempurl on input line 161.
+ [12.12]
 LaTeX Info: Redefining \tempurl on input line 190.
 LaTeX Info: Redefining \tempurl on input line 208.
 LaTeX Info: Redefining \tempurl on input line 222.
 LaTeX Info: Redefining \tempurl on input line 237.
 LaTeX Info: Redefining \tempurl on input line 254.
- [12.12]) [13.13]
+) [13.13]
 (./appendix.tex
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/b/sc' will be
 (Font)              scaled to size 10.0pt on input line 1.
@@ -2063,11 +2057,11 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 43958 strings out of 481239
- 795914 string characters out of 5920377
- 1473820 words of memory out of 5000000
- 57542 multiletter control sequences out of 15000+600000
- 902396 words of font info for 543 fonts, out of 8000000 for 9000
+ 43948 strings out of 481239
+ 795941 string characters out of 5920377
+ 1461141 words of memory out of 5000000
+ 57527 multiletter control sequences out of 15000+600000
+ 903117 words of font info for 549 fonts, out of 8000000 for 9000
  1303 hyphenation exceptions out of 8191
  63i,29n,101p,1460b,1920s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_iqbcqn.enc}{/us
@@ -2075,11 +2069,11 @@ r/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_jtta5h.enc}{/usr/shar
 e/texlive/texmf-dist/fonts/enc/dvips/inconsolata/i4-ts1.enc}{/usr/share/texlive
 /texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/share/texlive/texmf-dist/fonts/en
 c/dvips/libertine/lbtn_nh77jq.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvip
-s/libertine/lbtn_omcwp2.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libe
-rtine/lbtn_ncsllp.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/inconsolat
-a/i4-t1-4.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_oex
-x6f.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.en
-c}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_ki75ao.enc}{/us
+s/libertine/lbtn_omcwp2.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/inco
+nsolata/i4-t1-4.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lb
+tn_oexx6f.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_7gr
+ukw.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_ki75ao.en
+c}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}{/us
 r/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc}{/usr/shar
 e/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}</usr/share/texl
 ive/texmf-dist/fonts/type1/public/inconsolata/Inconsolata-zi4r.pfb></usr/share/
@@ -2100,10 +2094,10 @@ iaX.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/txfonts/txsyb.pfb></u
 sr/share/texlive/texmf-dist/fonts/type1/public/newtx/txsys.pfb></usr/share/texl
 ive/texmf-dist/fonts/type1/urw/zapfchan/uzcmi8a.pfb></usr/share/texlive/texmf-d
 ist/fonts/type1/public/boondox/zxxrw8a.pfb>
-Output written on paper.pdf (19 pages, 669797 bytes).
+Output written on paper.pdf (19 pages, 670262 bytes).
 PDF statistics:
- 555 PDF objects out of 1000 (max. 8388607)
- 454 compressed objects within 5 object streams
- 129 named destinations out of 1000 (max. 500000)
+ 560 PDF objects out of 1000 (max. 8388607)
+ 456 compressed objects within 5 object streams
+ 125 named destinations out of 1000 (max. 500000)
  104154 words of extra memory for PDF output out of 106986 (max. 10000000)
 

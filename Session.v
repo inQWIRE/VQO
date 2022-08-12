@@ -7,7 +7,7 @@ Require Import QPE.
 Require Import BasicUtility.
 Require Import Classical_Prop.
 Require Import MathSpec.
-Require Import OQASM.
+(*Require Import OQASM.*)
 (**********************)
 (** Unitary Programs **)
 (**********************)
@@ -25,14 +25,11 @@ Local Open Scope nat_scope.
 (* Classical State including variable relations that may be quantum *)
 
 (* we want to include all the single qubit gates here in the U below. *)
-Inductive atype := C : atype | Q : atype | M :atype.
+Inductive atype := C : atype | M :atype.
 
 Definition aty_eq  (t1 t2:atype) : bool := 
    match t1 with C => match t2 with C  => true
                             | _ => false
-                        end
-               | Q => match t2 with Q => true
-                           | _ => false
                         end
                | M => match t2 with M => true 
                            | _ => false
@@ -51,18 +48,16 @@ Notation "i '=a=' j" := (aty_eq i j) (at level 50).
 Lemma aty_eqb_eq : forall a b, a =a= b = true -> a = b.
 Proof.
  intros. unfold aty_eq in H.
- destruct a. destruct b. 1-3:easy.
- destruct b. 1-3:easy.
- destruct b. 1-3:easy.
+ destruct a. destruct b. easy. easy.
+ destruct b. 1-2:easy.
 Qed.
 
 Lemma aty_eqb_neq : forall a b, a =a= b = false -> a <> b.
 Proof.
  intros. unfold aty_eq in H.
  destruct a. destruct b. easy.
- easy. easy.
- destruct b. easy. easy. easy.
- destruct b. easy. easy. easy.
+ easy.
+ destruct b. easy. easy.
 Qed.
 
 Lemma aty_eq_reflect : forall r1 r2, reflect (r1 = r2) (aty_eq r1 r2). 
@@ -78,19 +73,37 @@ Proof.
 Qed.
 
 Definition meet_atype (a1 a2: atype) := 
-       match a1 with Q => Some Q | C => if  (a2 =a= M) then None else Some a2
-                | M => if a2 =a= M then Some M else None
+       match a1 with C => C
+                | M => a2
         end.
 
-Inductive varia := Var (x:var) | Index (x:var) (v:var).
+
+Inductive aexp := BA (x:var) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp).
+
+Coercion BA : var >-> aexp.
+
+Coercion Num: nat >-> aexp.
+
+
+Notation "e0 [+] e1" := (APlus e0 e1) (at level 50) : pexp_scope.
+Notation "e0 [*] e1" := (AMult e0 e1) (at level 50) : pexp_scope.
+
+Inductive varia := AExp (x:aexp) | Index (x:var) (v:aexp).
+
+Coercion AExp : aexp >-> varia.
+
+Notation "e0 [ e1 ]" := (Index e0 e1) (at level 50) : pexp_scope.
 
 Inductive singleGate := H_gate | X_gate | RZ_gate (f:nat) (*representing 1/2^n of RZ rotation. *).
 
+Inductive bexp := | BEq (x:varia) (y:varia) (i:var) (a:aexp)
+                  | BLt (x:aexp) (y:aexp) (i:var) (a:aexp) | BTest (i:var) (a:aexp).
 
-Inductive aexp := BA (x:varia) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | ASum (i:var) (n:aexp) (e:aexp).
+Notation "e0 [=] e1 @ e3 [ e4 ]" := (BEq e0 e1 e3 e4) (at level 50) : pexp_scope.
 
-Inductive bexp := | BEq (x:aexp) (y:aexp) | BLt (x:aexp) (y:aexp) | BTest (i:aexp) (a:aexp).
+Notation "e0 [<] e1 @ e3 [ e4 ]" := (BLt e0 e1 e3 e4) (at level 50) : pexp_scope.
 
+Notation "* e0 [ e1 ]" := (BTest e0 e1) (at level 50) : pexp_scope.
 
 (* Define the ground term type system 
 Inductive type_rotation := TV (b:aexp) | Infty.
@@ -104,52 +117,65 @@ Inductive type_phase := Infy | Uni.
 
 Inductive type_elem : Type := TNor (p : (rz_val))
          | TH (r:type_phase)
-         | EN (r:type_phase) (t:type_cfac).
+         | CH (m:nat) (t:type_cfac).
 
 Inductive se_type : Type := THT (n:nat) (t:type_elem).
 
 Definition type_pred := se_type.
 
 (* Ethan: I don't remember what is this tuple... *)
-Definition tpred := list (list (var * nat * nat) * se_type).
+Definition session := list (var * nat * nat).
 
-Inductive pexp := PSKIP | Assign (x:var) (n:aexp) 
+Definition tpred := list (session * se_type).
+
+Inductive maexp := AE (n:aexp) | Meas (a:var).
+
+Coercion AE : aexp >-> maexp.
+
+Inductive exp := SKIP (x:var) (a:aexp) | X (x:var) (a:aexp)
+        | CU (x:var) (a:aexp) (e:exp)
+        | RZ (q:nat) (x:var) (a:aexp)  (* 2 * PI * i / 2^q *)
+        | RRZ (q:nat) (x:var) (a:aexp)  
+        | SR (q:nat) (x:var) (* a series of RZ gates for QFT mode from q down to b. *)
+        | SRR (q:nat) (x:var) (* a series of RRZ gates for QFT mode from q down to b. *)
+        (*| HCNOT (p1:posi) (p2:posi) *)
+        | Lshift (x:var)
+        | Rshift (x:var)
+        | Rev (x:var)
+        | QFT (x:var) (b:nat) (* H on x ; CR gates on everything within (size - b). *)
+        | RQFT (x:var) (b:nat)
+       (* | H (p:posi) *)
+        | Seq (s1:exp) (s2:exp).
+
+Inductive type := Phi (b:nat) | Nor.
+
+Inductive single_u := RH (p:varia).
+
+Inductive pexp := PSKIP 
+            | Let (x:var) (n:maexp) (e:pexp)
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
-            | AppU (e:singleGate) (p:varia)
+            | AppSU (e:single_u)
+            | AppU (p:list varia) (e:exp) 
             | PSeq (s1:pexp) (s2:pexp)
             | If (x:bexp) (s1:pexp)
-            | IfB (x:bexp) (s1:pexp) (s2:pexp)
-            | While (b:bexp) (p:pexp) (l: list (list varia * se_type))
-            | Classic (p:exp) (args : list (varia))
+            | For (x:var) (l:aexp) (h:aexp) (b:bexp) (p:pexp)
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
                        the second arguments a is the phase of the post-state of x,
                        the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
                        excluding ancilla qubits  *)
-            | PQFT (x:var)
-            | PRQFT (x:var)
-            | Meas (a:var) (x:var) (* quantum measurement on x to a classical value 'a'. *)
-            | PMeas (p:var) (x:var) (a:var) (* the probability of measuring x = a assigning probability to p. *)
-            | QWhile (n:aexp) (x:var) (i:var) (b:bexp) (e:pexp)
             | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
-            | Reflect (x:var) (p:aexp) (a1:aexp) (a2:aexp) (* reflection on two state x=a1 and x=a2 with x=a1 happens in a probablity p, a1 <> a2  *)
-            | Distr (x:var) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
-                                               This statement basically distributes/diverges a vector x to many different vectors. *).
+            | Distr (x:varia) 
+     (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
+        This statement basically distributes/diverges a vector x to many different vectors. *).
           (*  | CX (x:posi) (y:posi)  (* control x on to y. *)
             | CU (x:posi) (p:exp) (z:var) (args: list var) (q:aexp) (s:aexp) *)
              (* control-U on the reversible expression p from the control node x on to z. *)
-(*
-            | QWhile (n:aexp) (x:var) (f:aexp) (b:bexp) (e:pexp) 
-                    (*max loop number of n, variable x, monotonic function f on x as x -> f(x), bool b and e.*)
-            | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. *)
-            | Reflect (x:var) (p:aexp) (a1:aexp) (a2:aexp) (* reflection on two state x=a1 and x=a2 with x=a1 happens in a probablity p, a1 <> a2  *)
-            | Distr (x:var) (al : list aexp) (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
-                                               This statement basically distributes/diverges a vector x to many different vectors. *).
-*)
+
 Notation "p1 ; p2" := (PSeq p1 p2) (at level 50) : pexp_scope.
 
-
+Notation "p1 [<-] p2" := (AppU p1 p2) (at level 50) : pexp_scope.
 
 
 (* Type system -- The Static Type system, and the dynamic gradual typing part will be merged with the triple rule. *)
@@ -177,25 +203,88 @@ Inductive bexp := BEq (x:aexp) (y:aexp) | BGe (x:aexp) (y:aexp) | BLt (x:aexp) (
                 | BTest (x:aexp) | BXOR (x:bexp) (y:bexp) | BNeg (x:bexp).
 *)
 
+
+(*
+Inductive static_type := SPos (x:list vari) | SNeg (x:list vari).
+*)
+Inductive factor := AType (a:atype) | Ses (a:session).
+
+Coercion AType : atype >-> factor.
+
+Coercion Ses : session  >-> factor.
+
 Module AEnv := FMapList.Make Nat_as_OT.
 Module AEnvFacts := FMapFacts.Facts (AEnv).
-Definition aenv := AEnv.t atype.
+Definition aenv := AEnv.t factor.
 Definition empty_benv := @AEnv.empty atype.
 
 Definition stack := AEnv.t nat.
 Definition empty_stack := @AEnv.empty nat.
 
-(*
-Inductive static_type := SPos (x:list vari) | SNeg (x:list vari).
-*)
-Definition vari_eq (x y: varia) :=
-  match x with Var n => match y with Var m => (n =? m) | _ => false end
-            | Index n i => match y with Index m j => (n =? m) && (i =? j) | _ => false end
-  end.
+Definition join_two_ses (a:(var * nat * nat)) (b:(var*nat*nat)) :=
+   match a with (x,n1,n2) => 
+      match b with (y,m1,m2) => 
+            if x =? y then (if n1 <=? m1 then 
+                               (if n2 <? m1 then None
+                                else if n2 <? m2 then Some (x,n1,m2)
+                                else Some(x,n1,n2))
+                            else if m2 <? n1 then None
+                            else if n2 <? m2 then Some (x,m1,m2)
+                            else Some (x,m1,n2))
+            else None
+     end
+   end.
 
-(* Ethan: Maybe same deal as before? *)
-Scheme Equality for varia.
-Print varia_eq_dec.
+Fixpoint join_ses_aux (a:(var * nat * nat)) (l:list ((var * nat * nat))) :=
+     match l with [] => ([a])
+           | (x::xs) => match join_two_ses a x with None => x::join_ses_aux a xs
+                                         | Some ax => ax::xs
+                        end
+     end.
+
+Fixpoint join_ses (l1 l2:list ((var * nat * nat))) :=
+    match l1 with [] => l2
+               | x::xs => join_ses_aux x (join_ses xs l2)
+   end.
+
+
+Definition union_f (t1 t2:factor) :=
+   match t1 with AType a => match t2 with AType b => AType (meet_atype a b)
+                                       | Ses b => Ses b
+                            end
+              | Ses a => match t2 with AType b => Ses a
+                             | Ses b => Ses (join_ses a b)
+                         end
+   end.
+
+Inductive type_aexp : aenv -> aexp -> factor -> Prop :=
+   | ba_type : forall env b t, AEnv.MapsTo b t env -> type_aexp env b t
+   | num_type : forall env n, type_aexp env n C
+   | plus_type : forall env e1 e2 t1 t2, 
+                   type_aexp env e1 t1 -> type_aexp env e2 t2 ->  
+                     type_aexp env (APlus e1 e2) (union_f t1 t2)
+   | mult_type : forall env e1 e2 t1 t2, 
+                   type_aexp env e1 t1 -> type_aexp env e2 t2 ->  
+                     type_aexp env (AMult e1 e2) (union_f t1 t2).
+
+
+Inductive type_vari : aenv -> varia -> factor -> Prop :=
+   | aexp_type : forall env a t, type_aexp env a t -> type_vari env a t
+   | index_type : forall env x a b v,
+       AEnv.MapsTo x (Ses ([(x,a,b)])) env -> a <= v < b -> type_vari env (Index x (Num v)) (Ses ([(x,v,S v)])).
+
+
+Inductive type_bexp : aenv -> bexp -> factor -> Prop :=
+   | beq_type : forall env a b t1 t2 x v1 v2 v, type_vari env a t1 -> type_vari env b t2 ->
+             AEnv.MapsTo x (Ses ([(x,v1,v2)])) env -> v1 <= v < v2 
+            -> type_bexp env (BEq a b x (Num v)) (union_f (union_f t1 t2) (Ses ([(x,v,S v)])))
+   | blt_type : forall env a b t1 t2 x v1 v2 v, type_vari env a t1 -> type_vari env b t2 ->
+             AEnv.MapsTo x (Ses ([(x,v1,v2)])) env -> v1 <= v < v2 
+            -> type_bexp env (BEq a b x (Num v)) (union_f (union_f t1 t2) (Ses ([(x,v,S v)])))
+   | btest_type : forall env x v1 v2 v, 
+             AEnv.MapsTo x (Ses ([(x,v1,v2)])) env -> v1 <= v < v2 
+            -> type_bexp env (BTest x (Num v)) (Ses ([(x,v,S v)])).
+
 
 (* Ethan: This looks suspicious *)
 Fixpoint merge_var (x: varia) (yl:list varia) :=
@@ -273,31 +362,7 @@ Inductive type_bexp : aenv -> bexp -> atype  -> Prop :=
 Definition pre_tenv (l:list var) (env:env) := forall x, In x l -> Env.MapsTo x Nor env.
 
 
-Definition join_two_ses (a:(var * nat * nat)) (b:(var*nat*nat)) :=
-   match a with (x,n1,n2) => 
-      match b with (y,m1,m2) => 
-            if x =? y then (if n1 <=? m1 then 
-                               (if n2 <? m1 then None
-                                else if n2 <? m2 then Some (x,n1,m2)
-                                else Some(x,n1,n2))
-                            else if m2 <? n1 then None
-                            else if n2 <? m2 then Some (x,m1,m2)
-                            else Some (x,m1,n2))
-            else None
-     end
-   end.
 
-Fixpoint join_ses_aux (a:(var * nat * nat)) (l:list ((var * nat * nat))) :=
-     match l with [] => ([a])
-           | (x::xs) => match join_two_ses a x with None => x::join_ses_aux a xs
-                                         | Some ax => ax::xs
-                        end
-     end.
-
-Fixpoint join_ses (l1 l2:list ((var * nat * nat))) :=
-    match l1 with [] => l2
-               | x::xs => join_ses_aux x (join_ses xs l2)
-   end.
 
 Definition varia_ses (qenv:var -> nat) (s:stack) (v:varia) :=
    match v with Var x => Some ([(x,0,qenv x)])
