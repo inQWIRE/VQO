@@ -97,7 +97,7 @@ Notation "e0 [ e1 ]" := (Index e0 e1) (at level 50) : pexp_scope.
 Inductive singleGate := H_gate | X_gate | RZ_gate (f:nat) (*representing 1/2^n of RZ rotation. *).
 
 Inductive bexp := | BEq (x:varia) (y:varia) (i:var) (a:aexp)
-                  | BLt (x:aexp) (y:aexp) (i:var) (a:aexp) | BTest (i:var) (a:aexp).
+                  | BLt (x:varia) (y:varia) (i:var) (a:aexp) | BTest (i:var) (a:aexp).
 
 Notation "e0 [=] e1 @ e3 [ e4 ]" := (BEq e0 e1 e3 e4) (at level 50) : pexp_scope.
 
@@ -109,15 +109,15 @@ Notation "* e0 [ e1 ]" := (BTest e0 e1) (at level 50) : pexp_scope.
 Inductive type_rotation := TV (b:aexp) | Infty.
 *)
 
-Inductive type_cfac := TMore (n:nat) (al:nat -> rz_val) | TDistr.
+Definition type_cfac : Type := nat -> rz_val.
 
-Inductive type_phase := Infy | Uni.
+Inductive type_phase :=  Uni.
 
 (*| Uni (b: nat -> rz_val) | DFT (b: nat -> rz_val). *)
 
-Inductive type_elem : Type := TNor (p : (rz_val))
-         | TH (r:type_phase)
-         | CH (m:nat) (t:type_cfac).
+Inductive type_elem : Type := TNor (p : option (rz_val))
+         | TH (r:option type_phase)
+         | CH (t:option (nat * type_cfac)).
 
 Inductive se_type : Type := THT (n:nat) (t:type_elem).
 
@@ -149,14 +149,14 @@ Inductive exp := SKIP (x:var) (a:aexp) | X (x:var) (a:aexp)
 
 Inductive type := Phi (b:nat) | Nor.
 
-Inductive single_u := RH (p:varia).
+Inductive single_u := RH (p:varia) | SQFT (x:var) | SRQFT (x:var).
 
 Inductive pexp := PSKIP 
             | Let (x:var) (n:maexp) (e:pexp)
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppSU (e:single_u)
-            | AppU (p:list varia) (e:exp) 
+            | AppU (e:exp) 
             | PSeq (s1:pexp) (s2:pexp)
             | If (x:bexp) (s1:pexp)
             | For (x:var) (l:aexp) (h:aexp) (b:bexp) (p:pexp)
@@ -166,7 +166,7 @@ Inductive pexp := PSKIP
                        the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
                        excluding ancilla qubits  *)
             | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
-            | Distr (x:varia) 
+            | Diffuse (x:varia) 
      (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
         This statement basically distributes/diverges a vector x to many different vectors. *).
           (*  | CX (x:posi) (y:posi)  (* control x on to y. *)
