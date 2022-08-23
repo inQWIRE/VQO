@@ -475,6 +475,12 @@ Definition get_core_ses (b:bexp) :=
                | _ => None
     end.
 
+Definition get_core_var (b:bexp) :=
+    match b with BEq c d x a => x
+               | BLt c d x a => x
+               | BTest x a => x
+    end.
+
 Definition a_nat2fb f n := natsum n (fun i => Nat.b2n (f i) * 2^i).
 
 Lemma a_nat2fb_scope : forall n f, a_nat2fb f n < 2^n.
@@ -505,6 +511,42 @@ Fixpoint count_ses (s:session) :=
    match s with [] => 0
           | ((x,a,b)::xl) => (b-a) + count_ses xl
    end.
+
+Hypothesis cal_size : (nat -> rz_val) -> nat -> nat.
+
+Definition keep_ch_c' (qenv:var -> nat) (n m:nat) (c c1:nat -> rz_val) (b:bexp) :=
+   match b with BEq (AExp (BA x)) (AExp (Num a)) y (Num v) =>
+     let new_f := (fun i => if a =? a_nat2fb (cut_n (c i) n) (qenv x) then merge_fun (c i) (c1 i) n else c i) in
+              Some (cal_size new_f m, new_f)
+               | BLt (AExp (BA x)) (AExp (Num a)) y (Num v) =>
+     let new_f := (fun i => if a_nat2fb (cut_n (c i) n) (qenv x) <? a then merge_fun (c i) (c1 i) n else c i) in
+              Some (cal_size new_f m, new_f)
+               | BTest y (Num v) =>
+     let new_f := (fun i => if c1 i 0 then merge_fun (c i) (c1 i) 1 else c i) in
+              Some (cal_size new_f m, new_f)
+             | _ => None
+   end.
+Definition keep_ch_c (qenv:var -> nat) (c c1:nat -> rz_val) (b:bexp) (s s1: session) :=
+   keep_ch_c' qenv (count_ses s) (count_ses (s++s1)) c c1 b.
+
+(* Define permutation of session vs types. *)
+Definition switch_val (r:rz_val) (n m:nat) :=
+     fun i => if i <? m then r (n+i) else if (m <=? i) && (i <? n+m) then r (i - m) else r i.
+
+Definition switch_type_t (t:type_elem) (n m:nat) :=
+   match t with TNor (Some r) => TNor (Some (switch_val r n m))
+              | CH (Some (x,f)) => CH (Some (x,fun i => switch_val (f i) n m))
+              | _ => t
+   end.
+
+Definition switch_type (t:se_type) (m:nat) :=
+   match t with THT n ta => THT n (switch_type_t ta m (n-m)) end.
+
+Inductive perm_tpred : tpred -> tpred -> Prop :=
+    perm_tpred_1 : forall t1 t2 s1 s2 t,
+            perm_tpred (t1++([(s1++s2,t)])++t2) (t1++([(s2++s1,(switch_type t (count_ses s1)))])++t2).
+
+Hypothesis cal_set : (nat -> rz_val) -> session -> session -> (nat -> rz_val).
 
 Inductive session_system {qenv: var -> nat} {rmax:nat}
            : atype -> aenv -> tpred -> pexp -> session -> se_type -> Prop :=
@@ -548,43 +590,30 @@ Inductive session_system {qenv: var -> nat} {rmax:nat}
            -> find_env T (s++[(x,v,S v)]) = Some ((s++[(x,v,S v)]), THT n (CH (Some (2^n,c)))) -> get_core_ses b = Some (x,v,S v)
             -> session_system M env T e s' (THT n' (CH (Some (m,c'))))
               -> session_system q env T (If b e) s' (THT (n+n') (CH (join_ch_c qenv c c' n m b)))
-    | qif_ses_ch_in: forall q env T b e n s m c s', type_bexp env b (Ses s)
-            -> session_system M env T e (s++s') (THT n (CH (Some (m,c))))
-              -> session_system q env T (If b e) s' (THT (n+n') (CH (join_ch_c qenv c c' n m b))).
-
-
-
-    | qif_ses_same : forall m stack stack' b e l a T t,
-         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
-         session_system Q stack T e stack' T -> find_env_had a T = Some t
-         -> session_system m stack T (If b e) stack (([a],t)::T)
-    | qif_ses : forall m stack stack' b e l a T T' T'' t,
-         type_bexp env b Q -> bexp_ses qenv stack b = Some ([a]) -> in_session a l 0 = None ->
-         session_system Q stack T e stack' T' -> is_nor T = true -> find_env_had a T = Some t -> is_nor T' = true -> T <> T'
-         -> create_ch T T' a t = Some T'' -> session_system m stack T (If b e) stack T''
-    | if_ses_true : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some true ->
-                session_system Q stack T e1 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-    | if_ses_false : forall m stack stack' b e1 e2 T T', type_bexp env b C -> eval_bexp_c stack b = Some false ->
-                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-    | if_ses_m : forall m stack stack' b e1 e2 T T', type_bexp env b M -> session_system Q stack T e1 stack' T' ->
-                session_system Q stack T e2 stack' T' -> session_system m stack T (IfB b e1 e2) stack' T'
-
-
-    | pmea_ses : forall m stack q p a x T, AEnv.MapsTo a q env -> AEnv.MapsTo p M env -> atype_order q M ->
-                 AEnv.MapsTo x Q env -> session_system m stack T (PMeas p x a) stack nil
-    | mea_ses : forall m stack a x T, AEnv.MapsTo a M env ->  
-                   AEnv.MapsTo x Q env -> session_system m stack T (Meas a x) stack nil
-    | amplify_ses : forall m stack x n T T', AEnv.MapsTo x Q env -> type_aexp env n C 
-                   -> find_had_env_list ([(x,0,qenv x)]) T = Some T' ->
-                    session_system m stack T (Amplify x n) stack T'
-    | reflect_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
-        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
-        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
-        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch (qenv x) v1 v2)])
-    | distr_ses_nor : forall m stack x p a1 a2 v1 v2 T T', AEnv.MapsTo x Q env -> type_aexp env p C -> type_aexp env a1 C
-        -> type_aexp env a2 C -> find_nor_env_list ([(x,0,qenv x)]) T = Some T' -> 
-        eval_aexp_c stack a1 = Some v1 -> eval_aexp_c stack a2 = Some v2 -> v1 <> v2 ->
-        session_system m stack T (Reflect x p a1 a2) stack ([([(x,0,qenv x)],to_ch_distr (qenv x))]).
+    | qif_ses_ch_in: forall q env T b e n s m c s' m1 c1, type_bexp env b (Ses s) ->
+               find_env T (s++s') = Some (s++s',THT n (CH (Some (m,c))))
+            -> session_system M env T e (s++s') (THT n (CH (Some (m1,c1))))
+              -> session_system q env T (If b e) s' (THT n (CH (keep_ch_c qenv c c1 b s s')))
+    | perm_ses: forall q env T T' e s t, perm_tpred T T' ->
+                session_system q env T' e s t -> session_system q env T e s t
+    (*TODO: the following rule is bad, we need some methods
+               to say about s[v/i] and t[v/i], so s and t now need to involve variables.
+            Basically saying that a for-loop is a type invariant depending on if statement. *)
+    | qfor_ses_ch: forall q env T i l h b e s t, 
+        (forall v, l <= v < h -> session_system q env T (If (subst_bexp b i v) (subst_pexp e i v)) s t)
+              -> session_system q env T (For i (Num l) (Num h) b e) s t
+    | amp_ses_ch: forall q env T x v s t, find_env T ([(x,0,qenv x)]) = Some (s,t) ->
+                 session_system q env T (Amplify x (Num v)) s t
+    (* TODO: we need to have a set syntax and interpretation for the CH type descrition,
+               so that we are able to specify the cal_set. *)
+    | dif_ses_ch_1:
+       forall q env T x s n m c, find_env T ([(x,0,qenv x)]) = Some (([(x,0,qenv x)])++s,THT n (CH (Some (m,c)))) ->
+                 session_system q env T (Diffuse (AExp (BA x))) (([(x,0,qenv x)])++s)
+                          (THT n (CH (Some (cal_size (cal_set c ([(x,0,qenv x)]) s) m,cal_set c ([(x,0,qenv x)]) s))))
+    | dif_ses_ch_2:
+       forall q env T x v s n m c, find_env T ([(x,v,S v)]) = Some (([(x,v,S v)])++s,THT n (CH (Some (m,c)))) ->
+                 session_system q env T (Diffuse (Index x (Num v))) (([(x,v,S v)])++s)
+                          (THT n (CH (Some (cal_size (cal_set c ([(x,v,S v)]) s) m,cal_set c ([(x,v,S v)]) s)))).
 
 
 Fixpoint var_in_list (x:var) (l:list var) :=
