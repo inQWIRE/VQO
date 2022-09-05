@@ -161,12 +161,12 @@ Fixpoint in_sessions (al: list (var* nat*nat)) (l:list (var*nat*nat)) :=
         | b::bl => match in_session b l 0 with None => false | Some pos => in_sessions bl l end
   end.
 
-Fixpoint find_env (l:tpred) (a: list (var* nat*nat)) :=
+Fixpoint find_env {t:Type} (l:ses_map t) (a: list (var* nat*nat)) :=
    match l with [] => None
            | ((x,tl)::xl) => if in_sessions a x then Some (x,tl) else find_env xl a
    end.
 
-Fixpoint update_env (l:tpred) (a: list (var* nat*nat)) (t:se_type) :=
+Fixpoint update_env {T:Type} (l:ses_map T) (a: list (var* nat*nat)) (t:T) :=
    match l with [] => ([(a,t)])
            | ((x,tl)::xl) => if in_sessions a x then (a,t)::xl else (x,tl)::(update_env xl a t) 
    end.
@@ -615,6 +615,48 @@ Inductive session_system {qenv: var -> nat} {rmax:nat}
                  session_system q env T (Diffuse (Index x (Num v))) (([(x,v,S v)])++s)
                           (THT n (CH (Some (cal_size (cal_set c ([(x,v,S v)]) s) m,cal_set c ([(x,v,S v)]) s)))).
 
+(* Semantics. *)
+Inductive state_elem := Nval (b:rz_val) 
+                 | Hval (b:nat -> rz_val)
+                 | Cval (b:nat -> rz_val * rz_val)
+                 | Fval (b : nat -> R * rz_val).
+
+Definition state := ses_map state_elem.
+
+Inductive eval_aexp  {qenv: var -> nat} : state -> aexp -> state -> Prop :=
+    | ba_var_sem : find
+
+
+Inductive aexp := BA (x:var) | Num (n:nat) | APlus (e1:aexp) (e2:aexp) | AMult (e1:aexp) (e2:aexp).
+
+
+
+Inductive qfor_sem  {qenv: var -> nat} {rmax:nat}
+           : state -> pexp -> state -> Prop :=
+  | skip_sem: forall s, qfor_sem s PSKIP s
+  | let_sem : forall s x a e, qfor_sem s (Let x a e) s.
+
+
+
+Inductive pexp := PSKIP 
+            | Let (x:var) (n:maexp) (e:pexp)
+              (*| InitQubit (p:posi) *) 
+              (* Ethan: Init = reset = trace out = measurement... commeneted out *)
+            | AppSU (e:single_u)
+            | AppU (e:exp) 
+            | PSeq (s1:pexp) (s2:pexp)
+            | If (x:bexp) (s1:pexp)
+            | For (x:var) (l:aexp) (h:aexp) (b:bexp) (p:pexp)
+                   (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
+                      the first argument is the list of variables of quantum to p,
+                       the second arguments a is the phase of the post-state of x,
+                       the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
+                       excluding ancilla qubits  *)
+            | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
+            | Diffuse (x:varia) 
+
+
+Inductive val := nval (b:bool) (r:rz_val) | qval (rc:rz_val) (r:rz_val).
 
 Fixpoint var_in_list (x:var) (l:list var) :=
   match l with nil => false

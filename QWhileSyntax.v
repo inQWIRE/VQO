@@ -97,7 +97,10 @@ Notation "e0 [ e1 ]" := (Index e0 e1) (at level 50) : pexp_scope.
 Inductive singleGate := H_gate | X_gate | RZ_gate (f:nat) (*representing 1/2^n of RZ rotation. *).
 
 Inductive bexp := | BEq (x:varia) (y:varia) (i:var) (a:aexp)
-                  | BLt (x:varia) (y:varia) (i:var) (a:aexp) | BTest (i:var) (a:aexp).
+                    (* x = n @ z[i] --> conpare x and n --> put result in z[i] *)
+                  | BLt (x:varia) (y:varia) (i:var) (a:aexp) 
+                    (* x < n @ z[i] --> conpare x and n --> put result in z[i] *)
+                  | BTest (i:var) (a:aexp). (* z[i] = 0 or 1 *)
 
 Notation "e0 [=] e1 @ e3 [ e4 ]" := (BEq e0 e1 e3 e4) (at level 50) : pexp_scope.
 
@@ -126,12 +129,15 @@ Definition type_pred := se_type.
 (* Ethan: I don't remember what is this tuple... *)
 Definition session := list (var * nat * nat).
 
-Definition tpred := list (session * se_type).
+Definition ses_map (a:Type) := list (session * a).
+
+Definition tpred := ses_map se_type.
 
 Inductive maexp := AE (n:aexp) | Meas (a:var).
 
 Coercion AE : aexp >-> maexp.
 
+(*compile to OQASM directly.  exp -> OQASM -> SQIR *)
 Inductive exp := SKIP (x:var) (a:aexp) | X (x:var) (a:aexp)
         | CU (x:var) (a:aexp) (e:exp)
         | RZ (q:nat) (x:var) (a:aexp)  (* 2 * PI * i / 2^q *)
@@ -158,14 +164,18 @@ Inductive pexp := PSKIP
             | AppSU (e:single_u)
             | AppU (e:exp) 
             | PSeq (s1:pexp) (s2:pexp)
+          (*compile to CU / CNOT *)
             | If (x:bexp) (s1:pexp)
             | For (x:var) (l:aexp) (h:aexp) (b:bexp) (p:pexp)
+                (* for (int x = l; x < h && b ; x++) p; 
+                    --> repeat x in (h-l) times of (If b(c/x) p) *)
                    (*  quantum oracle functions executing p, and a list of tuples (x,a,s)
                       the first argument is the list of variables of quantum to p,
                        the second arguments a is the phase of the post-state of x,
                        the third is the state s = f(x) as |x> -> e^2pi i * a *|s>,
                        excluding ancilla qubits  *)
-            | Amplify (x:var) (n:aexp) (* reflection on x with the form aexp x=n. l is the session. *)
+            | Amplify (x:var) (n:aexp) 
+                (* reflection on x with the form aexp x=n. l is the session. (|n><n| - I) tensor x *)
             | Diffuse (x:varia) 
      (*reflection on x = a_1 ,... x = a_n in al with equal probablity hadamard walk. 
         This statement basically distributes/diverges a vector x to many different vectors. *).
