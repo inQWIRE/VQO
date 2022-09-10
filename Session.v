@@ -224,7 +224,7 @@ Inductive type_pexp (qenv : var -> nat) : aenv -> pexp -> factor -> Prop :=
              -> type_pexp qenv env (AppSU (SQFT x)) (Ses s)
   | appsu_fa_rqft: forall env x s, AEnv.MapsTo x (Ses s) env
              -> type_pexp qenv env (AppSU (SRQFT x)) (Ses s)
-  | appu_fa: forall env e t, type_exp qenv env e (Ses t) -> type_pexp qenv env (AppU e) (Ses t)
+  | appu_fa: forall env e t, type_exp qenv env e (Ses t) -> type_pexp qenv env (AppU t e) (Ses t)
   | if_fa : forall env e b t1 t2, type_bexp env b t1 -> type_pexp qenv env e t2 -> type_pexp qenv env (If b e) (union_f t1 t2)
   | for_fa : forall env x l h b e t1 t2, type_aexp env l (AType CT) -> type_aexp env h (AType CT) -> 
                      type_bexp (AEnv.add x (AType CT) env) b t1 -> type_pexp qenv (AEnv.add x (AType CT) env) e t2
@@ -445,7 +445,7 @@ Fixpoint subst_pexp (e:pexp) (x:var) (n:nat) :=
                    | Let y a t e' => if y =? x then Let y (subst_mexp a x n) t e' else Let y (subst_mexp a x n) t (subst_pexp e' x n)
                    | AppSU (RH v) => AppSU (RH (subst_varia v x n))
                    | AppSU p => AppSU p
-                   | AppU e' => AppU (subst_exp e' x n)
+                   | AppU l e' => AppU l (subst_exp e' x n)
                    | If b s => If (subst_bexp b x n) (subst_pexp s x n)
                    | For i l h b p => if i =? x then For i (subst_aexp l x n) (subst_aexp h x n) b p
                                       else For i (subst_aexp l x n) (subst_aexp h x n) (subst_bexp b x n) (subst_pexp p x n)
@@ -590,11 +590,11 @@ Inductive session_system {qenv: var -> nat} {rmax:nat}
          session_system q env T (AppSU (SQFT x)) ([(x,0,qenv x)]) (THT (qenv x) (TH None))
     | appu_ses_nor:  forall q env T e s n b tenv ph ba, type_exp qenv env e (Ses s) -> find_env T s = Some (s, THT n (TNor (Some b)))
                 -> @oqasm_type qenv (gen_tenv b s) e = Some tenv -> trans_tenv tenv s rmax = (ph,ba) ->
-         session_system q env T (AppU e) s (THT n (TNor (Some ba)))
+         session_system q env T (AppU s e) s (THT n (TNor (Some ba)))
     | appu_ses_had:  forall q env T e s n, type_exp qenv env e (Ses s) -> find_env T s = Some (s, THT n (TH (Some Uni)))
-                -> session_system q env T (AppU e) s (THT n (CH (Some ((2^n), (gen_had_set qenv s e rmax)))))
+                -> session_system q env T (AppU s e) s (THT n (CH (Some ((2^n), (gen_had_set qenv s e rmax)))))
     | appu_ses_ch:  forall q env T e s s' n m b, type_exp qenv env e (Ses s) -> find_env T s = Some (s', THT n (CH (Some (m,b))))
-                -> session_system q env T (AppU e) s' (THT n (CH (Some (m,gen_ch_set qenv b s' e rmax ))))
+                -> session_system q env T (AppU s e) s' (THT n (CH (Some (m,gen_ch_set qenv b s' e rmax ))))
     | qif_ses_nor : forall q env T b e n s c s' t, type_bexp env b (Ses s) -> find_env T s = Some (s, THT n (TNor (Some c))) ->
               type_pexp qenv env e (Ses s') -> find_env T s' = Some (s', t) -> session_system q env T (If b e) s' (to_non_type t)
     | qif_ses_ch: forall q env T b e n s m c s' x v n' c', type_bexp env b (Ses (s++[(x,v,S v)]))
@@ -702,6 +702,21 @@ Definition update_cval (s:state) (a:var) (n:nat) :=
 Fixpoint ses_len (l:list (var * nat * nat)) :=
    match l with nil => 0 | (x,l,h)::xl => (h - l) + ses_len xl end. 
 
+Fixpoint turn_angle_r (rval :nat -> bool) (n:nat) (size:nat) : R :=
+   match n with 0 => (0:R)
+             | S m => (if (rval m) then (1/ (2^ (size - m))) else (0:R)) + turn_angle_r rval m size
+   end.
+Definition turn_angle (rval:nat -> bool) (n:nat) : R :=
+      turn_angle_r (fbrev n rval) n n.
+
+Fixpoint sum_angle (r:nat -> bool) (b:nat -> rz_val) (rmax:nat) (n:nat) : C :=
+   match n with 0 => C0
+      | S m => (if r m then (turn_angle (b m) rmax) else C0) + sum_angle r b rmax m
+   end.
+
+Definition had_to_ch (b:nat -> rz_val) (rmax : nat) (n:nat) := 
+    (fun i : nat => (sum_angle (nat2fb i) b rmax n, nat2fb i)).
+
 Inductive pick_mea : state -> var -> nat -> (R * nat) -> Prop :=
    pick_meas : forall s x n m b i r bl, find_qenv s ([(x,0,n)]) = Some (([(x,0,n)]), Fval m b)
             -> 0 <= i < m -> b i = (r,bl) -> pick_mea s x n (Cmod r, a_nat2fb bl n).
@@ -710,17 +725,36 @@ Inductive eval_aexp : state -> aexp -> nat -> Prop :=
     | var_sem : forall s x r n, find_cenv s x = Some (Mval r n) -> eval_aexp s (BA x) n
     | num_sem : forall s n, eval_aexp s (Num n) n
     | aplus_sem: forall s e1 e2 n1 n2, eval_aexp s e1 n1 -> eval_aexp s e2 n2 -> eval_aexp s (APlus e1 e2) (n1 + n2)
-    | amult_sem: forall s e1 e2 n1 n2, eval_aexp s e1 n1 -> eval_aexp s e2 n2 -> eval_aexp s (AMult e1 e2) (n1 * n2).
+    | amult_sem: forall s e1 e2 n1 n2, eval_aexp s e1 n1 -> eval_aexp s e2 n2 -> eval_aexp s (AMult e1 e2) (n1 * n2). 
+
+Inductive eval_varia {qenv: var -> nat}: varia -> (var * nat * nat) -> Prop :=
+    | aexp_sem : forall x, eval_varia (AExp (BA x)) (x,0,qenv x)
+    | index_sem : forall x v, eval_varia (Index x (Num v)) (x,v,v+1).
+
+Check Forall.
+
+Check gen_tenv.
+
+Check oqasm_type. 
 
 Inductive qfor_sem  {qenv: var -> nat} {rmax:nat}
            : state -> pexp -> state -> Prop :=
+  | trans_qubits: forall s a a' b e, find_qenv s a = Some (a',Hval b) ->
+           qfor_sem s e (update_qenv s a' (Fval (2^(ses_len a')) (had_to_ch b rmax (ses_len a'))))
   | skip_sem: forall s, qfor_sem s PSKIP s
   | let_sem_c : forall s s' x a n e, eval_aexp s a n -> qfor_sem s (subst_pexp e x n) s' -> qfor_sem s (Let x (AE a) CT e) s'
   | let_sem_m : forall s s' x a n e, eval_aexp s a n -> qfor_sem (update_cval s x n) e s' -> qfor_sem s (Let x (AE a) MT e) s'
   | let_sem_q : forall s s' x a e r v, pick_mea s a (qenv a) (r,v) ->
-            qfor_sem (update_cenv (remove_qenv s ([(a,0,qenv a)])) x (Mval r v)) e s' -> qfor_sem s (Let x (Meas a) MT e) s'.
-
-
+            qfor_sem (update_cenv (remove_qenv s ([(a,0,qenv a)])) x (Mval r v)) e s' -> qfor_sem s (Let x (Meas a) MT e) s'
+  | appsu_sem_h_nor : forall s p a b, @eval_varia qenv p a -> find_val s a = Some (Fval 1 b) 
+                 -> qfor_sem s (AppSU (RH p)) (update_qenv s ([a]) (Hval (fun i => (update allfalse 0 ((snd (b 1)) i)))))
+  | appsu_sem_h_had : forall s p a b, @eval_varia qenv p a -> find_val s a = Some (Hval b) 
+       -> qfor_sem s (AppSU (RH p))
+               (update_qenv s ([a]) (Fval 1 (fun i => if i =? 0 then (C0, (fun j => b j 0)) else (C0,allfalse))))
+  (* rewrite the tenv type for oqasm with respect to the ch list type. *)
+  | appu_sem : forall s a a' m b e, find_qenv s a = Some (a',Fval m b) -> qfor_sem s (AppU a e) s
+  | seq_sem: forall e1 e2 s s1 s2, qfor_sem s e1 s1 -> qfor_sem s1 e2 s2 -> qfor_sem s (PSeq e1 e2) s2
+  | if_sem : forall b e s, qfor_sem s (If b e) s.
 
 Inductive pexp := PSKIP 
             | Let (x:var) (n:maexp) (e:pexp)

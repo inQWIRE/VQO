@@ -162,7 +162,7 @@ Inductive pexp := PSKIP
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppSU (e:single_u)
-            | AppU (e:exp) 
+            | AppU (l:session) (e:exp) 
             | PSeq (s1:pexp) (s2:pexp)
           (*compile to CU / CNOT *)
             | If (x:bexp) (s1:pexp)
