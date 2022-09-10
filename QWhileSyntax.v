@@ -25,13 +25,13 @@ Local Open Scope nat_scope.
 (* Classical State including variable relations that may be quantum *)
 
 (* we want to include all the single qubit gates here in the U below. *)
-Inductive atype := C : atype | M :atype.
+Inductive atype := CT : atype | MT :atype.
 
 Definition aty_eq  (t1 t2:atype) : bool := 
-   match t1 with C => match t2 with C  => true
+   match t1 with CT => match t2 with CT  => true
                             | _ => false
                         end
-               | M => match t2 with M => true 
+               | MT => match t2 with MT => true 
                            | _ => false
                         end
    end.
@@ -73,8 +73,8 @@ Proof.
 Qed.
 
 Definition meet_atype (a1 a2: atype) := 
-       match a1 with C => C
-                | M => a2
+       match a1 with CT => CT
+                | MT => a2
         end.
 
 
@@ -158,7 +158,7 @@ Inductive type := Phi (b:nat) | Nor.
 Inductive single_u := RH (p:varia) | SQFT (x:var) | SRQFT (x:var).
 
 Inductive pexp := PSKIP 
-            | Let (x:var) (n:maexp) (e:pexp)
+            | Let (x:var) (n:maexp) (t:atype) (e:pexp)
               (*| InitQubit (p:posi) *) 
               (* Ethan: Init = reset = trace out = measurement... commeneted out *)
             | AppSU (e:single_u)
