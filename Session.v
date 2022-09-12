@@ -738,23 +738,30 @@ Check gen_tenv.
 Check oqasm_type. 
 
 Inductive qfor_sem  {qenv: var -> nat} {rmax:nat}
-           : state -> pexp -> state -> Prop :=
-  | trans_qubits: forall s a a' b e, find_qenv s a = Some (a',Hval b) ->
-           qfor_sem s e (update_qenv s a' (Fval (2^(ses_len a')) (had_to_ch b rmax (ses_len a'))))
-  | skip_sem: forall s, qfor_sem s PSKIP s
-  | let_sem_c : forall s s' x a n e, eval_aexp s a n -> qfor_sem s (subst_pexp e x n) s' -> qfor_sem s (Let x (AE a) CT e) s'
-  | let_sem_m : forall s s' x a n e, eval_aexp s a n -> qfor_sem (update_cval s x n) e s' -> qfor_sem s (Let x (AE a) MT e) s'
-  | let_sem_q : forall s s' x a e r v, pick_mea s a (qenv a) (r,v) ->
-            qfor_sem (update_cenv (remove_qenv s ([(a,0,qenv a)])) x (Mval r v)) e s' -> qfor_sem s (Let x (Meas a) MT e) s'
-  | appsu_sem_h_nor : forall s p a b, @eval_varia qenv p a -> find_val s a = Some (Fval 1 b) 
-                 -> qfor_sem s (AppSU (RH p)) (update_qenv s ([a]) (Hval (fun i => (update allfalse 0 ((snd (b 1)) i)))))
-  | appsu_sem_h_had : forall s p a b, @eval_varia qenv p a -> find_val s a = Some (Hval b) 
-       -> qfor_sem s (AppSU (RH p))
+           : aenv -> state -> pexp -> state -> Prop :=
+  | trans_qubits: forall aenv s a a' b e, find_qenv s a = Some (a',Hval b) ->
+           qfor_sem aenv s e (update_qenv s a' (Fval (2^(ses_len a')) (had_to_ch b rmax (ses_len a'))))
+  | skip_sem: forall aenv s, qfor_sem aenv s PSKIP s
+  | let_sem_c : forall aenv s s' x a n e, eval_aexp s a n -> qfor_sem aenv s (subst_pexp e x n) s' -> qfor_sem aenv s (Let x (AE a) CT e) s'
+  | let_sem_m : forall aenv s s' x a n e, eval_aexp s a n -> qfor_sem (AEnv.add x (AType MT) aenv) (update_cval s x n) e s'
+  -> qfor_sem aenv s (Let x (AE a) MT e) s'
+  | let_sem_q : forall aenv s s' x a e r v, pick_mea s a (qenv a) (r,v) ->
+            qfor_sem (AEnv.add x (AType MT) aenv) (update_cenv (remove_qenv s ([(a,0,qenv a)])) x (Mval r v)) e s'
+                  -> qfor_sem aenv s (Let x (Meas a) MT e) s'
+  | appsu_sem_h_nor : forall aenv s p a b, @eval_varia qenv p a -> find_val s a = Some (Fval 1 b) 
+                 -> qfor_sem aenv s (AppSU (RH p)) (update_qenv s ([a]) (Hval (fun i => (update allfalse 0 ((snd (b 1)) i)))))
+  | appsu_sem_h_had : forall aenv s p a b, @eval_varia qenv p a -> find_val s a = Some (Hval b) 
+       -> qfor_sem aenv s (AppSU (RH p))
                (update_qenv s ([a]) (Fval 1 (fun i => if i =? 0 then (C0, (fun j => b j 0)) else (C0,allfalse))))
   (* rewrite the tenv type for oqasm with respect to the ch list type. *)
-  | appu_sem : forall s a a' m b e, find_qenv s a = Some (a',Fval m b) -> qfor_sem s (AppU a e) s
-  | seq_sem: forall e1 e2 s s1 s2, qfor_sem s e1 s1 -> qfor_sem s1 e2 s2 -> qfor_sem s (PSeq e1 e2) s2
-  | if_sem : forall b e s, qfor_sem s (If b e) s.
+  | appu_sem : forall aenv s a a' m b e, find_qenv s a = Some (a',Fval m b) -> qfor_sem aenv s (AppU a e) s
+  | seq_sem: forall aenv e1 e2 s s1 s2, qfor_sem aenv s e1 s1 -> qfor_sem aenv s1 e2 s2 -> qfor_sem aenv s (PSeq e1 e2) s2
+  | if_sem : forall aenv l1 l2 b e s s', type_pexp qenv aenv e (Ses l1) -> type_bexp aenv b (Ses l2) 
+                -> qfor_sem aenv s e s'
+     (*TODO: rewrite Fval state design, instead of function, we use list. 
+        for every items in the s whose session is l1++l2, the result is 
+              s[l1++l2 |-> ori_l1 ++ if s(l1) = true then s(l2)_of_l1 update to s'; otherwise s ] *)
+           -> qfor_sem aenv s (If b e) s.
 
 Inductive pexp := PSKIP 
             | Let (x:var) (n:maexp) (e:pexp)
