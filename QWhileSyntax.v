@@ -112,26 +112,9 @@ Notation "* e0 [ e1 ]" := (BTest e0 e1) (at level 50) : pexp_scope.
 Inductive type_rotation := TV (b:aexp) | Infty.
 *)
 
-Definition type_cfac : Type := nat -> rz_val.
-
-Inductive type_phase :=  Uni.
-
-(*| Uni (b: nat -> rz_val) | DFT (b: nat -> rz_val). *)
-
-Inductive type_elem : Type := TNor (p : option (rz_val))
-         | TH (r:option type_phase)
-         | CH (t:option (nat * type_cfac)).
-
-Inductive se_type : Type := THT (n:nat) (t:type_elem).
-
-Definition type_pred := se_type.
 
 (* Ethan: I don't remember what is this tuple... *)
 Definition session := list (var * nat * nat).
-
-Definition ses_map (a:Type) := list (session * a).
-
-Definition tpred := ses_map se_type.
 
 Inductive maexp := AE (n:aexp) | Meas (a:var).
 

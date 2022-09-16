@@ -1,4 +1,4 @@
-method Shor ( a : nat, N : nat, n : nat, x : Q[n], y : Q[n] )
+method Shor ( a : nat, N : nat, n : nat, x : Q[n], y : Q[n] ) {return: t : float}
  requires (n > 0)
  requires (1 < a < N)
  requires (N < 2^(n-1))
@@ -11,7 +11,7 @@ method Shor ( a : nat, N : nat, n : nat, x : Q[n], y : Q[n] )
  ensures (a^(t/2) + 1 divides N || a^(t/2) - 1 divides N)
  //ensures (r.pos > (4 * e^(-2) / PI ^ 2) / (Nat.log2 N)^4)
 {
-  x *= H ;
+  x *= H ; // x := apply_h(...,x) pre and post
   y *= cl(y+1); //cl might be omitted.
   for (int i = 0; i < n; x[i]; i ++)
     invariant (0 <= i <= n)
