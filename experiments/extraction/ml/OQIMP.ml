@@ -191,11 +191,11 @@ module QvarNatType =
   (** val compare : t -> t -> (qvar * int) OrderedType.coq_Compare **)
 
   let compare x y =
-    let (a, b) = x in
-    let (a0, b0) = y in
-    (match a with
+    let (q, n) = x in
+    let (q0, n0) = y in
+    (match q with
      | G v ->
-       (match a0 with
+       (match q0 with
         | G v0 ->
           let h = blt_reflect v v0 in
           (match h with
@@ -204,28 +204,28 @@ module QvarNatType =
              let h0 = beq_reflect v v0 in
              (match h0 with
               | ReflectT ->
-                let h1 = blt_reflect b b0 in
+                let h1 = blt_reflect n n0 in
                 (match h1 with
                  | ReflectT -> OrderedType.LT
                  | ReflectF ->
-                   let h2 = beq_reflect b b0 in
+                   let h2 = beq_reflect n n0 in
                    (match h2 with
                     | ReflectT -> OrderedType.EQ
                     | ReflectF -> OrderedType.GT))
               | ReflectF -> OrderedType.GT))
         | L _ -> OrderedType.GT)
      | L v ->
-       (match a0 with
+       (match q0 with
         | G _ -> OrderedType.LT
         | L v0 ->
           let h = beq_reflect v v0 in
           (match h with
            | ReflectT ->
-             let h0 = blt_reflect b b0 in
+             let h0 = blt_reflect n n0 in
              (match h0 with
               | ReflectT -> OrderedType.LT
               | ReflectF ->
-                let h1 = beq_reflect b b0 in
+                let h1 = beq_reflect n n0 in
                 (match h1 with
                  | ReflectT -> OrderedType.EQ
                  | ReflectF -> OrderedType.GT))

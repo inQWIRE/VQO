@@ -1,6 +1,7 @@
 Require Coq.extraction.Extraction.
 Require Import Reals.
 Require Import ExtractionGateSet.
+Require Import OQASM.
 Require Import OQASMProof.
 Require Import CLArith.
 Require Import RZArith.
@@ -37,6 +38,7 @@ Extract Constant id_nat => "fun x : int -> x". (* add type annotation *)
 
 (* Perform extraction *)
 Separate Extraction
+    OQASM.exp_sem
     (* OQASM Toffoli-based modular multiplier *)
     ExtrOQASM.trans_modmult_rev
     

@@ -75,6 +75,23 @@ let fbrev n f x =
 let times_two_spec f i =
   if Nat.eqb i 0 then false else f ((fun x y -> max 0 (x-y)) i (succ 0))
 
+(** val addto : (int -> bool) -> int -> int -> bool **)
+
+let addto r n i =
+  if Nat.ltb i n
+  then cut_n (fbrev n (sumfb false (cut_n (fbrev n r) n) (nat2fb (succ 0))))
+         n i
+  else r i
+
+(** val addto_n : (int -> bool) -> int -> int -> bool **)
+
+let addto_n r n i =
+  if Nat.ltb i n
+  then cut_n
+         (fbrev n (sumfb false (cut_n (fbrev n r) n) (negatem n (nat2fb 0))))
+         n i
+  else r i
+
 (** val natsum : int -> (int -> int) -> int **)
 
 let rec natsum n f =

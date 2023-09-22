@@ -83,14 +83,14 @@ module Raw =
     let f6 = f s in
     (match s with
      | [] -> f3 __
-     | a :: l ->
-       let (a0, b) = a in
-       let f7 = f6 a0 b l __ in
+     | p :: l ->
+       let (t0, e) = p in
+       let f7 = f6 t0 e l __ in
        let f8 = fun _ _ -> let hrec = mem_rect k f2 f1 f0 f l in f7 __ __ hrec
        in
-       let f9 = f5 a0 b l __ in
-       let f10 = f4 a0 b l __ in
-       (match X.compare k a0 with
+       let f9 = f5 t0 e l __ in
+       let f10 = f4 t0 e l __ in
+       (match X.compare k t0 with
         | OrderedType.LT -> f10 __ __
         | OrderedType.EQ -> f9 __ __
         | OrderedType.GT -> f8 __ __))
@@ -172,15 +172,15 @@ module Raw =
     let f6 = f s in
     (match s with
      | [] -> f3 __
-     | a :: l ->
-       let (a0, b) = a in
-       let f7 = f6 a0 b l __ in
+     | p :: l ->
+       let (t0, e) = p in
+       let f7 = f6 t0 e l __ in
        let f8 = fun _ _ ->
          let hrec = find_rect k f2 f1 f0 f l in f7 __ __ hrec
        in
-       let f9 = f5 a0 b l __ in
-       let f10 = f4 a0 b l __ in
-       (match X.compare k a0 with
+       let f9 = f5 t0 e l __ in
+       let f10 = f4 t0 e l __ in
+       (match X.compare k t0 with
         | OrderedType.LT -> f10 __ __
         | OrderedType.EQ -> f9 __ __
         | OrderedType.GT -> f8 __ __))
@@ -263,15 +263,15 @@ module Raw =
     let f6 = f s in
     (match s with
      | [] -> f3 __
-     | a :: l ->
-       let (a0, b) = a in
-       let f7 = f6 a0 b l __ in
+     | p :: l ->
+       let (t0, e) = p in
+       let f7 = f6 t0 e l __ in
        let f8 = fun _ _ ->
          let hrec = add_rect k x f2 f1 f0 f l in f7 __ __ hrec
        in
-       let f9 = f5 a0 b l __ in
-       let f10 = f4 a0 b l __ in
-       (match X.compare k a0 with
+       let f9 = f5 t0 e l __ in
+       let f10 = f4 t0 e l __ in
+       (match X.compare k t0 with
         | OrderedType.LT -> f10 __ __
         | OrderedType.EQ -> f9 __ __
         | OrderedType.GT -> f8 __ __))
@@ -353,15 +353,15 @@ module Raw =
     let f6 = f s in
     (match s with
      | [] -> f3 __
-     | a :: l ->
-       let (a0, b) = a in
-       let f7 = f6 a0 b l __ in
+     | p :: l ->
+       let (t0, e) = p in
+       let f7 = f6 t0 e l __ in
        let f8 = fun _ _ ->
          let hrec = remove_rect k f2 f1 f0 f l in f7 __ __ hrec
        in
-       let f9 = f5 a0 b l __ in
-       let f10 = f4 a0 b l __ in
-       (match X.compare k a0 with
+       let f9 = f5 t0 e l __ in
+       let f10 = f4 t0 e l __ in
+       (match X.compare k t0 with
         | OrderedType.LT -> f10 __ __
         | OrderedType.EQ -> f9 __ __
         | OrderedType.GT -> f8 __ __))
@@ -434,10 +434,10 @@ module Raw =
     let f3 = f m acc in
     (match m with
      | [] -> f2 __
-     | a :: l ->
-       let (a0, b) = a in
-       let f4 = f3 a0 b l __ in
-       let hrec = fold_rect f1 f0 f l (f1 a0 b acc) in f4 hrec)
+     | p :: l ->
+       let (t0, e) = p in
+       let f4 = f3 t0 e l __ in
+       let hrec = fold_rect f1 f0 f l (f1 t0 e acc) in f4 hrec)
 
   (** val fold_rec :
       (key -> 'a1 -> 'a2 -> 'a2) -> ('a1 t -> 'a2 -> __ -> 'a3) -> ('a1 t ->
@@ -538,21 +538,21 @@ module Raw =
      | [] -> let f9 = f3 __ in (match m' with
                                 | [] -> f9 __
                                 | _ :: _ -> f8 __)
-     | a :: l ->
-       let (a0, b) = a in
-       let f9 = f5 a0 b l __ in
-       let f10 = f4 a0 b l __ in
+     | p :: l ->
+       let (t0, e) = p in
+       let f9 = f5 t0 e l __ in
+       let f10 = f4 t0 e l __ in
        (match m' with
         | [] -> f8 __
-        | a1 :: l0 ->
-          let (a2, b0) = a1 in
-          let f11 = f9 a2 b0 l0 __ in
-          let f12 = let _x = X.compare a0 a2 in f11 _x __ in
-          let f13 = f10 a2 b0 l0 __ in
+        | p0 :: l0 ->
+          let (t1, e0) = p0 in
+          let f11 = f9 t1 e0 l0 __ in
+          let f12 = let _x = X.compare t0 t1 in f11 _x __ in
+          let f13 = f10 t1 e0 l0 __ in
           let f14 = fun _ _ ->
             let hrec = equal_rect cmp f2 f1 f0 f l l0 in f13 __ __ hrec
           in
-          (match X.compare a0 a2 with
+          (match X.compare t0 t1 with
            | OrderedType.EQ -> f14 __ __
            | _ -> f12 __)))
 
